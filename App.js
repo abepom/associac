@@ -5,6 +5,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import Inicio from "./src/pages/Inicio";
 import Login from "./src/pages/Login";
 import CadastrarAssociado from "./src/pages/CadastrarAssociado";
+import ConsultarDescontos from "./src/pages/ConsultarDescontos";
 import { StatusBar } from "expo-status-bar";
 import Constants from "expo-constants";
 
@@ -34,6 +35,11 @@ export default function App() {
 					<Stack.Screen
 						name="CadastrarAssociado"
 						component={CadastrarAssociado}
+						options={{ headerShown: false }}
+					/>
+					<Stack.Screen
+						name="ConsultarDescontos"
+						component={ConsultarDescontos}
 						options={{ headerShown: false }}
 					/>
 				</Stack.Navigator>

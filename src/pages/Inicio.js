@@ -9,24 +9,27 @@ import {
 	ImageBackground,
 } from "react-native";
 import images from "../utils/images";
+import app from "../../app.json";
 
 function Inicio({ navigation }) {
 	const items = [
 		{
 			id: 1,
-			title: "CADASTRAR ASSOCIADO",
-			icon: "",
+			image: images.cadastrar_associado,
 			link: "CadastrarAssociado",
 		},
 		{
 			id: 2,
-			title: "CONSULTAR DESCONTOS",
-			icon: "",
+			image: images.consultar_descontos,
 			link: "ConsultarDescontos",
 		},
-		{ id: 3, title: "GERAR SENHA", icon: "", link: "GerarSenha" },
-		{ id: 4, title: "RECADASTRAR DADOS", icon: "", link: "Recadastrar" },
-		{ id: 5, title: "PLANO DE SAÚDE", icon: "", link: "PlanoDeSaude" },
+		{ id: 3, image: images.gerar_senha, link: "GerarSenha" },
+		{ id: 4, image: images.recadastrar_associado, link: "Recadastrar" },
+		{
+			id: 5,
+			image: images.cadastrar_plano_saude,
+			link: "PlanoDeSaude",
+		},
 	];
 
 	return (
@@ -43,12 +46,13 @@ function Inicio({ navigation }) {
 					style={{
 						alignItems: "center",
 						justifyContent: "center",
-						marginVertical: 20,
+						marginTop: 40,
+						marginBottom: 20,
 					}}
 				>
 					<Image
 						source={images.logo_abepom}
-						style={{ width: 100, height: 100 }}
+						style={{ width: 200, height: 200 }}
 					/>
 				</View>
 				<FlatList
@@ -73,11 +77,25 @@ function Inicio({ navigation }) {
 									alignItems: "center",
 								}}
 							>
-								<Text>{item.title}</Text>
+								{item.image ? (
+									<Image
+										source={item.image}
+										style={{
+											width: "100%",
+											height: 100,
+											resizeMode: "contain",
+										}}
+									/>
+								) : (
+									<Text>{item.title}</Text>
+								)}
 							</TouchableOpacity>
 						);
 					}}
 				/>
+				<Text style={{ color: "#fff", textAlign: "center", bottom: 20 }}>
+					Versão: {app.expo.version.substring(0, 3)}
+				</Text>
 			</ImageBackground>
 		</SafeAreaView>
 	);
