@@ -8,6 +8,8 @@ import CadastrarAssociado from "./src/pages/CadastrarAssociado";
 import ConsultarDescontos from "./src/pages/ConsultarDescontos";
 import { StatusBar } from "expo-status-bar";
 import Constants from "expo-constants";
+import GerarSenha from "./src/pages/GerarSenha";
+import RecadastrarAssociado from "./src/pages/RecadastrarAssociado";
 
 const Stack = createNativeStackNavigator();
 
@@ -40,6 +42,16 @@ export default function App() {
 					<Stack.Screen
 						name="ConsultarDescontos"
 						component={ConsultarDescontos}
+						options={{ headerShown: false }}
+					/>
+					<Stack.Screen
+						name="GerarSenha"
+						component={GerarSenha}
+						options={{ headerShown: false }}
+					/>
+					<Stack.Screen
+						name="RecadastrarAssociado"
+						component={RecadastrarAssociado}
 						options={{ headerShown: false }}
 					/>
 				</Stack.Navigator>

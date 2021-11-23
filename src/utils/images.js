@@ -12,6 +12,9 @@ import linha_verde from "../../assets/img/linha_verde.png";
 import circulo_estrela_vazada from "../../assets/img/circulo_estrela_vazada.png";
 import circulo_branco from "../../assets/img/circulo_branco.png";
 import fechar from "../../assets/img/fechar.png";
+import chave from "../../assets/img/chave.png";
+import sucesso from "../../assets/img/success.png";
+import atencao from "../../assets/img/warning.png";
 
 export default {
 	bg,
@@ -28,4 +31,7 @@ export default {
 	circulo_branco,
 	circulo_estrela_vazada,
 	fechar,
+	chave,
+	sucesso,
+	atencao,
 };

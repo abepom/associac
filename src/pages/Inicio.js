@@ -24,7 +24,11 @@ function Inicio({ navigation }) {
 			link: "ConsultarDescontos",
 		},
 		{ id: 3, image: images.gerar_senha, link: "GerarSenha" },
-		{ id: 4, image: images.recadastrar_associado, link: "Recadastrar" },
+		{
+			id: 4,
+			image: images.recadastrar_associado,
+			link: "RecadastrarAssociado",
+		},
 		{
 			id: 5,
 			image: images.cadastrar_plano_saude,

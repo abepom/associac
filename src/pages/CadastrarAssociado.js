@@ -24,6 +24,7 @@ import Header from "../components/Header";
 import styles, { tema } from "../../assets/style/Style";
 
 function CadastrarAssociado(props) {
+	const { navigation } = props;
 	const [associado, setAssociado] = useState({
 		matricula: "",
 		sexo: { Name: "", Value: "" },
@@ -615,7 +616,9 @@ function CadastrarAssociado(props) {
 										<View style={{ flex: 1 }}></View>
 										<View style={{ flex: 2 }}>
 											<TouchableOpacity
-												onPress={() => console.log("RECADASTRAR")}
+												onPress={() =>
+													navigation.navigate("RecadastrarAssociado")
+												}
 												style={{
 													flexDirection: "row",
 													flex: 1,
