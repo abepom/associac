@@ -2384,6 +2384,11 @@ escape-html@~1.0.3:
   resolved "https://registry.yarnpkg.com/escape-html/-/escape-html-1.0.3.tgz#0258eae4d3d0c0974de1c169188ef0051d1d1988"
   integrity sha1-Aljq5NPQwJdN4cFpGI7wBR0dGYg=
 
+escape-string-regexp@2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/escape-string-regexp/-/escape-string-regexp-2.0.0.tgz#a30304e99daa32e23b2fd20f51babd07cffca344"
+  integrity sha512-UpzcLCXolUWcNu5HtVMHYdXJjArjsF9C0aNnquZYY4uW/Vu0miy5YoWvbV345HauVvcAUnpRuhMMcqTcGOY2+w==
+
 escape-string-regexp@^1.0.5:
   version "1.0.5"
   resolved "https://registry.yarnpkg.com/escape-string-regexp/-/escape-string-regexp-1.0.5.tgz#1b61c0562190a8dff6ae3bb2cf0200ca130b86d4"
@@ -2536,6 +2541,21 @@ expo-modules-core@~0.4.4, expo-modules-core@~0.4.5:
   dependencies:
     compare-versions "^3.4.0"
     invariant "^2.2.4"
+
+expo-modules-core@~0.4.7:
+  version "0.4.8"
+  resolved "https://registry.yarnpkg.com/expo-modules-core/-/expo-modules-core-0.4.8.tgz#6fed03fca9370793b0a4bebc4fe1a44b213ed445"
+  integrity sha512-PElvF9/mw8TZ0FG3cQkQHB1yZEvtSrQ9nh90pINuTwmIUrxC427rgGoPrALsMaX90h94jTkPHODXHuX+Xsl/rg==
+  dependencies:
+    compare-versions "^3.4.0"
+    invariant "^2.2.4"
+
+expo-print@^11.0.4:
+  version "11.0.4"
+  resolved "https://registry.yarnpkg.com/expo-print/-/expo-print-11.0.4.tgz#8d5096b543c130fe9d31993f1411d249db987610"
+  integrity sha512-iKFoEJavMdqNUs0mZoCp9GFC0pWEvRzi+vJS3Ufn/S3ITGMBE6FUSi7V1P7jT0leJjOD3ivreQUzWH8hiuJGvA==
+  dependencies:
+    expo-modules-core "~0.4.7"
 
 expo-status-bar@~1.1.0:
   version "1.1.0"
@@ -4609,6 +4629,11 @@ react-native-screens@~3.8.0:
   dependencies:
     warn-once "^0.1.0"
 
+react-native-signature-canvas@^4.3.0:
+  version "4.3.0"
+  resolved "https://registry.yarnpkg.com/react-native-signature-canvas/-/react-native-signature-canvas-4.3.0.tgz#8f47e2671522664a66049a220613012c738fa3b2"
+  integrity sha512-RgAUmgHmPeZWAKwYcLqFYRKm2kL1q/yHd2CHUch1nLuVd82D+HCjIQ8WOdJSjWfgss3llRU4PBvnjU0aEhj8DQ==
+
 react-native-web@0.17.1:
   version "0.17.1"
   resolved "https://registry.yarnpkg.com/react-native-web/-/react-native-web-0.17.1.tgz#90d473c89dd99b88bc9830b2a9fcdd2fc5f04902"
@@ -4621,6 +4646,14 @@ react-native-web@0.17.1:
     inline-style-prefixer "^6.0.0"
     normalize-css-color "^1.0.2"
     prop-types "^15.6.0"
+
+react-native-webview@^11.14.3:
+  version "11.14.3"
+  resolved "https://registry.yarnpkg.com/react-native-webview/-/react-native-webview-11.14.3.tgz#31da92b8fd21f4d1192e057867478598153a6f5d"
+  integrity sha512-y/+7mE6by/uLGSIVmlp1xpJvL37rAuOL90EWTJYKZWL5iM8lN+pQkj/zwcPcGu4zNmuHdXXUk/cMR8hE89mNYg==
+  dependencies:
+    escape-string-regexp "2.0.0"
+    invariant "2.2.4"
 
 react-native@0.64.2:
   version "0.64.2"

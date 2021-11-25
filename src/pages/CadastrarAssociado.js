@@ -251,7 +251,7 @@ function CadastrarAssociado(props) {
 			Alert.alert("ATENÇÃO!", "CABEÇA DE BIGORNA!");
 		} else {
 			const response = await fetch(
-				`https://viacep.com.br/ws/${associado.cep.replace(/-/g, "")}/json/`,
+				`https://viacep.com.br/ws/${associado.cep.replace(/[-.]/g, "")}/json/`,
 				{
 					method: "GET",
 					mode: "no-cors",
