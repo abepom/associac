@@ -7,8 +7,8 @@ import {
 	Image,
 	RefreshControl,
 	ScrollView,
-	Alert,
 	Modal,
+	Keyboard,
 } from "react-native";
 import { TextInput } from "react-native-paper";
 import { MaskService, TextInputMask } from "react-native-masked-text";
@@ -20,11 +20,11 @@ import Header from "../components/Header";
 import Loading from "../components/Loading";
 import Messages from "../components/Messages";
 import styles, { tema } from "../../assets/style/Style";
+import Alert from "../components/Alert";
 
 function ConsultarDescontos(props) {
 	let data_atual = new Date();
 	let total = 0;
-	let total_descontos_hospitalares = 0;
 	const [matricula, setMatricula] = useState("");
 	const [associado, setAssociado] = useState({
 		matricula: "",
@@ -45,6 +45,7 @@ function ConsultarDescontos(props) {
 		useState(false);
 	const [procedimentosCopart, setProcedimentosCopart] = useState([]);
 	const [carregandoProcedimento, setCarregandoProcedimento] = useState(false);
+	const [alerta, setAlerta] = useState({});
 
 	const meses = [
 		{ Name: "JANEIRO", Value: 1 },
@@ -63,7 +64,7 @@ function ConsultarDescontos(props) {
 
 	const anos = [];
 
-	for (let i = 2020; i >= 1993; i--) {
+	for (let i = data_atual.getFullYear(); i >= 1993; i--) {
 		anos.push({ Name: `${i}`, Value: i });
 	}
 
@@ -90,6 +91,8 @@ function ConsultarDescontos(props) {
 				cartao: `${matricula}00001`,
 			});
 
+			console.log(retorno);
+
 			setAssociado(retorno);
 
 			const data = await api.associados.get("/descontosDoMes", {
@@ -101,8 +104,17 @@ function ConsultarDescontos(props) {
 			setCarregando(false);
 			setMostrarDados(true);
 			setDescontos([...data.descontos]);
+			Keyboard.dismiss();
 		} else {
-			Alert.alert("ATENÇÃO!", "Preencha a matricula");
+			setAlerta({
+				visible: true,
+				title: "ATENÇÃO!",
+				message: "Para prosseguir é obrigatório informar a matrícula.",
+				type: "danger",
+				confirmText: "FECHAR",
+				showConfirm: true,
+				showCancel: false,
+			});
 		}
 	}
 
@@ -276,8 +288,9 @@ function ConsultarDescontos(props) {
 							<View style={{ flex: 1, marginHorizontal: 5 }}>
 								<TextInput
 									label="Matrícula"
+									mode={"outlined"}
 									value={matricula}
-									mode="outlined"
+									theme={tema}
 									keyboardType={"numeric"}
 									maxLength={6}
 									onChangeText={(text) => setMatricula(text)}
@@ -469,47 +482,44 @@ function ConsultarDescontos(props) {
 											}
 											style={styles.containerScroll}
 										>
-											<View
-												style={{
-													width: "100%",
-													backgroundColor: tema.colors.background,
-													borderRadius: 6,
-													padding: 20,
-													marginBottom: 20,
-													elevation: 2,
-													flexDirection: "row",
-												}}
-											>
-												<View style={{ flex: 1 }}>
-													<Text style={{ fontWeight: "bold" }}>
-														{associado.nome}
-													</Text>
-													{associado.tipo === "01" ? (
-														<Text style={{ color: tema.colors.verde }}>
-															ASSOCIADO ABEPOM
+											{associado.status && (
+												<View
+													style={{
+														width: "100%",
+														backgroundColor: tema.colors.background,
+														borderRadius: 6,
+														padding: 20,
+														marginBottom: 20,
+														elevation: 2,
+														flexDirection: "row",
+													}}
+												>
+													<View style={{ flex: 1 }}>
+														<Text style={{ fontWeight: "bold" }}>
+															{associado.nome}
 														</Text>
-													) : (
-														<Text style={{ color: tema.colors.vermelho }}>
-															NÃO ASSOCIADO
+														{associado.tipo === "01" ? (
+															<Text style={{ color: tema.colors.verde }}>
+																ASSOCIADO ABEPOM
+															</Text>
+														) : (
+															<Text style={{ color: tema.colors.vermelho }}>
+																NÃO ASSOCIADO
+															</Text>
+														)}
+													</View>
+													<View style={{ flex: 1 }}>
+														<Text style={{ textAlign: "right" }}>
+															Nascimento: {associado.nascimento}
 														</Text>
-													)}
+														<Text style={{ textAlign: "right" }}>
+															{associado.email}
+														</Text>
+													</View>
 												</View>
-												<View style={{ flex: 1 }}>
-													<Text style={{ textAlign: "right" }}>
-														Nascimento: {associado.nascimento}
-													</Text>
-													<Text style={{ textAlign: "right" }}>
-														{associado.email}
-													</Text>
-												</View>
-											</View>
+											)}
 											{descontos.length > 0 ? (
 												descontos.map((desconto, index) => {
-													if (desconto.filtro == 3) {
-														total_descontos_hospitalares +=
-															desconto.valor_parcela;
-													}
-
 													desconto.pago
 														? (total += 0)
 														: desconto.valor_parcela
@@ -682,10 +692,15 @@ function ConsultarDescontos(props) {
 														</View>
 													);
 												})
+											) : !associado.status ? (
+												<Messages
+													titulo={`MATRÍCULA INVÁLIDA!`}
+													subtitulo="A matrícula informada não foi encontrada ou está inválida."
+												/>
 											) : (
 												<Messages
-													titulo={`NÃO HÁ DESCONTOS !`}
-													subtitulo="Não há nenhum desconto para o mês/ano e filtro selecionado."
+													titulo={`NÃO HÁ DESCONTOS!`}
+													subtitulo="Não há nenhum desconto para o mês/ano e matrícula informada."
 												/>
 											)}
 											<View style={{ height: 60 }}></View>
@@ -700,7 +715,7 @@ function ConsultarDescontos(props) {
 					style={[
 						styles.containerTotal,
 						styles.centralizado,
-						{ height: 60, paddingVertical: 5 },
+						{ height: 80, paddingVertical: 5 },
 					]}
 				>
 					<View
@@ -713,7 +728,7 @@ function ConsultarDescontos(props) {
 						<Text
 							style={{
 								color: "#fff",
-								fontSize: 12,
+								fontSize: 20,
 							}}
 						>
 							TOTAL DE {("0" + mes.Value).slice(-2)}/{ano.Value}:
@@ -730,7 +745,7 @@ function ConsultarDescontos(props) {
 								<Text
 									style={{
 										color: "#fff",
-										fontSize: 18,
+										fontSize: 20,
 										fontWeight: "bold",
 										marginLeft: 10,
 									}}
@@ -742,6 +757,7 @@ function ConsultarDescontos(props) {
 					</View>
 				</View>
 			</SafeAreaView>
+			<Alert {...props} alerta={alerta} setAlerta={setAlerta} />
 		</>
 	);
 }

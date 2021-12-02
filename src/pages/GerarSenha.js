@@ -5,7 +5,7 @@ import {
 	Text,
 	TouchableOpacity,
 	Image,
-	Alert,
+	Keyboard,
 } from "react-native";
 import { TextInputMask } from "react-native-masked-text";
 import { TextInput } from "react-native-paper";
@@ -15,6 +15,7 @@ import Header from "../components/Header";
 import Loading from "../components/Loading";
 import Messages from "../components/Messages";
 import images from "../utils/images";
+import Alert from "../components/Alert";
 
 function GerarSenha(props) {
 	const { navigation } = props;
@@ -22,6 +23,7 @@ function GerarSenha(props) {
 	const [associado, setAssociado] = useState({});
 	const [carregando, setCarregando] = useState(false);
 	const [mostrarDados, setMostrarDados] = useState(false);
+	const [alerta, setAlerta] = useState({});
 
 	const verificarMatricula = async () => {
 		if (matricula !== "") {
@@ -30,13 +32,20 @@ function GerarSenha(props) {
 				cartao: `${matricula}00001`,
 			});
 
-			console.log(retorno);
-
 			setAssociado(retorno);
 			setCarregando(false);
 			setMostrarDados(true);
+			Keyboard.dismiss();
 		} else {
-			Alert.alert("ATENÇÃO!", "Preencha a matricula");
+			setAlerta({
+				visible: true,
+				title: "ATENÇÃO!",
+				message: "Para prosseguir é obrigatório informar a matrícula.",
+				type: "danger",
+				confirmText: "FECHAR",
+				showConfirm: true,
+				showCancel: false,
+			});
 		}
 	};
 
@@ -46,12 +55,31 @@ function GerarSenha(props) {
 			celular: associado.celular,
 		});
 
-		Alert.alert(retorno.title, retorno.message);
-
 		if (retorno.status) {
 			setMatricula("");
 			setAssociado({});
 			setMostrarDados(false);
+
+			setAlerta({
+				visible: true,
+				title: retorno.title,
+				message:
+					"Uma nova senha será enviada para o celular do titular. Caso o titular não receba o SMS, entre em contato com a ABEPOM.",
+				type: "success",
+				confirmText: "FECHAR",
+				showConfirm: true,
+				showCancel: false,
+			});
+		} else {
+			setAlerta({
+				visible: true,
+				title: retorno.title,
+				message: retorno.message,
+				type: "danger",
+				confirmText: "FECHAR",
+				showConfirm: true,
+				showCancel: false,
+			});
 		}
 	};
 
@@ -78,6 +106,7 @@ function GerarSenha(props) {
 								label="Matrícula"
 								value={matricula}
 								mode="outlined"
+								theme={tema}
 								keyboardType={"numeric"}
 								maxLength={6}
 								onChangeText={(text) => setMatricula(text)}
@@ -296,6 +325,7 @@ function GerarSenha(props) {
 					</View>
 				</View>
 			</SafeAreaView>
+			<Alert {...props} alerta={alerta} setAlerta={setAlerta} />
 		</>
 	);
 }

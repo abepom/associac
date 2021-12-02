@@ -44,7 +44,7 @@ function Header(props) {
 					<View style={{ paddingRight: 10 }}>
 						<Image
 							source={imagens.logo_abepom}
-							style={{ width: 25, height: 25 }}
+							style={{ width: 35, height: 35 }}
 						/>
 					</View>
 					<View style={{ justifyContent: "center", alignItems: "center" }}>
@@ -66,7 +66,7 @@ function Header(props) {
 								) : null}
 							</View>
 						) : (
-							<Text style={{ color: "#fff", fontSize: 17 }}>
+							<Text style={{ color: "#fff", fontSize: 20 }}>
 								{props.titulo}
 							</Text>
 						)}

@@ -5,9 +5,9 @@ import {
 	Text,
 	TouchableOpacity,
 	Image,
-	Alert,
 	ScrollView,
 	Modal,
+	Keyboard,
 } from "react-native";
 import { TextInputMask } from "react-native-masked-text";
 import { Button, IconButton, TextInput } from "react-native-paper";
@@ -21,6 +21,7 @@ import images from "../utils/images";
 import Signature from "react-native-signature-canvas";
 import * as Print from "expo-print";
 import { WebView } from "react-native-webview";
+import Alert from "../components/Alert";
 
 function RecadastrarAssociado(props) {
 	const ref = useRef();
@@ -37,6 +38,7 @@ function RecadastrarAssociado(props) {
 	const [modal, setModal] = useState(false);
 	const [pdf, setPdf] = useState("");
 	const [btnRecadastrar, setBtnRecadastrar] = useState(false);
+	const [alerta, setAlerta] = useState({});
 
 	useEffect(() => {
 		listarCidades();
@@ -55,8 +57,17 @@ function RecadastrarAssociado(props) {
 			setMostrarDados(true);
 			setBtnRecadastrar(false);
 			setPdf("");
+			Keyboard.dismiss();
 		} else {
-			Alert.alert("ATENÇÃO!", "Preencha a matricula");
+			setAlerta({
+				visible: true,
+				title: "ATENÇÃO!",
+				message: "Para prosseguir é obrigatório informar a matrícula.",
+				type: "danger",
+				confirmText: "FECHAR",
+				showConfirm: true,
+				showCancel: false,
+			});
 		}
 	};
 
@@ -92,7 +103,15 @@ function RecadastrarAssociado(props) {
 
 	async function buscarCep() {
 		if (associado.cep === "" || associado.cep?.length < 8) {
-			Alert.alert("ATENÇÃO!", "CABEÇA DE BIGORNA!");
+			setAlerta({
+				visible: true,
+				title: "ATENÇÃO!",
+				message: "Para prosseguir é obrigatório informar o CEP.",
+				type: "danger",
+				confirmText: "FECHAR",
+				showConfirm: true,
+				showCancel: false,
+			});
 		} else {
 			const response = await fetch(
 				`https://viacep.com.br/ws/${associado.cep.replace(/[-.]/g, "")}/json/`,
@@ -105,7 +124,15 @@ function RecadastrarAssociado(props) {
 			let dados = await response.json();
 
 			if (dados.erro) {
-				Alert.alert("ATENÇÃO!", "CEP informado inválido.");
+				setAlerta({
+					visible: true,
+					title: "ATENÇÃO!",
+					message: "O CEP informado é inválido.",
+					type: "danger",
+					confirmText: "FECHAR",
+					showConfirm: true,
+					showCancel: false,
+				});
 			} else {
 				let cid = associado.cidade;
 
@@ -135,8 +162,6 @@ function RecadastrarAssociado(props) {
 			usuario: "bruno.horn",
 		});
 
-		Alert.alert(retorno.title, retorno.message);
-
 		if (retorno.status) {
 			setAssociado({
 				sexo: { Name: "", Value: "" },
@@ -145,6 +170,26 @@ function RecadastrarAssociado(props) {
 			});
 			setMatricula("");
 			setMostrarDados(false);
+
+			setAlerta({
+				visible: true,
+				title: retorno.title,
+				message: retorno.message,
+				type: "success",
+				confirmText: "FECHAR",
+				showConfirm: true,
+				showCancel: false,
+			});
+		} else {
+			setAlerta({
+				visible: true,
+				title: retorno.title,
+				message: retorno.message,
+				type: "danger",
+				confirmText: "FECHAR",
+				showConfirm: true,
+				showCancel: false,
+			});
 		}
 	}
 
@@ -231,6 +276,16 @@ function RecadastrarAssociado(props) {
 	};
 
 	const handleOK = async (signature) => {
+		setModal(false);
+		setAlerta({
+			visible: true,
+			title: "CARREGANDO ASSINATURA",
+			message: <Loading size={125} />,
+			showConfirm: false,
+			showCancel: false,
+			showIcon: false,
+		});
+
 		let html =
 			pdf +
 			` 
@@ -270,10 +325,20 @@ function RecadastrarAssociado(props) {
 		);
 
 		if (data.status) {
-			setModal(false);
+			setAlerta({ visible: false });
 			setBtnRecadastrar(true);
 		} else {
-			Alert.alert(data.title, data.message);
+			setAlerta({
+				visible: true,
+				title: data.title,
+				message: data.message,
+				type: "danger",
+				cancelText: "FECHAR",
+				confirmText: "OK",
+				showConfirm: true,
+				showCancel: true,
+				confirmFunction: () => setModal(true),
+			});
 		}
 	};
 
@@ -426,6 +491,7 @@ function RecadastrarAssociado(props) {
 								label="Matrícula"
 								value={matricula}
 								mode="outlined"
+								theme={tema}
 								keyboardType={"numeric"}
 								maxLength={6}
 								onChangeText={(text) => setMatricula(text)}
@@ -1038,21 +1104,39 @@ function RecadastrarAssociado(props) {
 												<View style={{ flex: 1 }} />
 												<View style={{ flex: 2 }}>
 													{btnRecadastrar ? (
-														<TouchableOpacity
-															onPress={() => setModal(true)}
-															style={{
-																backgroundColor: tema.colors.verde,
-																justifyContent: "center",
-																alignContent: "center",
-																alignItems: "center",
-																padding: 15,
-																borderRadius: 6,
-															}}
-														>
-															<Text style={{ color: "#fff", fontSize: 15 }}>
-																RECADASTRAR ASSOCIADO
-															</Text>
-														</TouchableOpacity>
+														<View style={{ flexDirection: "row" }}>
+															<TouchableOpacity
+																onPress={() => recadastrar()}
+																style={{
+																	backgroundColor: tema.colors.verde,
+																	justifyContent: "center",
+																	alignContent: "center",
+																	alignItems: "center",
+																	padding: 15,
+																	borderRadius: 6,
+																	marginRight: 10,
+																}}
+															>
+																<Text style={{ color: "#fff", fontSize: 15 }}>
+																	RECADASTRAR ASSOCIADO
+																</Text>
+															</TouchableOpacity>
+															<TouchableOpacity
+																onPress={() => abrirModal()}
+																style={{
+																	backgroundColor: tema.colors.primary,
+																	justifyContent: "center",
+																	alignContent: "center",
+																	alignItems: "center",
+																	padding: 15,
+																	borderRadius: 6,
+																}}
+															>
+																<Text style={{ color: "#fff", fontSize: 15 }}>
+																	RECOLHER ASSINATURA
+																</Text>
+															</TouchableOpacity>
+														</View>
 													) : (
 														<TouchableOpacity
 															onPress={() => abrirModal()}
@@ -1081,6 +1165,9 @@ function RecadastrarAssociado(props) {
 					</View>
 				</View>
 			</SafeAreaView>
+			{alerta.visible && (
+				<Alert {...props} alerta={alerta} setAlerta={setAlerta} />
+			)}
 		</>
 	);
 }

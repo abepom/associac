@@ -4,7 +4,7 @@ export const LARGURA_DEVICE = Dimensions.get("window").width;
 export const ALTURA_DEVICE = Dimensions.get("window").height;
 
 export const tema = {
-	roundness: 2,
+	roundness: 5,
 	colors: {
 		primary: "#03254E",
 		accent: "#114267",
@@ -14,6 +14,7 @@ export const tema = {
 		text: "#03254E",
 		disabled: "#717171",
 		placeholder: "#2A629A",
+		text: "#03254E",
 		backdrop: "rgba(52, 52, 52, 0.8)",
 		verde: "#6CAC67",
 		amarelo: "#d3c200",

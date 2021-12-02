@@ -1,5 +1,5 @@
 import React from "react";
-import { Dimensions, View } from "react-native";
+import { View } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import Inicio from "./src/pages/Inicio";
@@ -10,6 +10,11 @@ import { StatusBar } from "expo-status-bar";
 import Constants from "expo-constants";
 import GerarSenha from "./src/pages/GerarSenha";
 import RecadastrarAssociado from "./src/pages/RecadastrarAssociado";
+import PlanoDeSaude from "./src/pages/PlanoDeSaude";
+import Dependentes from "./src/pages/Dependentes";
+import AlterarTipoDependente from "./src/pages/AlterarTipoDependente";
+import { StoreProvider } from "./src/store/store";
+import Sair from "./src/pages/Sair";
 
 const Stack = createNativeStackNavigator();
 
@@ -23,38 +28,60 @@ export default function App() {
 					marginTop: Constants.statusBarHeight,
 				}}
 			>
-				<Stack.Navigator>
-					<Stack.Screen
-						name="Login"
-						component={Login}
-						options={{ headerShown: false }}
-					/>
-					<Stack.Screen
-						name="Inicio"
-						component={Inicio}
-						options={{ headerShown: false }}
-					/>
-					<Stack.Screen
-						name="CadastrarAssociado"
-						component={CadastrarAssociado}
-						options={{ headerShown: false }}
-					/>
-					<Stack.Screen
-						name="ConsultarDescontos"
-						component={ConsultarDescontos}
-						options={{ headerShown: false }}
-					/>
-					<Stack.Screen
-						name="GerarSenha"
-						component={GerarSenha}
-						options={{ headerShown: false }}
-					/>
-					<Stack.Screen
-						name="RecadastrarAssociado"
-						component={RecadastrarAssociado}
-						options={{ headerShown: false }}
-					/>
-				</Stack.Navigator>
+				<StoreProvider>
+					<Stack.Navigator>
+						<Stack.Screen
+							name="Login"
+							component={Login}
+							options={{ headerShown: false }}
+						/>
+						<Stack.Screen
+							name="Inicio"
+							component={Inicio}
+							options={{ headerShown: false }}
+						/>
+						<Stack.Screen
+							name="CadastrarAssociado"
+							component={CadastrarAssociado}
+							options={{ headerShown: false }}
+						/>
+						<Stack.Screen
+							name="ConsultarDescontos"
+							component={ConsultarDescontos}
+							options={{ headerShown: false }}
+						/>
+						<Stack.Screen
+							name="GerarSenha"
+							component={GerarSenha}
+							options={{ headerShown: false }}
+						/>
+						<Stack.Screen
+							name="RecadastrarAssociado"
+							component={RecadastrarAssociado}
+							options={{ headerShown: false }}
+						/>
+						<Stack.Screen
+							name="PlanoDeSaude"
+							component={PlanoDeSaude}
+							options={{ headerShown: false }}
+						/>
+						<Stack.Screen
+							name="Dependentes"
+							component={Dependentes}
+							options={{ headerShown: false }}
+						/>
+						<Stack.Screen
+							name="AlterarTipoDependente"
+							component={AlterarTipoDependente}
+							options={{ headerShown: false }}
+						/>
+						<Stack.Screen
+							name="Sair"
+							component={Sair}
+							options={{ headerShown: false }}
+						/>
+					</Stack.Navigator>
+				</StoreProvider>
 			</View>
 		</NavigationContainer>
 	);

@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
 	View,
 	Text,
 	SafeAreaView,
 	TouchableOpacity,
 	Image,
-	Alert,
 	ScrollView,
 	Modal,
 } from "react-native";
@@ -22,9 +21,13 @@ import * as ImagePicker from "expo-image-picker";
 import * as Camera from "expo-camera";
 import Header from "../components/Header";
 import styles, { tema } from "../../assets/style/Style";
+import Alert from "../components/Alert";
+import Loading from "../components/Loading";
+import { useUsuario } from "../store/Usuario";
 
 function CadastrarAssociado(props) {
 	const { navigation } = props;
+	const [usuario] = useUsuario();
 	const [associado, setAssociado] = useState({
 		matricula: "",
 		sexo: { Name: "", Value: "" },
@@ -53,9 +56,30 @@ function CadastrarAssociado(props) {
 	const [rg, setRg] = useState("1");
 	const [contraCheque, setContraCheque] = useState("1");
 	const [comprovanteResidencia, setComprovanteResidencia] = useState("1");
-	const [visible, setVisible] = useState(false);
-	const showModal = () => setVisible(true);
-	const hideModal = () => setVisible(false);
+	const [modalJoia, setModalJoia] = useState(false);
+	const [alerta, setAlerta] = useState({});
+	const [carregando, setCarregando] = useState(false);
+
+	const nascimentoRef = useRef(null);
+	const cpfRef = useRef(null);
+	const rgRef = useRef(null);
+	const comercialRef = useRef(null);
+	const residencialRef = useRef(null);
+	const celularRef = useRef(null);
+	const emailRef = useRef(null);
+	const digitoRef = useRef(null);
+	const numeroRef = useRef(null);
+	const complementoRef = useRef(null);
+	const bairroRef = useRef(null);
+	const identificadorRef = useRef(null);
+	const agenciaRef = useRef(null);
+	const contaRef = useRef(null);
+	const digitoContaRef = useRef(null);
+	const mensalidadeRef = useRef(null);
+	const obsRef = useRef(null);
+
+	const showModal = () => setModalJoia(true);
+	const hideModal = () => setModalJoia(false);
 
 	const onToggleEstornado = () =>
 		setAssociado({ ...associado, estornado: !associado.estornado });
@@ -171,6 +195,8 @@ function CadastrarAssociado(props) {
 	const verificarMatricula = async () => {
 		if (associado.matricula?.length == 6) {
 			if (!isNaN(associado.matricula)) {
+				setCarregando(true);
+
 				const data = await api.associados.get("/verificarMatricula", {
 					cartao: associado.matricula,
 				});
@@ -190,24 +216,51 @@ function CadastrarAssociado(props) {
 					setBtnRecadastrar(false);
 					setNextStep(true);
 				}
+
+				setCarregando(false);
 			} else {
 				setBtnRecadastrar(false);
 				setMostrarDadosAssociado(false);
 				setNextStep(false);
-				Alert.alert("ATENÇÃO", "CUIDADO");
+				setAlerta({
+					visible: true,
+					title: "ATENÇÃO!",
+					message: "A matrícula informada está inválida.",
+					type: "danger",
+					confirmText: "FECHAR",
+					showConfirm: true,
+					showCancel: false,
+				});
 			}
 		} else {
-			Alert.alert("ATENÇÃO!", "Digita só numero né ô cabeça mole.");
+			setAlerta({
+				visible: true,
+				title: "ATENÇÃO!",
+				message:
+					"Para prosseguir é necessário informar a matrícula corretamente.",
+				type: "warning",
+				confirmText: "Ok, Informar a Matrícula!",
+				showConfirm: true,
+				showCancel: false,
+			});
 		}
 	};
 
 	const cadastrarAssociado = async () => {
 		const data = await api.geral.post("/cadastrarAssociado", {
 			associado,
-			usuario: "bruno.horn",
+			usuario: usuario.usuario,
 		});
 
-		Alert.alert(data.title, data.message);
+		setAlerta({
+			visible: true,
+			title: data.title,
+			message: data.message,
+			showCancel: false,
+			showConfirm: true,
+			confirmText: "FECHAR",
+			type: data.status ? "success" : "danger",
+		});
 
 		if (data.status) {
 			setActiveStep(0);
@@ -239,7 +292,7 @@ function CadastrarAssociado(props) {
 			const data = await api.associados.get("/verificarCpf", {
 				cartao: associado.matricula + "00001",
 				cpf: associado.cpf,
-				usuario: "bruno.horn",
+				usuario: usuario.usuario,
 			});
 
 			return data.status;
@@ -248,7 +301,15 @@ function CadastrarAssociado(props) {
 
 	async function buscarCep() {
 		if (associado.cep === "" || associado.cep?.length < 8) {
-			Alert.alert("ATENÇÃO!", "CABEÇA DE BIGORNA!");
+			setAlerta({
+				visible: true,
+				title: "ATENÇÃO!",
+				message: "Para prosseguir é necessário preencher o CEP.",
+				showCancel: false,
+				showConfirm: true,
+				confirmText: "FECHAR",
+				type: "danger",
+			});
 		} else {
 			const response = await fetch(
 				`https://viacep.com.br/ws/${associado.cep.replace(/[-.]/g, "")}/json/`,
@@ -261,7 +322,15 @@ function CadastrarAssociado(props) {
 			let dados = await response.json();
 
 			if (dados.erro) {
-				Alert.alert("ATENÇÃO!", "CEP informado inválido.");
+				setAlerta({
+					visible: true,
+					title: "ATENÇÃO!",
+					message: "O CEP informado é incorreto.",
+					showCancel: false,
+					showConfirm: true,
+					confirmText: "FECHAR",
+					type: "danger",
+				});
 			} else {
 				let cid = associado.cidade;
 
@@ -292,7 +361,15 @@ function CadastrarAssociado(props) {
 			let permissao = await Camera.requestCameraPermissionsAsync();
 
 			if (permissao.status != "granted") {
-				alert("Você não forneceu permissão para acessar a CÂMERA.");
+				setAlerta({
+					visible: true,
+					title: "ATENÇÃO!",
+					message: "Você não forneceu permissão para acessar a câmera.",
+					showCancel: false,
+					showConfirm: true,
+					confirmText: "FECHAR",
+					type: "danger",
+				});
 				return;
 			}
 		}
@@ -311,7 +388,8 @@ function CadastrarAssociado(props) {
 
 			const formulario = new FormData();
 			formulario.append("matricula", `${associado.matricula}`);
-			formulario.append("usuario", "bruno.horn");
+			formulario.append("dependente", `00`);
+			formulario.append("usuario", usuario.usuario);
 			formulario.append("tipo", tipo);
 			formulario.append("file", {
 				uri,
@@ -347,10 +425,22 @@ function CadastrarAssociado(props) {
 	}
 
 	const goToNextStep = async () => {
+		let erros = 0;
+		let msgErro = "";
+
 		switch (activeStep) {
 			case 0:
 				if (associado.matricula?.length < 6 || isNaN(associado.matricula)) {
-					Alert.alert("ATENÇÃO!", "NAO PASSOU");
+					setAlerta({
+						visible: true,
+						title: "ATENÇÃO!",
+						message: "A matrícula encontra-se incorreta.",
+						showCancel: false,
+						showConfirm: true,
+						confirmText: "FECHAR",
+						type: "danger",
+					});
+
 					setPrevStep(false);
 				} else {
 					setPrevStep(true);
@@ -358,22 +448,63 @@ function CadastrarAssociado(props) {
 				}
 				break;
 			case 1:
+				erros = 0;
+				msgErro = "";
+
 				const cpfValido = await verificarCpf();
 
 				let data = new Date(formatDate(associado.nascimento, "AMD"));
 
+				if (associado?.nome?.length < 3) {
+					erros++;
+					msgErro += "O campo NOME não pode ser menor do que 3 caracteres.\n";
+				}
+
+				if (!isDate(data)) {
+					erros++;
+					msgErro += "O campo DATA DE NASCIMENTO está incorreto.\n";
+				}
+
+				if (associado?.sexo?.Name === "") {
+					erros++;
+					msgErro += "É obrigatório selecionar o SEXO.\n";
+				}
+
+				if (associado?.rg === "") {
+					erros++;
+					msgErro += "É obrigatório preencher o RG.\n";
+				}
+
+				if (associado?.digito === "") {
+					erros++;
+					msgErro += "É obrigatório preencher o DÍGITO DA MATRÍCULA.\n";
+				}
+
 				if (
-					associado.nome?.length < 3 ||
-					!isDate(data) ||
-					associado.sexo.Name === "" ||
-					associado.rg === "" ||
-					associado.digito === "" ||
-					(associado.telefone_comercial === "" &&
-						associado.telefone_residencial === "" &&
-						associado.celular === "") ||
-					!cpfValido
+					associado?.telefone_comercial === "" &&
+					associado?.telefone_residencial === "" &&
+					associado?.celular === ""
 				) {
-					Alert.alert("ATENÇÃO!", "NÃO PASSOU 2!");
+					erros++;
+					msgErro +=
+						"É obrigatório preencher pelo menos um telefone (RESIDENCIAL, COMERCIAL OU CELULAR).\n";
+				}
+
+				if (!cpfValido) {
+					erros++;
+					msgErro += "O campo CPF está inválido.\n";
+				}
+
+				if (erros > 0) {
+					setAlerta({
+						visible: true,
+						title: "ATENÇÃO!",
+						message: `Para prosseguir é necessário preencher corretamente os campos:\n\n${msgErro}`,
+						showCancel: false,
+						showConfirm: true,
+						confirmText: "OK, Corrigir campos",
+						type: "warning",
+					});
 				} else {
 					setActiveStep(2);
 					setTextNext("PRÓXIMO");
@@ -381,13 +512,39 @@ function CadastrarAssociado(props) {
 
 				break;
 			case 2:
-				if (
-					associado.cep.length < 8 ||
-					associado.endereco === "" ||
-					associado.bairro === "" ||
-					associado.cidade.Value === ""
-				) {
-					Alert.alert("ATENÇÃO!", "NÃO PASSOU");
+				erros = 0;
+				msgErro = "";
+
+				if (associado?.cep?.length < 8) {
+					erros++;
+					msgErro += "O CEP informado está incorreto.\n";
+				}
+
+				if (associado?.endereco === "") {
+					erros++;
+					msgErro += "É obrigatório preencher o ENDEREÇO.\n";
+				}
+
+				if (associado?.bairro === "") {
+					erros++;
+					msgErro += "É obrigatório preencher o BAIRRO.\n";
+				}
+
+				if (associado?.cidade === "") {
+					erros++;
+					msgErro += "É obrigatório selecionar a CIDADE.\n";
+				}
+
+				if (erros > 0) {
+					setAlerta({
+						visible: true,
+						title: "ATENÇÃO!",
+						message: `Para prosseguir é necessário preencher corretamente os campos:\n\n${msgErro}`,
+						showCancel: false,
+						showConfirm: true,
+						confirmText: "OK, Corrigir campos",
+						type: "warning",
+					});
 				} else {
 					setActiveStep(3);
 					setTextNext("PRÓXIMO");
@@ -407,16 +564,54 @@ function CadastrarAssociado(props) {
 					}
 				}
 
-				if (
-					associado.orgao.Name === "" ||
-					associado.local_trabalho.Name === "" ||
-					associado.funcao.Name === "" ||
-					associado.banco.Name === "" ||
-					associado.agencia === "" ||
-					associado.conta === "" ||
-					associado.forma_desconto.Name === ""
-				) {
-					Alert.alert("ATENÇÃO!", "NÃO PASSOU");
+				erros = 0;
+				msgErro = "";
+
+				if (associado?.orgao?.Name === "") {
+					erros++;
+					msgErro += "É obrigatório selecionar o ÓRGÃO DE RECEBIMENTO.\n";
+				}
+
+				if (associado?.local_trabalho?.Name === "") {
+					erros++;
+					msgErro += "É obrigatório selecionar o LOCAL DE TRABALHO.\n";
+				}
+
+				if (associado?.funcao?.Name === "") {
+					erros++;
+					msgErro += "É obrigatório selecionar a FUNÇÃO.\n";
+				}
+
+				if (associado?.banco?.Name === "") {
+					erros++;
+					msgErro += "É obrigatório selecionar o BANCO.\n";
+				}
+
+				if (associado?.agencia === "") {
+					erros++;
+					msgErro += "É obrigatório preencher a AGÊNCIA.\n";
+				}
+
+				if (associado?.conta === "") {
+					erros++;
+					msgErro += "É obrigatório preencher a CONTA.\n";
+				}
+
+				if (associado?.forma_desconto?.Name === "") {
+					erros++;
+					msgErro += "É obrigatório selecionar a FORMA DE DESCONTO.\n";
+				}
+
+				if (erros > 0) {
+					setAlerta({
+						visible: true,
+						title: "ATENÇÃO!",
+						message: `Para prosseguir é necessário preencher corretamente os campos:\n\n${msgErro}`,
+						showCancel: false,
+						showConfirm: true,
+						confirmText: "OK, Corrigir campos",
+						type: "warning",
+					});
 				} else {
 					setActiveStep(4);
 					setTextNext("CADASTRAR");
@@ -424,13 +619,40 @@ function CadastrarAssociado(props) {
 
 				break;
 			case 4:
-				if (
-					cpf === "" ||
-					rg === "" ||
-					contraCheque === "" ||
-					comprovanteResidencia === ""
-				) {
-					Alert.alert("ATENÇÃO!", "Não passou. Precisa preencher tudo.");
+				erros = 0;
+				msgErro = "";
+
+				if (cpf === "") {
+					erros++;
+					msgErro += "É obrigatório enviar a imagem do CPF.\n";
+				}
+
+				if (rg === "") {
+					erros++;
+					msgErro += "É obrigatório enviar a imagem do RG.\n";
+				}
+
+				if (contraCheque === "") {
+					erros++;
+					msgErro += "É obrigatório enviar a imagem do CONTRA CHEQUE.\n";
+				}
+
+				if (comprovanteResidencia === "") {
+					erros++;
+					msgErro +=
+						"É obrigatório enviar a imagem do COMPROVANTE DE RESIDÊNCIA.\n";
+				}
+
+				if (erros > 0) {
+					setAlerta({
+						visible: true,
+						title: "ATENÇÃO!",
+						message: `Para prosseguir é necessário preencher corretamente os campos:\n\n${msgErro}`,
+						showCancel: false,
+						showConfirm: true,
+						confirmText: "OK, Corrigir campos",
+						type: "warning",
+					});
 				} else {
 					if (associado.data_saida == 1) {
 						showModal();
@@ -457,7 +679,7 @@ function CadastrarAssociado(props) {
 	return (
 		<>
 			<Header titulo={"Cadastrar Associado"} {...props} />
-			<Modal animationType="fade" transparent visible={visible}>
+			<Modal animationType="fade" transparent visible={modalJoia}>
 				<View
 					style={{
 						flex: 1,
@@ -478,7 +700,7 @@ function CadastrarAssociado(props) {
 						]}
 					>
 						<Text>
-							Atenção bruno.horn, este associado pagará joia, e esta será
+							Atenção {usuario.nome}, este associado pagará joia, e esta será
 							descontada em {associado.parcelas_joia} parcelas. Deseja
 							continuar?
 						</Text>
@@ -503,7 +725,7 @@ function CadastrarAssociado(props) {
 							textAlign: "center",
 							marginTop: 10,
 							marginBottom: 20,
-							fontSize: 17,
+							fontSize: 18,
 						}}
 					>
 						Preencha os campos abaixo para efetuar a inclusão do associado.
@@ -515,18 +737,23 @@ function CadastrarAssociado(props) {
 							completedProgressBarColor="#031e3f"
 							completedStepIconColor="#031e3f"
 							activeLabelColor="#031e3f"
+							labelFontSize={18}
 							marginBottom={100}
 							style={{ zIndex: 12 }}
 						>
 							<ProgressStep label="Matrícula" removeBtnRow>
 								<View style={{ flexDirection: "row" }}>
 									<View style={{ flex: 1 }}></View>
-									<View style={{ flex: 1 }}>
+									<View style={{ flex: 2 }}>
 										<TextInput
 											label="Matrícula"
+											mode={"outlined"}
 											value={associado.matricula}
 											keyboardType={"numeric"}
 											maxLength={6}
+											theme={tema}
+											style={{ fontSize: 25 }}
+											placeholder={"Digite a matrícula"}
 											onChangeText={(text) =>
 												setAssociado({ ...associado, matricula: text })
 											}
@@ -545,7 +772,7 @@ function CadastrarAssociado(props) {
 								</View>
 								<View style={{ flexDirection: "row", marginTop: 20 }}>
 									<View style={{ flex: 1 }}></View>
-									<View style={{ flex: 1 }}>
+									<View style={{ flex: 2 }}>
 										<TouchableOpacity
 											onPress={() => verificarMatricula()}
 											style={{
@@ -565,97 +792,123 @@ function CadastrarAssociado(props) {
 									</View>
 									<View style={{ flex: 1 }}></View>
 								</View>
-								{mostrarDadosAssociado && (
+								{carregando ? (
 									<View
 										style={{
-											flex: 1,
-											margin: 20,
-											backgroundColor: "#fff",
-											borderWidth: associado.tipo === "01" ? 2 : 0,
-											borderColor: associado.tipo === "01" ? "#07A85C" : "#fff",
-											padding: 20,
-											borderRadius: 6,
-											elevation: 1,
+											justifyContent: "center",
+											alignItems: "center",
+											marginTop: 40,
 										}}
 									>
-										{associado.status ? (
-											<>
-												<Text style={{ fontSize: 20, fontWeight: "bold" }}>
-													{associado.nome} ({associado.matricula})
-												</Text>
-												<Text style={{ fontSize: 18 }}>
-													SITUAÇÃO ATUAL:{" "}
-													<Text style={{ fontWeight: "bold" }}>
-														{associado.tipo !== "01"
-															? "NÃO ASSOCIADO - COM DADOS PRÉ-PREENCHIDOS"
-															: "ASSOCIADO ABEPOM"}
-													</Text>
-												</Text>
-												{associado.data_saida == 1 && (
-													<Text
-														style={{
-															color: tema.colors.vermelho,
-															fontSize: 15,
-														}}
-													>
-														O ASSOCIADO DEVERÁ PAGAR JOIA
-													</Text>
-												)}
-											</>
-										) : (
-											<>
-												<Text style={{ fontSize: 20, fontWeight: "bold" }}>
-													MILITAR SEM REGISTRO COM A ABEPOM
-												</Text>
-											</>
-										)}
+										<Loading size={110} />
 									</View>
-								)}
-								{btnRecadastrar && (
-									<View style={{ flexDirection: "row" }}>
-										<View style={{ flex: 1 }}></View>
-										<View style={{ flex: 2 }}>
-											<TouchableOpacity
-												onPress={() =>
-													navigation.navigate("RecadastrarAssociado")
-												}
+								) : (
+									<>
+										{mostrarDadosAssociado && (
+											<View
 												style={{
-													flexDirection: "row",
 													flex: 1,
 													margin: 20,
-													backgroundColor: "#031e3f",
-													justifyContent: "center",
+													backgroundColor: "#fff",
+													borderWidth: associado.tipo === "01" ? 2 : 0,
+													borderColor:
+														associado.tipo === "01" ? "#07A85C" : "#fff",
 													padding: 20,
 													borderRadius: 6,
+													elevation: 1,
 												}}
 											>
-												<Text
-													style={{
-														color: "#fff",
-														fontSize: 17,
-														marginRight: 10,
-													}}
-												>
-													RECADASTRAR ASSOCIADO
-												</Text>
-												<Image
-													source={images.seta}
-													style={{ width: 20, height: 20, tintColor: "#fff" }}
-													tintColor={"#fff"}
-												/>
-											</TouchableOpacity>
-										</View>
-										<View style={{ flex: 1 }}></View>
-									</View>
+												{associado.status ? (
+													<>
+														<Text style={{ fontSize: 20, fontWeight: "bold" }}>
+															{associado.nome} ({associado.matricula})
+														</Text>
+														<Text style={{ fontSize: 18 }}>
+															SITUAÇÃO ATUAL:{" "}
+															<Text style={{ fontWeight: "bold" }}>
+																{associado.tipo !== "01"
+																	? "NÃO ASSOCIADO - COM DADOS PRÉ-PREENCHIDOS"
+																	: "ASSOCIADO ABEPOM"}
+															</Text>
+														</Text>
+														{associado.data_saida == 1 && (
+															<Text
+																style={{
+																	color: tema.colors.vermelho,
+																	fontSize: 15,
+																}}
+															>
+																O ASSOCIADO DEVERÁ PAGAR JOIA
+															</Text>
+														)}
+													</>
+												) : (
+													<>
+														<Text style={{ fontSize: 20, fontWeight: "bold" }}>
+															MILITAR SEM REGISTRO COM A ABEPOM
+														</Text>
+													</>
+												)}
+											</View>
+										)}
+										{btnRecadastrar && (
+											<View style={{ flexDirection: "row" }}>
+												<View style={{ flex: 1 }}></View>
+												<View style={{ flex: 2 }}>
+													<TouchableOpacity
+														onPress={() =>
+															navigation.navigate("RecadastrarAssociado")
+														}
+														style={{
+															flexDirection: "row",
+															flex: 1,
+															marginVertical: 20,
+															backgroundColor: "#031e3f",
+															justifyContent: "center",
+															padding: 20,
+															borderRadius: 6,
+														}}
+													>
+														<Text
+															style={{
+																color: "#fff",
+																fontSize: 17,
+																marginRight: 10,
+															}}
+														>
+															RECADASTRAR ASSOCIADO
+														</Text>
+														<Image
+															source={images.seta}
+															style={{
+																width: 20,
+																height: 20,
+																tintColor: "#fff",
+															}}
+															tintColor={"#fff"}
+														/>
+													</TouchableOpacity>
+												</View>
+												<View style={{ flex: 1 }}></View>
+											</View>
+										)}
+									</>
 								)}
 							</ProgressStep>
-							<ProgressStep label="Dados Gerais" removeBtnRow>
+							<ProgressStep label="Geral" removeBtnRow>
 								<View style={{ flexDirection: "row", marginBottom: 15 }}>
-									<View style={{ flex: 3, marginRight: 5 }}>
+									<View style={{ flex: 4, marginRight: 5 }}>
 										<TextInput
 											label="Nome"
+											mode={"outlined"}
+											theme={tema}
 											value={associado.nome}
 											maxLength={40}
+											style={{ fontSize: 18 }}
+											returnKeyType={"next"}
+											onSubmitEditing={() =>
+												nascimentoRef?.current?._inputElement.focus()
+											}
 											onChangeText={(text) =>
 												setAssociado({ ...associado, nome: text })
 											}
@@ -664,8 +917,16 @@ function CadastrarAssociado(props) {
 									<View style={{ flex: 2 }}>
 										<TextInput
 											label="Data de Nascimento"
+											mode={"outlined"}
+											theme={tema}
 											value={associado.nascimento}
 											keyboardType={"numeric"}
+											style={{ fontSize: 18 }}
+											maxLength={10}
+											returnKeyType={"next"}
+											onSubmitEditing={() =>
+												cpfRef?.current?._inputElement.focus()
+											}
 											onChangeText={(text) =>
 												setAssociado({ ...associado, nascimento: text })
 											}
@@ -673,6 +934,7 @@ function CadastrarAssociado(props) {
 												<TextInputMask
 													{...props}
 													type={"custom"}
+													ref={nascimentoRef}
 													options={{
 														mask: "99/99/9999",
 													}}
@@ -682,14 +944,17 @@ function CadastrarAssociado(props) {
 									</View>
 								</View>
 								<View style={{ flexDirection: "row", marginBottom: 15 }}>
-									<View style={{ flex: 1, marginRight: 5 }}>
+									<View style={{ flex: 2, marginRight: 5 }}>
 										<TextInput
 											label="Sexo"
+											mode={"outlined"}
+											theme={tema}
+											style={{ fontSize: 18 }}
 											value={associado.sexo.Name.substring(0, 1).toUpperCase()}
 											onChangeText={(text) =>
 												setAssociado({ ...associado, sexo: text })
 											}
-											render={(props) => (
+											render={() => (
 												<PickerModal
 													renderSelectView={(disabled, selected, showModal) => (
 														<TouchableOpacity
@@ -703,7 +968,7 @@ function CadastrarAssociado(props) {
 															disabled={disabled}
 															onPress={showModal}
 														>
-															<View style={{ flex: 3, paddingTop: 15 }}>
+															<View style={{ flex: 3 }}>
 																<Text
 																	style={{ fontSize: associado.sexo ? 15 : 12 }}
 																>
@@ -761,14 +1026,21 @@ function CadastrarAssociado(props) {
 									<View style={{ flex: 2, marginRight: 5 }}>
 										<TextInput
 											label="CPF"
+											mode={"outlined"}
+											theme={tema}
 											value={associado.cpf}
 											maxLength={14}
+											style={{ fontSize: 18 }}
+											keyboardType={"number-pad"}
+											returnKeyType={"next"}
+											onSubmitEditing={() => rgRef?.current?.focus()}
 											onChangeText={(text) =>
 												setAssociado({ ...associado, cpf: text })
 											}
 											render={(props) => (
 												<TextInputMask
 													{...props}
+													ref={cpfRef}
 													type={"custom"}
 													options={{
 														mask: "999.999.999-99",
@@ -777,11 +1049,20 @@ function CadastrarAssociado(props) {
 											)}
 										/>
 									</View>
-									<View style={{ flex: 2, marginRight: 5 }}>
+									<View style={{ flex: 2 }}>
 										<TextInput
 											label="RG"
+											mode={"outlined"}
+											theme={tema}
 											value={associado.rg}
 											maxLength={15}
+											ref={rgRef}
+											returnKeyType={"next"}
+											onSubmitEditing={() =>
+												comercialRef?.current?._inputElement.focus()
+											}
+											keyboardType={"number-pad"}
+											style={{ fontSize: 18 }}
 											onChangeText={(text) =>
 												setAssociado({ ...associado, rg: text })
 											}
@@ -792,14 +1073,23 @@ function CadastrarAssociado(props) {
 									<View style={{ flex: 1, marginRight: 5 }}>
 										<TextInput
 											label="Telefone Comercial"
+											mode={"outlined"}
+											theme={tema}
 											value={associado.telefone_comercial}
-											keyboardType={"numeric"}
+											keyboardType={"number-pad"}
+											style={{ fontSize: 18 }}
+											maxLength={15}
+											returnKeyType={"next"}
+											onSubmitEditing={() =>
+												residencialRef?.current?._inputElement.focus()
+											}
 											onChangeText={(text) =>
 												setAssociado({ ...associado, telefone_comercial: text })
 											}
 											render={(props) => (
 												<TextInputMask
 													{...props}
+													ref={comercialRef}
 													type={"custom"}
 													options={{
 														mask: "(99) 9999-9999",
@@ -811,9 +1101,16 @@ function CadastrarAssociado(props) {
 									<View style={{ flex: 1, marginRight: 5 }}>
 										<TextInput
 											label="Telefone Residencial"
+											mode={"outlined"}
+											theme={tema}
 											value={associado.telefone_residencial}
 											maxLength={15}
-											keyboardType={"numeric"}
+											keyboardType={"number-pad"}
+											style={{ fontSize: 18 }}
+											returnKeyType={"next"}
+											onSubmitEditing={() =>
+												celularRef?.current?._inputElement.focus()
+											}
 											onChangeText={(text) =>
 												setAssociado({
 													...associado,
@@ -823,6 +1120,7 @@ function CadastrarAssociado(props) {
 											render={(props) => (
 												<TextInputMask
 													{...props}
+													ref={residencialRef}
 													type={"custom"}
 													options={{
 														mask: "(99) 9999-9999",
@@ -831,18 +1129,24 @@ function CadastrarAssociado(props) {
 											)}
 										/>
 									</View>
-									<View style={{ flex: 1, marginRight: 5 }}>
+									<View style={{ flex: 1 }}>
 										<TextInput
 											label="Celular"
+											mode={"outlined"}
+											theme={tema}
 											value={associado.celular}
-											maxLength={15}
+											maxLength={16}
 											keyboardType={"numeric"}
+											style={{ fontSize: 18 }}
+											returnKeyType={"next"}
+											onSubmitEditing={() => emailRef?.current?.focus()}
 											onChangeText={(text) =>
 												setAssociado({ ...associado, celular: text })
 											}
 											render={(props) => (
 												<TextInputMask
 													{...props}
+													ref={celularRef}
 													type={"custom"}
 													options={{
 														mask: "(99) 9 9999-9999",
@@ -853,30 +1157,37 @@ function CadastrarAssociado(props) {
 									</View>
 								</View>
 								<View style={{ flexDirection: "row", marginBottom: 15 }}>
-									<View style={{ flex: 1, marginRight: 5 }}>
+									<View style={{ flex: 4, marginRight: 5 }}>
 										<TextInput
 											label="E-mail"
+											mode={"outlined"}
+											theme={tema}
 											textContentType={"emailAddress"}
 											maxLength={60}
 											value={associado.email}
+											style={{ fontSize: 18 }}
+											ref={emailRef}
+											returnKeyType={"next"}
+											onSubmitEditing={() => digitoRef.current.focus()}
 											onChangeText={(text) =>
 												setAssociado({ ...associado, email: text })
 											}
 										/>
 									</View>
-								</View>
-								<View style={{ flexDirection: "row", marginBottom: 15 }}>
-									<View style={{ flex: 1, marginRight: 5 }}>
+									<View style={{ flex: 2 }}>
 										<TextInput
-											label="Dígito"
+											label="Díg. da Matrícula"
+											mode={"outlined"}
+											theme={tema}
 											value={associado.digito}
 											maxLength={1}
+											style={{ fontSize: 18 }}
+											ref={digitoRef}
 											onChangeText={(text) =>
 												setAssociado({ ...associado, digito: text })
 											}
 										/>
 									</View>
-									<View style={{ flex: 3, marginRight: 5 }}></View>
 								</View>
 							</ProgressStep>
 							<ProgressStep label="Endereço" removeBtnRow>
@@ -884,8 +1195,11 @@ function CadastrarAssociado(props) {
 									<View style={{ flex: 1, marginRight: 5 }}>
 										<TextInput
 											label="CEP"
+											mode={"outlined"}
+											theme={tema}
 											value={associado.cep}
 											maxLength={10}
+											style={{ fontSize: 18 }}
 											keyboardType={"numeric"}
 											onChangeText={(text) =>
 												setAssociado({ ...associado, cep: text })
@@ -927,8 +1241,13 @@ function CadastrarAssociado(props) {
 									<View style={{ flex: 4, marginRight: 5 }}>
 										<TextInput
 											label="Endereço"
+											mode={"outlined"}
+											theme={tema}
 											value={associado.endereco}
 											maxLength={50}
+											style={{ fontSize: 18 }}
+											returnKeyType={"next"}
+											onSubmitEditing={() => numeroRef?.current?.focus()}
 											onChangeText={(text) =>
 												setAssociado({ ...associado, endereco: text })
 											}
@@ -937,7 +1256,13 @@ function CadastrarAssociado(props) {
 									<View style={{ flex: 1, marginRight: 5 }}>
 										<TextInput
 											label="Número"
+											mode={"outlined"}
+											theme={tema}
+											ref={numeroRef}
+											style={{ fontSize: 18 }}
 											value={associado.numero}
+											returnKeyType={"next"}
+											onSubmitEditing={() => complementoRef?.current?.focus()}
 											onChangeText={(text) =>
 												setAssociado({ ...associado, numero: text })
 											}
@@ -948,8 +1273,14 @@ function CadastrarAssociado(props) {
 									<View style={{ flex: 1, marginRight: 5 }}>
 										<TextInput
 											label="Complemento"
+											mode={"outlined"}
+											ref={complementoRef}
+											theme={tema}
+											style={{ fontSize: 18 }}
 											value={associado.complemento}
 											maxLength={40}
+											returnKeyType={"next"}
+											onSubmitEditing={() => bairroRef?.current?.focus()}
 											onChangeText={(text) =>
 												setAssociado({ ...associado, complemento: text })
 											}
@@ -958,8 +1289,12 @@ function CadastrarAssociado(props) {
 									<View style={{ flex: 1, marginRight: 5 }}>
 										<TextInput
 											label="Bairro"
+											ref={bairroRef}
 											value={associado.bairro}
 											maxLength={35}
+											mode={"outlined"}
+											theme={tema}
+											style={{ fontSize: 18 }}
 											onChangeText={(text) =>
 												setAssociado({ ...associado, bairro: text })
 											}
@@ -968,6 +1303,9 @@ function CadastrarAssociado(props) {
 									<View style={{ flex: 1, marginRight: 5 }}>
 										<TextInput
 											label="Cidade"
+											mode={"outlined"}
+											theme={tema}
+											style={{ fontSize: 18 }}
 											value={
 												associado.cidade.Value == ""
 													? "SELECIONE A CIDADE"
@@ -990,7 +1328,7 @@ function CadastrarAssociado(props) {
 															disabled={disabled}
 															onPress={showModal}
 														>
-															<View style={{ flex: 3, paddingTop: 15 }}>
+															<View style={{ flex: 3 }}>
 																<Text
 																	style={{
 																		fontSize: associado.cidade ? 15 : 12,
@@ -1050,6 +1388,9 @@ function CadastrarAssociado(props) {
 									<View style={{ flex: 1, marginRight: 5 }}>
 										<TextInput
 											label="Órgão"
+											mode={"outlined"}
+											theme={tema}
+											style={{ fontSize: 18 }}
 											value={
 												associado.orgao.Value == ""
 													? "SELECIONE O ÓRGÃO"
@@ -1072,7 +1413,7 @@ function CadastrarAssociado(props) {
 															disabled={disabled}
 															onPress={showModal}
 														>
-															<View style={{ flex: 3, paddingTop: 15 }}>
+															<View style={{ flex: 3 }}>
 																<Text
 																	style={{
 																		fontSize: associado.orgao ? 15 : 12,
@@ -1125,6 +1466,9 @@ function CadastrarAssociado(props) {
 									<View style={{ flex: 2, marginRight: 5 }}>
 										<TextInput
 											label="Local de Trabalho"
+											mode={"outlined"}
+											theme={tema}
+											style={{ fontSize: 18 }}
 											value={
 												associado.local_trabalho.Name === ""
 													? "SELECIONE"
@@ -1147,7 +1491,7 @@ function CadastrarAssociado(props) {
 															disabled={disabled}
 															onPress={showModal}
 														>
-															<View style={{ flex: 3, paddingTop: 15 }}>
+															<View style={{ flex: 3 }}>
 																<Text
 																	style={{
 																		fontSize:
@@ -1205,6 +1549,9 @@ function CadastrarAssociado(props) {
 									<View style={{ flex: 1, marginRight: 5 }}>
 										<TextInput
 											label="Função"
+											mode={"outlined"}
+											theme={tema}
+											style={{ fontSize: 18 }}
 											value={
 												associado.funcao.Name === ""
 													? "SELECIONE"
@@ -1227,7 +1574,7 @@ function CadastrarAssociado(props) {
 															disabled={disabled}
 															onPress={showModal}
 														>
-															<View style={{ flex: 3, paddingTop: 15 }}>
+															<View style={{ flex: 3 }}>
 																<Text
 																	style={{
 																		fontSize: associado.funcao !== "" ? 15 : 12,
@@ -1280,8 +1627,13 @@ function CadastrarAssociado(props) {
 									<View style={{ flex: 2, marginRight: 5 }}>
 										<TextInput
 											label="Mês / Ano Últ. Desc."
+											mode={"outlined"}
+											theme={tema}
+											style={{ fontSize: 18 }}
 											value={associado.mesano}
 											maxLength={7}
+											returnKeyType={"next"}
+											onSubmitEditing={() => identificadorRef?.current?.focus()}
 											onChangeText={(text) =>
 												setAssociado({ ...associado, mesano: text })
 											}
@@ -1299,8 +1651,14 @@ function CadastrarAssociado(props) {
 									<View style={{ flex: 1, marginRight: 5 }}>
 										<TextInput
 											label="Identificador"
+											ref={identificadorRef}
+											mode={"outlined"}
+											theme={tema}
+											style={{ fontSize: 18 }}
 											value={associado.identificador}
 											maxLength={15}
+											returnKeyType={"next"}
+											onSubmitEditing={() => agenciaRef?.current?.focus()}
 											onChangeText={(text) =>
 												setAssociado({ ...associado, identificador: text })
 											}
@@ -1311,6 +1669,9 @@ function CadastrarAssociado(props) {
 									<View style={{ flex: 1, marginRight: 5 }}>
 										<TextInput
 											label="Banco"
+											mode={"outlined"}
+											theme={tema}
+											style={{ fontSize: 18 }}
 											value={
 												associado.banco.Name === ""
 													? "SELECIONE"
@@ -1333,7 +1694,7 @@ function CadastrarAssociado(props) {
 															disabled={disabled}
 															onPress={showModal}
 														>
-															<View style={{ flex: 3, paddingTop: 15 }}>
+															<View style={{ flex: 3 }}>
 																<Text
 																	style={{
 																		fontSize: associado.banco !== "" ? 15 : 12,
@@ -1386,8 +1747,14 @@ function CadastrarAssociado(props) {
 									<View style={{ flex: 1, marginRight: 5 }}>
 										<TextInput
 											label="Agência"
+											mode={"outlined"}
+											ref={agenciaRef}
+											theme={tema}
+											style={{ fontSize: 18 }}
 											value={associado.agencia}
 											maxLength={7}
+											returnKeyType={"next"}
+											onSubmitEditing={() => contaRef?.current?.focus()}
 											onChangeText={(text) =>
 												setAssociado({ ...associado, agencia: text })
 											}
@@ -1396,8 +1763,14 @@ function CadastrarAssociado(props) {
 									<View style={{ flex: 2, marginRight: 5 }}>
 										<TextInput
 											label="Conta Corrente"
+											ref={contaRef}
+											mode={"outlined"}
+											theme={tema}
+											style={{ fontSize: 18 }}
 											value={associado.conta}
 											maxLength={8}
+											returnKeyType={"next"}
+											onSubmitEditing={() => digitoContaRef?.current?.focus()}
 											onChangeText={(text) =>
 												setAssociado({ ...associado, conta: text })
 											}
@@ -1406,8 +1779,16 @@ function CadastrarAssociado(props) {
 									<View style={{ flex: 1, marginRight: 5 }}>
 										<TextInput
 											label="Dígito"
+											ref={digitoContaRef}
+											mode={"outlined"}
+											theme={tema}
+											style={{ fontSize: 18 }}
 											value={associado.digito_conta}
 											maxLength={1}
+											returnKeyType={"next"}
+											onSubmitEditing={() =>
+												mensalidadeRef?.current?._inputElement.focus()
+											}
 											onChangeText={(text) =>
 												setAssociado({ ...associado, digito_conta: text })
 											}
@@ -1418,6 +1799,9 @@ function CadastrarAssociado(props) {
 									<View style={{ flex: 2, marginRight: 5 }}>
 										<TextInput
 											label="Forma de Desconto"
+											mode={"outlined"}
+											theme={tema}
+											style={{ fontSize: 18 }}
 											value={
 												associado.forma_desconto.Name === ""
 													? "SELECIONE"
@@ -1440,7 +1824,7 @@ function CadastrarAssociado(props) {
 															disabled={disabled}
 															onPress={showModal}
 														>
-															<View style={{ flex: 3, paddingTop: 15 }}>
+															<View style={{ flex: 3 }}>
 																<Text
 																	style={{
 																		fontSize:
@@ -1506,13 +1890,19 @@ function CadastrarAssociado(props) {
 									<View style={{ flex: 1, marginRight: 5 }}>
 										<TextInput
 											label="Valor da Mensalidade"
+											mode={"outlined"}
+											theme={tema}
+											style={{ fontSize: 18 }}
 											value={associado.valor_mensalidade.toString()}
+											returnKeyType={"next"}
+											onSubmitEditing={() => obsRef?.current?.focus()}
 											onChangeText={(text) =>
 												setAssociado({ ...associado, valor_mensalidade: text })
 											}
 											render={(props) => (
 												<TextInputMask
 													{...props}
+													ref={mensalidadeRef}
 													type={"money"}
 													options={{
 														precision: 2,
@@ -1539,9 +1929,14 @@ function CadastrarAssociado(props) {
 									<View style={{ flex: 1, marginRight: 5 }}>
 										<TextInput
 											label="Observação"
+											ref={obsRef}
+											mode={"outlined"}
+											theme={tema}
+											style={{ fontSize: 18 }}
 											value={associado.observacao}
 											multiline
 											numberOfLines={10}
+											returnKeyType={"done"}
 											onChangeText={(text) =>
 												setAssociado({ ...associado, observacao: text })
 											}
@@ -1740,6 +2135,7 @@ function CadastrarAssociado(props) {
 					</View>
 				</View>
 			</SafeAreaView>
+			<Alert {...props} alerta={alerta} setAlerta={setAlerta} />
 		</>
 	);
 }

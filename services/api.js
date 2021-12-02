@@ -12,6 +12,9 @@ const conexao = {
 	geral: axios.create({
 		baseURL: "http://apiteste.abepom.org.br:3917/",
 	}),
+	intranet: axios.create({
+		baseURL: "http://apiteste.abepom.org.br:3917/intranet/",
+	}),
 };
 
 const associados = {
@@ -194,6 +197,66 @@ const convenios = {
 	},
 };
 
-const api = { associados, geral, convenios };
+const intranet = {
+	post: async function (rota, dados, contentType = "application/json") {
+		await conexao.intranet
+			.post(rota, dados, {
+				headers: { "Content-Type": contentType },
+			})
+			.then((response) => {
+				retorno = response.data;
+			})
+			.catch(function (error) {
+				if (error.response) {
+					// error.response.status = verificar o status do retorno;
+					retorno = error.response.data;
+				} else if (error.request) {
+					retorno = {
+						status: false,
+						title: "ATENÇÃO!",
+						message: "Não houve retorno do servidor para a sua requisição.",
+					};
+				} else {
+					retorno = {
+						status: false,
+						title: "ATENÇÃO!",
+						message: error.message,
+					};
+				}
+			});
+
+		return retorno;
+	},
+	get: async function (rota, dados, contentType = "application/json") {
+		await conexao.intranet
+			.get(
+				rota,
+				{ params: dados },
+				{
+					headers: { "Content-Type": contentType },
+				}
+			)
+			.then((response) => {
+				retorno = response.data;
+			})
+			.catch(function (error) {
+				if (error.response) {
+					// error.response.status = verificar o status do retorno;
+					retorno = error.response.data;
+				} else if (error.request) {
+					retorno = {
+						title: "ATENÇÃO!",
+						message: "Não houve retorno do servidor para a sua requisição.",
+					};
+				} else {
+					retorno = error.message;
+				}
+			});
+
+		return retorno;
+	},
+};
+
+const api = { associados, geral, convenios, intranet };
 
 export default api;
