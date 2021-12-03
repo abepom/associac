@@ -30,14 +30,15 @@ function Dependentes(props) {
 	const verificarMatricula = async () => {
 		if (matricula !== "") {
 			setCarregando(true);
-			const retorno = await api.associados.get("/verificarMatricula", {
+
+			const { data } = await api.associados.get("/verificarMatricula", {
 				cartao: `${matricula}00001`,
 			});
 
-			setAssociado(retorno);
+			setAssociado(data);
 
-			if (retorno.status) {
-				const data = await api.associados.get("/listarDependentes", {
+			if (data.status) {
+				const { data } = await api.associados.get("/listarDependentes", {
 					cartao: `${matricula}00001`,
 				});
 

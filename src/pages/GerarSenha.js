@@ -28,11 +28,12 @@ function GerarSenha(props) {
 	const verificarMatricula = async () => {
 		if (matricula !== "") {
 			setCarregando(true);
-			const retorno = await api.associados.get("/verificarMatricula", {
+
+			const { data } = await api.associados.get("/verificarMatricula", {
 				cartao: `${matricula}00001`,
 			});
 
-			setAssociado(retorno);
+			setAssociado(data);
 			setCarregando(false);
 			setMostrarDados(true);
 			Keyboard.dismiss();
@@ -50,19 +51,19 @@ function GerarSenha(props) {
 	};
 
 	const gerarSenha = async () => {
-		const retorno = await api.associados.post("/gerarSenhaAppDependente", {
+		const { data } = await api.associados.post("/gerarSenhaAppDependente", {
 			cartao: associado.cartao,
 			celular: associado.celular,
 		});
 
-		if (retorno.status) {
+		if (data.status) {
 			setMatricula("");
 			setAssociado({});
 			setMostrarDados(false);
 
 			setAlerta({
 				visible: true,
-				title: retorno.title,
+				title: data.title,
 				message:
 					"Uma nova senha será enviada para o celular do titular. Caso o titular não receba o SMS, entre em contato com a ABEPOM.",
 				type: "success",
@@ -73,8 +74,8 @@ function GerarSenha(props) {
 		} else {
 			setAlerta({
 				visible: true,
-				title: retorno.title,
-				message: retorno.message,
+				title: data.title,
+				message: data.message,
 				type: "danger",
 				confirmText: "FECHAR",
 				showConfirm: true,

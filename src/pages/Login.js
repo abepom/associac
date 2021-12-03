@@ -14,6 +14,7 @@ import images from "../utils/images";
 import Alert from "../components/Alert";
 import api from "../../services/api";
 import { useUsuario } from "../store/Usuario";
+import Loading from "../components/Loading";
 
 function Login(props) {
 	const [usuario, setUsuario] = useUsuario();
@@ -27,7 +28,19 @@ function Login(props) {
 		if (login !== "" && senha !== "") {
 			Keyboard.dismiss();
 
-			const data = await api.intranet.post("/login", { usuario: login, senha });
+			setAlerta({
+				visible: true,
+				title: "EFETUANDO LOGIN",
+				message: <Loading size={120} />,
+				showIcon: false,
+				showCancel: false,
+				showConfirm: false,
+			});
+
+			const { data } = await api.intranet.post("/login", {
+				usuario: login,
+				senha,
+			});
 
 			if (data.status) {
 				setUsuario({
@@ -36,10 +49,21 @@ function Login(props) {
 					codigo_local: data.dados.codigo_local,
 					nome: data.dados.nome,
 					email: data.dados.email,
+					token: data.token,
 				});
 
 				props.navigation.reset({ index: 0, routes: [{ name: "Inicio" }] });
 				props.navigation.navigate("Inicio");
+			} else {
+				setAlerta({
+					visible: true,
+					title: "ATENÇÃO!",
+					message: data.message,
+					type: "danger",
+					showCancel: false,
+					showConfirm: true,
+					confirmText: "FECHAR",
+				});
 			}
 		} else {
 			setAlerta({

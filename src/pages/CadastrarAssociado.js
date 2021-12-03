@@ -27,7 +27,8 @@ import { useUsuario } from "../store/Usuario";
 
 function CadastrarAssociado(props) {
 	const { navigation } = props;
-	const [usuario] = useUsuario();
+	const [{ usuario, nome, token }] = useUsuario();
+	const [matricula, setMatricula] = useState("");
 	const [associado, setAssociado] = useState({
 		matricula: "",
 		sexo: { Name: "", Value: "" },
@@ -103,11 +104,10 @@ function CadastrarAssociado(props) {
 	}, []);
 
 	async function listarCidades() {
-		const response = await api.geral.get("/listarCidades");
-
+		const { data } = await api.geral.get("/listarCidades");
 		let cids = [];
 
-		response.cidades.map((cidade) => {
+		data.cidades.map((cidade) => {
 			cids.push({
 				Name: cidade.nome_cidade,
 				Value: cidade.cod_cidade,
@@ -118,11 +118,11 @@ function CadastrarAssociado(props) {
 	}
 
 	async function listarOrgaos() {
-		const response = await api.geral.get("/listarOrgaos");
+		const { data } = await api.geral.get("/listarOrgaos");
 
 		let orgs = [];
 
-		response.orgaos.map((orgao) => {
+		data.orgaos.map((orgao) => {
 			orgs.push({
 				Name: `${orgao.descricao} (${orgao.codigo})`,
 				Value: orgao.codigo,
@@ -133,11 +133,11 @@ function CadastrarAssociado(props) {
 	}
 
 	async function listarBancos() {
-		const response = await api.geral.get("/listarBancos");
+		const { data } = await api.geral.get("/listarBancos");
 
 		let bancs = [];
 
-		response.bancos.map((banco) => {
+		data.bancos.map((banco) => {
 			bancs.push({
 				Name: banco.nome_banco,
 				Value: banco.cod_banco,
@@ -148,11 +148,11 @@ function CadastrarAssociado(props) {
 	}
 
 	async function listarFuncoes() {
-		const response = await api.geral.get("/listarFuncoes");
+		const { data } = await api.geral.get("/listarFuncoes");
 
 		let funcs = [];
 
-		response.funcoes.map((funcao) => {
+		data.funcoes.map((funcao) => {
 			funcs.push({
 				Name: funcao.descricao,
 				Value: funcao.codigo,
@@ -163,11 +163,11 @@ function CadastrarAssociado(props) {
 	}
 
 	async function listarLotacoes() {
-		const response = await api.geral.get("/listarLotacoes");
+		const { data } = await api.geral.get("/listarLotacoes");
 
 		let lots = [];
 
-		response.lotacoes.map((lotacao) => {
+		data.lotacoes.map((lotacao) => {
 			lots.push({
 				Name: `${lotacao.descricao} (${lotacao.codigo})`,
 				Value: lotacao.codigo,
@@ -178,11 +178,11 @@ function CadastrarAssociado(props) {
 	}
 
 	async function listarFormas() {
-		const response = await api.geral.get("/listarFormasDesconto");
+		const { data } = await api.geral.get("/listarFormasDesconto");
 
 		let forms = [];
 
-		response.formas.map((forma) => {
+		data.formas.map((forma) => {
 			forms.push({
 				Name: `${forma.descricao} (${forma.codigo})`,
 				Value: forma.codigo,
@@ -193,12 +193,12 @@ function CadastrarAssociado(props) {
 	}
 
 	const verificarMatricula = async () => {
-		if (associado.matricula?.length == 6) {
-			if (!isNaN(associado.matricula)) {
+		if (matricula.length == 6) {
+			if (!isNaN(matricula)) {
 				setCarregando(true);
 
-				const data = await api.associados.get("/verificarMatricula", {
-					cartao: associado.matricula,
+				const { data } = await api.associados.get("/verificarMatricula", {
+					cartao: matricula,
 				});
 
 				setMostrarDadosAssociado(true);
@@ -247,10 +247,7 @@ function CadastrarAssociado(props) {
 	};
 
 	const cadastrarAssociado = async () => {
-		const data = await api.geral.post("/cadastrarAssociado", {
-			associado,
-			usuario: usuario.usuario,
-		});
+		const { data } = await api.geral.post("/cadastrarAssociado", { associado });
 
 		setAlerta({
 			visible: true,
@@ -282,6 +279,7 @@ function CadastrarAssociado(props) {
 			setRg("");
 			setContraCheque("");
 			setComprovanteResidencia("");
+			setMatricula("");
 		}
 	};
 
@@ -289,13 +287,17 @@ function CadastrarAssociado(props) {
 		if (associado.cpf === "") {
 			return false;
 		} else {
-			const data = await api.associados.get("/verificarCpf", {
-				cartao: associado.matricula + "00001",
-				cpf: associado.cpf,
-				usuario: usuario.usuario,
-			});
+			if (associado.nascimento == "") {
+				return false;
+			} else {
+				const { data } = await api.associados.get("/verificarCpf", {
+					cartao: associado.matricula + "00001",
+					cpf: associado.cpf,
+					nascimento: formatDate(associado.nascimento, "AMD"),
+				});
 
-			return data.status;
+				return data.status;
+			}
 		}
 	}
 
@@ -389,7 +391,6 @@ function CadastrarAssociado(props) {
 			const formulario = new FormData();
 			formulario.append("matricula", `${associado.matricula}`);
 			formulario.append("dependente", `00`);
-			formulario.append("usuario", usuario.usuario);
 			formulario.append("tipo", tipo);
 			formulario.append("file", {
 				uri,
@@ -397,7 +398,7 @@ function CadastrarAssociado(props) {
 				name: `${associado.matricula}_${new Date().toJSON()}.${extensao}`,
 			});
 
-			const data = await api.geral.post(
+			const { data } = await api.geral.post(
 				"/enviarDocumentoTitular",
 				formulario,
 				"multipart/form-data"
@@ -700,9 +701,8 @@ function CadastrarAssociado(props) {
 						]}
 					>
 						<Text>
-							Atenção {usuario.nome}, este associado pagará joia, e esta será
-							descontada em {associado.parcelas_joia} parcelas. Deseja
-							continuar?
+							Atenção {nome}, este associado pagará joia, e esta será descontada
+							em {associado.parcelas_joia} parcelas. Deseja continuar?
 						</Text>
 						<TouchableOpacity
 							onPress={() => {
@@ -748,15 +748,13 @@ function CadastrarAssociado(props) {
 										<TextInput
 											label="Matrícula"
 											mode={"outlined"}
-											value={associado.matricula}
+											value={matricula}
 											keyboardType={"numeric"}
 											maxLength={6}
 											theme={tema}
 											style={{ fontSize: 25 }}
 											placeholder={"Digite a matrícula"}
-											onChangeText={(text) =>
-												setAssociado({ ...associado, matricula: text })
-											}
+											onChangeText={(text) => setMatricula(text)}
 											render={(props) => (
 												<TextInputMask
 													{...props}
@@ -857,7 +855,9 @@ function CadastrarAssociado(props) {
 												<View style={{ flex: 2 }}>
 													<TouchableOpacity
 														onPress={() =>
-															navigation.navigate("RecadastrarAssociado")
+															navigation.navigate("RecadastrarAssociado", {
+																associado,
+															})
 														}
 														style={{
 															flexDirection: "row",

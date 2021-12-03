@@ -48,11 +48,12 @@ function RecadastrarAssociado(props) {
 	const verificarMatricula = async () => {
 		if (matricula !== "") {
 			setCarregando(true);
-			const retorno = await api.associados.get("/verificarMatricula", {
+
+			const { data } = await api.associados.get("/verificarMatricula", {
 				cartao: `${matricula}00001`,
 			});
 
-			setAssociado(retorno);
+			setAssociado(data);
 			setCarregando(false);
 			setMostrarDados(true);
 			setBtnRecadastrar(false);
@@ -72,11 +73,11 @@ function RecadastrarAssociado(props) {
 	};
 
 	async function listarCidades() {
-		const response = await api.geral.get("/listarCidades");
+		const { data } = await api.geral.get("/listarCidades");
 
 		let cids = [];
 
-		response.cidades.map((cidade) => {
+		data.cidades.map((cidade) => {
 			cids.push({
 				Name: cidade.nome_cidade,
 				Value: cidade.cod_cidade,
@@ -87,11 +88,11 @@ function RecadastrarAssociado(props) {
 	}
 
 	async function listarLotacoes() {
-		const response = await api.geral.get("/listarLotacoes");
+		const { data } = await api.geral.get("/listarLotacoes");
 
 		let lots = [];
 
-		response.lotacoes.map((lotacao) => {
+		data.lotacoes.map((lotacao) => {
 			lots.push({
 				Name: `${lotacao.descricao} (${lotacao.codigo})`,
 				Value: lotacao.codigo,
@@ -157,12 +158,9 @@ function RecadastrarAssociado(props) {
 	}
 
 	async function recadastrar() {
-		const retorno = await api.associados.post("/recadastrar", {
-			associado,
-			usuario: "bruno.horn",
-		});
+		const { data } = await api.associados.post("/recadastrar", { associado });
 
-		if (retorno.status) {
+		if (data.status) {
 			setAssociado({
 				sexo: { Name: "", Value: "" },
 				cidade: { Name: "", Value: "0000" },
@@ -173,8 +171,8 @@ function RecadastrarAssociado(props) {
 
 			setAlerta({
 				visible: true,
-				title: retorno.title,
-				message: retorno.message,
+				title: data.title,
+				message: data.message,
 				type: "success",
 				confirmText: "FECHAR",
 				showConfirm: true,
@@ -183,8 +181,8 @@ function RecadastrarAssociado(props) {
 		} else {
 			setAlerta({
 				visible: true,
-				title: retorno.title,
-				message: retorno.message,
+				title: data.title,
+				message: data.message,
 				type: "danger",
 				confirmText: "FECHAR",
 				showConfirm: true,
@@ -311,14 +309,13 @@ function RecadastrarAssociado(props) {
 
 		const formulario = new FormData();
 		formulario.append("matricula", `${associado.matricula}`);
-		formulario.append("usuario", `bruno.horn`);
 		formulario.append("file", {
 			uri,
 			type: `application/pdf`,
 			name: `REQUERIMENTO_RECADASTRO_${associado.matricula}.pdf`,
 		});
 
-		const data = await api.associados.post(
+		const { data } = await api.associados.post(
 			"/cadastrarAssinatura",
 			formulario,
 			"multipart/form-data"
@@ -349,6 +346,14 @@ function RecadastrarAssociado(props) {
 	const handleConfirm = () => {
 		ref.current.readSignature();
 	};
+
+	useEffect(() => {
+		if (props?.route?.params?.associado) {
+			setAssociado(props.route.params.associado);
+			setMatricula(props.route.params.associado.matricula);
+			setMostrarDados(true);
+		}
+	}, []);
 
 	return (
 		<>

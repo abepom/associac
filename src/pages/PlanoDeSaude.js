@@ -54,8 +54,7 @@ function PlanoDeSaude(props) {
 	const [plano, setPlano] = useState({ Name: "", Value: "", valor_faixas: [] });
 
 	const listarPlanos = async () => {
-		const data = await api.geral.get("/listarPlanosDeSaude");
-
+		const { data } = await api.geral.get("/listarPlanosDeSaude");
 		let plans = [];
 
 		data.planos.map((plano) => {
@@ -99,16 +98,16 @@ function PlanoDeSaude(props) {
 				cartao: `${matricula}00001`,
 			});
 
-			setAssociado(retorno);
+			setAssociado(retorno.data);
 
-			if (retorno.status) {
-				const data = await api.associados.get("/listarDependentes", {
+			if (retorno.data.status) {
+				const { data } = await api.associados.get("/listarDependentes", {
 					cartao: `${matricula}00001`,
 				});
 
 				let deps = [];
 
-				dataFormat = formatDate(retorno.nascimento, "AMD");
+				dataFormat = formatDate(retorno.data.nascimento, "AMD");
 
 				if (isDate(new Date(dataFormat))) {
 					age = calculateAge(dataFormat);
@@ -117,15 +116,15 @@ function PlanoDeSaude(props) {
 				}
 
 				deps.push({
-					Name: retorno.nome,
-					Value: retorno.cd_dependente,
-					data_nascimento: retorno.nascimento,
+					Name: retorno.data.nome,
+					Value: retorno.data.cd_dependente,
+					data_nascimento: retorno.data.nascimento,
 					idade: age,
 					estado_civil: { Name: "", Value: "" },
-					sexo: retorno.sexo.Name,
+					sexo: retorno.data.sexo.Name,
 					tipo: "TITULAR",
 					local_cobranca: { Name: "", Value: "" },
-					cpf: retorno.cpf,
+					cpf: retorno.data.cpf,
 					valor_mensalidade: 0,
 				});
 
@@ -239,6 +238,15 @@ function PlanoDeSaude(props) {
 	};
 
 	const incluirPlano = async () => {
+		setAlerta({
+			visible: true,
+			title: "CADASTRANDO DADOS DO PLANO",
+			message: <Loading size={120} />,
+			showIcon: false,
+			showCancel: false,
+			showConfirm: false,
+		});
+
 		let erros = 0;
 		let msg = "Para prosseguir é necessário: \n\n";
 
@@ -268,14 +276,13 @@ function PlanoDeSaude(props) {
 				confirmText: "FECHAR",
 			});
 		} else {
-			const data = await api.associados.post("/cadastrarPlanoDeSaude", {
+			const { data } = await api.associados.post("/cadastrarPlanoDeSaude", {
 				beneficiario: {
 					...beneficiario,
 					data_nascimento: formatDate(beneficiario.data_nascimento, "AMD"),
 				},
 				plano,
 				associado,
-				usuario: usuario.usuario,
 			});
 
 			setAlerta({
@@ -288,26 +295,29 @@ function PlanoDeSaude(props) {
 				confirmText: "FECHAR",
 			});
 
-			setMatricula("");
-			setBeneficiario({
-				Name: "",
-				Value: "",
-				data_nascimento: "",
-				idade: 0,
-				estado_civil: { Name: "", Value: "" },
-				sexo: "",
-				tipo: "",
-				local_cobranca: { Name: "", Value: "" },
-				cpf: "",
-				valor_mensalidade: 0,
-			});
-			setAssociado({});
-			setDependentes([]);
-			setPlano({
-				Name: "",
-				Value: "",
-				valor_faixas: [],
-			});
+			if (data.status) {
+				setMatricula("");
+				setBeneficiario({
+					Name: "",
+					Value: "",
+					data_nascimento: "",
+					idade: 0,
+					estado_civil: { Name: "", Value: "" },
+					sexo: "",
+					tipo: "",
+					local_cobranca: { Name: "", Value: "" },
+					cpf: "",
+					valor_mensalidade: 0,
+				});
+				setAssociado({});
+				setDependentes([]);
+				setPlano({
+					Name: "",
+					Value: "",
+					valor_faixas: [],
+				});
+				setMostrarDados(false);
+			}
 		}
 	};
 

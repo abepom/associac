@@ -1,6 +1,9 @@
 import axios from "axios";
+import { AsyncStorage } from "react-native";
 
 let retorno = "";
+let data;
+let token;
 
 const conexao = {
 	associados: axios.create({
@@ -17,6 +20,62 @@ const conexao = {
 	}),
 };
 
+conexao.associados.interceptors.request.use(async (config) => {
+	data = await AsyncStorage.getItem("usuario");
+
+	if (data) {
+		token = JSON.parse(data).usuario.token;
+
+		if (token) {
+			conexao.associados.defaults.headers = { "x-access-token": token };
+		}
+	}
+
+	return config;
+});
+
+conexao.convenios.interceptors.request.use(async (config) => {
+	data = await AsyncStorage.getItem("usuario");
+
+	if (data) {
+		token = JSON.parse(data).usuario.token;
+
+		if (token) {
+			conexao.convenios.defaults.headers = { "x-access-token": token };
+		}
+	}
+
+	return config;
+});
+
+conexao.geral.interceptors.request.use(async (config) => {
+	data = await AsyncStorage.getItem("usuario");
+
+	if (data) {
+		token = JSON.parse(data).usuario.token;
+
+		if (token) {
+			conexao.geral.defaults.headers = { "x-access-token": token };
+		}
+	}
+
+	return config;
+});
+
+conexao.intranet.interceptors.request.use(async (config) => {
+	data = await AsyncStorage.getItem("usuario");
+
+	if (data) {
+		token = JSON.parse(data).usuario.token;
+
+		if (token) {
+			conexao.intranet.defaults.headers = { "x-access-token": token };
+		}
+	}
+
+	return config;
+});
+
 const associados = {
 	post: async function (rota, dados, contentType = "application/json") {
 		await conexao.associados
@@ -24,12 +83,12 @@ const associados = {
 				headers: { "Content-Type": contentType },
 			})
 			.then((response) => {
-				retorno = response.data;
+				retorno = response;
 			})
 			.catch(function (error) {
 				if (error.response) {
 					// error.response.status = verificar o status do retorno;
-					retorno = error.response.data;
+					retorno = error.response;
 				} else if (error.request) {
 					retorno = {
 						status: false,
@@ -57,12 +116,12 @@ const associados = {
 				}
 			)
 			.then((response) => {
-				retorno = response.data;
+				retorno = response;
 			})
 			.catch(function (error) {
 				if (error.response) {
 					// error.response.status = verificar o status do retorno;
-					retorno = error.response.data;
+					retorno = error.response;
 				} else if (error.request) {
 					retorno = {
 						title: "ATENÇÃO!",
@@ -84,12 +143,12 @@ const geral = {
 				headers: { "Content-Type": "application/json" },
 			})
 			.then((response) => {
-				retorno = response.data;
+				retorno = response;
 			})
 			.catch(function (error) {
 				if (error.response) {
 					// error.response.status = verificar o status do retorno;
-					retorno = error.response.data;
+					retorno = error.response;
 				} else if (error.request) {
 					retorno = {
 						status: false,
@@ -113,16 +172,18 @@ const geral = {
 				rota,
 				{ params: dados },
 				{
-					headers: { "Content-Type": "application/json" },
+					headers: {
+						"Content-Type": "application/json",
+					},
 				}
 			)
 			.then((response) => {
-				retorno = response.data;
+				retorno = response;
 			})
 			.catch(function (error) {
 				if (error.response) {
 					// error.response.status = verificar o status do retorno;
-					retorno = error.response.data;
+					retorno = error.response;
 				} else if (error.request) {
 					retorno = {
 						title: "ATENÇÃO!",
@@ -144,12 +205,12 @@ const convenios = {
 				headers: { "Content-Type": "application/json" },
 			})
 			.then((response) => {
-				retorno = response.data;
+				retorno = response;
 			})
 			.catch(function (error) {
 				if (error.response) {
 					// error.response.status = verificar o status do retorno;
-					retorno = error.response.data;
+					retorno = error.response;
 				} else if (error.request) {
 					retorno = {
 						status: false,
@@ -177,12 +238,12 @@ const convenios = {
 				}
 			)
 			.then((response) => {
-				retorno = response.data;
+				retorno = response;
 			})
 			.catch(function (error) {
 				if (error.response) {
 					// error.response.status = verificar o status do retorno;
-					retorno = error.response.data;
+					retorno = error.response;
 				} else if (error.request) {
 					retorno = {
 						title: "ATENÇÃO!",
@@ -204,12 +265,12 @@ const intranet = {
 				headers: { "Content-Type": contentType },
 			})
 			.then((response) => {
-				retorno = response.data;
+				retorno = response;
 			})
 			.catch(function (error) {
 				if (error.response) {
 					// error.response.status = verificar o status do retorno;
-					retorno = error.response.data;
+					retorno = error.response;
 				} else if (error.request) {
 					retorno = {
 						status: false,
@@ -237,12 +298,12 @@ const intranet = {
 				}
 			)
 			.then((response) => {
-				retorno = response.data;
+				retorno = response;
 			})
 			.catch(function (error) {
 				if (error.response) {
 					// error.response.status = verificar o status do retorno;
-					retorno = error.response.data;
+					retorno = error.response;
 				} else if (error.request) {
 					retorno = {
 						title: "ATENÇÃO!",

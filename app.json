@@ -1,32 +1,40 @@
 {
-  "expo": {
-    "name": "associac",
-    "slug": "associac",
-    "version": "1.0.0",
-    "icon": "./assets/icon.png",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
-    "updates": {
-      "fallbackToCacheTimeout": 0
-    },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
-    "ios": {
-      "supportsTablet": true
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#FFFFFF"
-      },
-      "package": "com.nti_abepom.associac"
-    },
-    "web": {
-      "favicon": "./assets/favicon.png"
-    }
-  }
+	"expo": {
+		"name": "ASSOCIAC Mobile",
+		"description": "Aplicativo para gestão administrativa da ABEPOM.",
+		"slug": "associac_mobile",
+		"version": "1.0.0",
+		"backgroundColor": "#03254E",
+		"primaryColor": "#03254E",
+		"icon": "./assets/img/icon.png",
+		"splash": {
+			"image": "./assets/img/splash_screen.png",
+			"backgroundColor": "#03254E",
+			"resizeMode": "cover"
+		},
+		"updates": {
+			"fallbackToCacheTimeout": 0
+		},
+		"assetBundlePatterns": ["**/*"],
+		"ios": {
+			"supportsTablet": true
+		},
+		"android": {
+			"package": "com.nti_abepom.associac",
+			"backgroundColor": "#03254E",
+			"icon": "./assets/img/icon.png",
+			"adaptiveIcon": {
+				"foregroundImage": "./assets/img/adaptiveIcon.png",
+				"backgroundColor": "#03254E"
+			},
+			"splash": {
+				"image": "./assets/img/splash_screen.png",
+				"backgroundColor": "#03254E",
+				"resizeMode": "cover"
+			}
+		},
+		"web": {
+			"favicon": "./assets/favicon.png"
+		}
+	}
 }

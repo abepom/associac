@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
+	AsyncStorage,
 	Image,
 	SafeAreaView,
 	Text,
@@ -20,6 +21,7 @@ import Loading from "../components/Loading";
 import { useUsuario } from "../store/Usuario";
 
 function AlterarTipoDependente(props) {
+	const { navigation } = props;
 	const data_atual = new Date();
 	const [usuario] = useUsuario();
 	const [matricula, setMatricula] = useState(props.route.params.matricula);
@@ -117,7 +119,7 @@ function AlterarTipoDependente(props) {
 				break;
 			case "23":
 			case "99":
-				const data = await api.geral.get("/listarTiposDependente");
+				const { data } = await api.geral.get("/listarTiposDependente");
 
 				let list_tipos = [];
 
@@ -226,21 +228,38 @@ function AlterarTipoDependente(props) {
 				showConfirm: false,
 			});
 
-			const data = await api.associados.post("/alterarTipoDependente", {
-				dependente,
-				matricula,
-				usuario: usuario.usuario,
-			});
+			const { data, status } = await api.associados.post(
+				"/alterarTipoDependente",
+				{ dependente, matricula }
+			);
 
-			setAlerta({
-				visible: true,
-				title: data.title,
-				message: data.message,
-				type: data.status ? "success" : "danger",
-				showCancel: false,
-				showConfirm: true,
-				confirmText: "FECHAR",
-			});
+			if (status == 401) {
+				setAlerta({
+					visible: true,
+					title: "SESSÃO EXPIRADA!",
+					message: `A sua sessão expirou. Você será deslogado em 5 segundos.`,
+					type: "warning",
+					showCancel: false,
+					showConfirm: true,
+					confirmText: "FECHAR",
+				});
+
+				setTimeout(async () => {
+					await AsyncStorage.clear().then(() =>
+						navigation.navigate("Login", { id: new Date().toJSON() })
+					);
+				}, 5000);
+			} else {
+				setAlerta({
+					visible: true,
+					title: data.title,
+					message: data.message,
+					type: data.status ? "success" : "danger",
+					showCancel: false,
+					showConfirm: true,
+					confirmText: "FECHAR",
+				});
+			}
 		}
 	};
 
@@ -287,7 +306,7 @@ function AlterarTipoDependente(props) {
 				name: `${matricula}_${new Date().toJSON()}.${extensao}`,
 			});
 
-			const data = await api.geral.post(
+			const { data } = await api.geral.post(
 				"/enviarDocumentoTitular",
 				formulario,
 				"multipart/form-data"

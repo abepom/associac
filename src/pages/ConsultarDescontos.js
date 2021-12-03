@@ -87,15 +87,14 @@ function ConsultarDescontos(props) {
 	async function carregarDescontos() {
 		if (matricula !== "") {
 			setCarregando(true);
-			const retorno = await api.associados.get("/verificarMatricula", {
+
+			const { data } = await api.associados.get("/verificarMatricula", {
 				cartao: `${matricula}00001`,
 			});
 
-			console.log(retorno);
+			setAssociado(data);
 
-			setAssociado(retorno);
-
-			const data = await api.associados.get("/descontosDoMes", {
+			const response = await api.associados.get("/descontosDoMes", {
 				cartao: `${matricula}00001`,
 				mes: ("0" + mes.Value).slice(-2),
 				ano: ano.Value,
@@ -103,7 +102,7 @@ function ConsultarDescontos(props) {
 
 			setCarregando(false);
 			setMostrarDados(true);
-			setDescontos([...data.descontos]);
+			setDescontos([...response.data.descontos]);
 			Keyboard.dismiss();
 		} else {
 			setAlerta({
@@ -122,7 +121,7 @@ function ConsultarDescontos(props) {
 		setCarregandoProcedimento(true);
 		setModalComposicaoParcelamento(true);
 
-		const data = await api.associados.get("/procedimentosCoparticipacao", {
+		const { data } = await api.associados.get("/procedimentosCoparticipacao", {
 			controle: controle.replace("CD: ", ""),
 		});
 
