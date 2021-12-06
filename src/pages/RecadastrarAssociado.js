@@ -22,9 +22,11 @@ import Signature from "react-native-signature-canvas";
 import * as Print from "expo-print";
 import { WebView } from "react-native-webview";
 import Alert from "../components/Alert";
+import { useUsuario } from "../store/Usuario";
 
 function RecadastrarAssociado(props) {
 	const ref = useRef();
+	const [usuario] = useUsuario();
 	const [matricula, setMatricula] = useState("");
 	const [associado, setAssociado] = useState({
 		sexo: { Name: "", Value: "" },
@@ -49,16 +51,38 @@ function RecadastrarAssociado(props) {
 		if (matricula !== "") {
 			setCarregando(true);
 
-			const { data } = await api.associados.get("/verificarMatricula", {
-				cartao: `${matricula}00001`,
-			});
+			try {
+				const { data } = await api.associados.get("/verificarMatricula", {
+					cartao: `${matricula}00001`,
+				});
 
-			setAssociado(data);
-			setCarregando(false);
-			setMostrarDados(true);
-			setBtnRecadastrar(false);
-			setPdf("");
-			Keyboard.dismiss();
+				setAssociado(data);
+				setCarregando(false);
+				setMostrarDados(true);
+				setBtnRecadastrar(false);
+				setPdf("");
+				Keyboard.dismiss();
+			} catch (error) {
+				setAssociado({
+					sexo: { Name: "", Value: "" },
+					local_trabalho: { Name: "", Value: "" },
+					cidade: { Name: "", Value: "" },
+				});
+				setCarregando(false);
+				setMostrarDados(false);
+				setBtnRecadastrar(true);
+				Keyboard.dismiss();
+
+				setAlerta({
+					visible: true,
+					title: "ATENÇÃO!",
+					message: "Ocorreu um erro ao tentar verificar a matrícula",
+					type: "danger",
+					confirmText: "FECHAR",
+					showConfirm: true,
+					showCancel: false,
+				});
+			}
 		} else {
 			setAlerta({
 				visible: true,
@@ -73,33 +97,41 @@ function RecadastrarAssociado(props) {
 	};
 
 	async function listarCidades() {
-		const { data } = await api.geral.get("/listarCidades");
+		try {
+			const { data } = await api.geral.get("/listarCidades");
 
-		let cids = [];
+			let cids = [];
 
-		data.cidades.map((cidade) => {
-			cids.push({
-				Name: cidade.nome_cidade,
-				Value: cidade.cod_cidade,
+			data.cidades.map((cidade) => {
+				cids.push({
+					Name: cidade.nome_cidade,
+					Value: cidade.cod_cidade,
+				});
 			});
-		});
 
-		setCidades(cids);
+			setCidades(cids);
+		} catch (error) {
+			setCidades([]);
+		}
 	}
 
 	async function listarLotacoes() {
-		const { data } = await api.geral.get("/listarLotacoes");
+		try {
+			const { data } = await api.geral.get("/listarLotacoes");
 
-		let lots = [];
+			let lots = [];
 
-		data.lotacoes.map((lotacao) => {
-			lots.push({
-				Name: `${lotacao.descricao} (${lotacao.codigo})`,
-				Value: lotacao.codigo,
+			data.lotacoes.map((lotacao) => {
+				lots.push({
+					Name: `${lotacao.descricao} (${lotacao.codigo})`,
+					Value: lotacao.codigo,
+				});
 			});
-		});
 
-		setLotacoes(lots);
+			setLotacoes(lots);
+		} catch (error) {
+			setLotacoes([]);
+		}
 	}
 
 	async function buscarCep() {
@@ -158,31 +190,43 @@ function RecadastrarAssociado(props) {
 	}
 
 	async function recadastrar() {
-		const { data } = await api.associados.post("/recadastrar", { associado });
+		try {
+			const { data } = await api.associados.post("/recadastrar", { associado });
 
-		if (data.status) {
-			setAssociado({
-				sexo: { Name: "", Value: "" },
-				cidade: { Name: "", Value: "0000" },
-				local_trabalho: { Name: "", Value: "" },
-			});
-			setMatricula("");
-			setMostrarDados(false);
+			if (data.status) {
+				setAssociado({
+					sexo: { Name: "", Value: "" },
+					cidade: { Name: "", Value: "0000" },
+					local_trabalho: { Name: "", Value: "" },
+				});
+				setMatricula("");
+				setMostrarDados(false);
 
+				setAlerta({
+					visible: true,
+					title: data.title,
+					message: data.message,
+					type: "success",
+					confirmText: "FECHAR",
+					showConfirm: true,
+					showCancel: false,
+				});
+			} else {
+				setAlerta({
+					visible: true,
+					title: data.title,
+					message: data.message,
+					type: "danger",
+					confirmText: "FECHAR",
+					showConfirm: true,
+					showCancel: false,
+				});
+			}
+		} catch (error) {
 			setAlerta({
 				visible: true,
-				title: data.title,
-				message: data.message,
-				type: "success",
-				confirmText: "FECHAR",
-				showConfirm: true,
-				showCancel: false,
-			});
-		} else {
-			setAlerta({
-				visible: true,
-				title: data.title,
-				message: data.message,
+				title: "ATENÇÃO!",
+				message: "Ocorreu um erro ao tentar recadastrar o associado.",
 				type: "danger",
 				confirmText: "FECHAR",
 				showConfirm: true,
@@ -296,7 +340,9 @@ function RecadastrarAssociado(props) {
 				</center>
 				<div style="display: flex; flex: 1; flex-direction: row; width: 100%;margin-top: 50px;">
 					<div style="display: flex; flex: 1; justify-content: center;">
-						<p style="text-align: center"><b>bruno.horn</b><br />Responsável pelo cadastro</p>
+						<p style="text-align: center"><b>${
+							usuario.nome
+						}</b><br />Representante ABEPOM</p>
 					</div>
 					<div style="display: flex; flex: 1; justify-content: center;">
 						<p style="text-align: center">Cel Aroldo<br />Presidente da ABEPOM</p>
@@ -305,36 +351,49 @@ function RecadastrarAssociado(props) {
 			</body>
 		</html>`;
 
-		const { uri } = await Print.printToFileAsync({ html });
+		try {
+			const { uri } = await Print.printToFileAsync({ html });
 
-		const formulario = new FormData();
-		formulario.append("matricula", `${associado.matricula}`);
-		formulario.append("file", {
-			uri,
-			type: `application/pdf`,
-			name: `REQUERIMENTO_RECADASTRO_${associado.matricula}.pdf`,
-		});
+			const formulario = new FormData();
+			formulario.append("matricula", `${associado.matricula}`);
+			formulario.append("file", {
+				uri,
+				type: `application/pdf`,
+				name: `REQUERIMENTO_RECADASTRO_${associado.matricula}.pdf`,
+			});
 
-		const { data } = await api.associados.post(
-			"/cadastrarAssinatura",
-			formulario,
-			"multipart/form-data"
-		);
+			const { data } = await api.associados.post(
+				"/cadastrarAssinatura",
+				formulario,
+				"multipart/form-data"
+			);
 
-		if (data.status) {
-			setAlerta({ visible: false });
-			setBtnRecadastrar(true);
-		} else {
+			if (data.status) {
+				setAlerta({ visible: false });
+				setBtnRecadastrar(true);
+			} else {
+				setAlerta({
+					visible: true,
+					title: data.title,
+					message: data.message,
+					type: "danger",
+					cancelText: "FECHAR",
+					confirmText: "OK",
+					showConfirm: true,
+					showCancel: true,
+					confirmFunction: () => setModal(true),
+				});
+			}
+		} catch (error) {
 			setAlerta({
 				visible: true,
-				title: data.title,
-				message: data.message,
+				title: "ATENÇÃO!",
+				message:
+					"Ocorreu um erro ao tentar recolher a assinatura do associado.",
 				type: "danger",
 				cancelText: "FECHAR",
-				confirmText: "OK",
-				showConfirm: true,
+				showConfirm: false,
 				showCancel: true,
-				confirmFunction: () => setModal(true),
 			});
 		}
 	};

@@ -104,92 +104,116 @@ function CadastrarAssociado(props) {
 	}, []);
 
 	async function listarCidades() {
-		const { data } = await api.geral.get("/listarCidades");
-		let cids = [];
+		try {
+			const { data } = await api.geral.get("/listarCidades");
+			let cids = [];
 
-		data.cidades.map((cidade) => {
-			cids.push({
-				Name: cidade.nome_cidade,
-				Value: cidade.cod_cidade,
+			data.cidades.map((cidade) => {
+				cids.push({
+					Name: cidade.nome_cidade,
+					Value: cidade.cod_cidade,
+				});
 			});
-		});
 
-		setCidades(cids);
+			setCidades(cids);
+		} catch (error) {
+			setCidades([]);
+		}
 	}
 
 	async function listarOrgaos() {
-		const { data } = await api.geral.get("/listarOrgaos");
+		try {
+			const { data } = await api.geral.get("/listarOrgaos");
 
-		let orgs = [];
+			let orgs = [];
 
-		data.orgaos.map((orgao) => {
-			orgs.push({
-				Name: `${orgao.descricao} (${orgao.codigo})`,
-				Value: orgao.codigo,
+			data.orgaos.map((orgao) => {
+				orgs.push({
+					Name: `${orgao.descricao} (${orgao.codigo})`,
+					Value: orgao.codigo,
+				});
 			});
-		});
 
-		setOrgaos(orgs);
+			setOrgaos(orgs);
+		} catch (error) {
+			setOrgaos([]);
+		}
 	}
 
 	async function listarBancos() {
-		const { data } = await api.geral.get("/listarBancos");
+		try {
+			const { data } = await api.geral.get("/listarBancos");
 
-		let bancs = [];
+			let bancs = [];
 
-		data.bancos.map((banco) => {
-			bancs.push({
-				Name: banco.nome_banco,
-				Value: banco.cod_banco,
+			data.bancos.map((banco) => {
+				bancs.push({
+					Name: banco.nome_banco,
+					Value: banco.cod_banco,
+				});
 			});
-		});
 
-		setBancos(bancs);
+			setBancos(bancs);
+		} catch (error) {
+			setBancos([]);
+		}
 	}
 
 	async function listarFuncoes() {
-		const { data } = await api.geral.get("/listarFuncoes");
+		try {
+			const { data } = await api.geral.get("/listarFuncoes");
 
-		let funcs = [];
+			let funcs = [];
 
-		data.funcoes.map((funcao) => {
-			funcs.push({
-				Name: funcao.descricao,
-				Value: funcao.codigo,
+			data.funcoes.map((funcao) => {
+				funcs.push({
+					Name: funcao.descricao,
+					Value: funcao.codigo,
+				});
 			});
-		});
 
-		setFuncoes(funcs);
+			setFuncoes(funcs);
+		} catch (error) {
+			setFuncoes([]);
+		}
 	}
 
 	async function listarLotacoes() {
-		const { data } = await api.geral.get("/listarLotacoes");
+		try {
+			const { data } = await api.geral.get("/listarLotacoes");
 
-		let lots = [];
+			let lots = [];
 
-		data.lotacoes.map((lotacao) => {
-			lots.push({
-				Name: `${lotacao.descricao} (${lotacao.codigo})`,
-				Value: lotacao.codigo,
+			data.lotacoes.map((lotacao) => {
+				lots.push({
+					Name: `${lotacao.descricao} (${lotacao.codigo})`,
+					Value: lotacao.codigo,
+				});
 			});
-		});
 
-		setLotacoes(lots);
+			setLotacoes(lots);
+		} catch (error) {
+			setLotacoes([]);
+		}
 	}
 
 	async function listarFormas() {
-		const { data } = await api.geral.get("/listarFormasDesconto");
+		try {
+			const { data } = await api.geral.get("/listarFormasDesconto");
 
-		let forms = [];
+			let forms = [];
 
-		data.formas.map((forma) => {
-			forms.push({
-				Name: `${forma.descricao} (${forma.codigo})`,
-				Value: forma.codigo,
+			data.formas.map((forma) => {
+				forms.push({
+					Name: `${forma.descricao} (${forma.codigo})`,
+					Value: forma.codigo,
+				});
 			});
-		});
 
-		setFormas(forms);
+			setFormas(forms);
+		} catch (error) {
+			setFormas([]);
+		}
 	}
 
 	const verificarMatricula = async () => {
@@ -197,27 +221,54 @@ function CadastrarAssociado(props) {
 			if (!isNaN(matricula)) {
 				setCarregando(true);
 
-				const { data } = await api.associados.get("/verificarMatricula", {
-					cartao: matricula,
-				});
+				try {
+					const { data } = await api.associados.get("/verificarMatricula", {
+						cartao: matricula,
+					});
 
-				setMostrarDadosAssociado(true);
-				setAssociado(data);
+					setMostrarDadosAssociado(true);
+					setAssociado(data);
 
-				if (data.status) {
-					if (data.tipo === "01") {
-						setBtnRecadastrar(true);
-						setNextStep(false);
+					if (data.status) {
+						if (data.tipo === "01") {
+							setBtnRecadastrar(true);
+							setNextStep(false);
+						} else {
+							setBtnRecadastrar(false);
+							setNextStep(true);
+						}
 					} else {
 						setBtnRecadastrar(false);
 						setNextStep(true);
 					}
-				} else {
-					setBtnRecadastrar(false);
-					setNextStep(true);
-				}
 
-				setCarregando(false);
+					setCarregando(false);
+				} catch (error) {
+					setCarregando(false);
+					setAssociado({
+						matricula: "",
+						sexo: { Name: "", Value: "" },
+						cidade: { Name: "", Value: "" },
+						orgao: { Name: "", Value: "" },
+						funcao: { Name: "", Value: "" },
+						local_trabalho: { Name: "", Value: "" },
+						banco: { Name: "", Value: "" },
+						forma_desconto: { Name: "", Value: "" },
+						valor_mensalidade: 0,
+						paga_joia: 0,
+					});
+					setBtnRecadastrar(false);
+					setNextStep(false);
+					setAlerta({
+						visible: true,
+						title: "ATENÇÃO!",
+						message: "Ocorreu um erro ao verificar a matrícula.",
+						type: "danger",
+						confirmText: "FECHAR",
+						showConfirm: true,
+						showCancel: false,
+					});
+				}
 			} else {
 				setBtnRecadastrar(false);
 				setMostrarDadosAssociado(false);
@@ -247,39 +298,53 @@ function CadastrarAssociado(props) {
 	};
 
 	const cadastrarAssociado = async () => {
-		const { data } = await api.geral.post("/cadastrarAssociado", { associado });
-
-		setAlerta({
-			visible: true,
-			title: data.title,
-			message: data.message,
-			showCancel: false,
-			showConfirm: true,
-			confirmText: "FECHAR",
-			type: data.status ? "success" : "danger",
-		});
-
-		if (data.status) {
-			setActiveStep(0);
-			setAssociado({
-				matricula: "",
-				sexo: { Name: "", Value: "" },
-				cidade: { Name: "", Value: "" },
-				orgao: { Name: "", Value: "" },
-				funcao: { Name: "", Value: "" },
-				local_trabalho: { Name: "", Value: "" },
-				banco: { Name: "", Value: "" },
-				forma_desconto: { Name: "", Value: "" },
-				valor_mensalidade: 0,
+		try {
+			const { data } = await api.geral.post("/cadastrarAssociado", {
+				associado,
 			});
-			setPrevStep(false);
-			setTextNext("PRÓXIMO");
-			setMostrarDadosAssociado(false);
-			setCpf("");
-			setRg("");
-			setContraCheque("");
-			setComprovanteResidencia("");
-			setMatricula("");
+
+			setAlerta({
+				visible: true,
+				title: data.title,
+				message: data.message,
+				showCancel: false,
+				showConfirm: true,
+				confirmText: "FECHAR",
+				type: data.status ? "success" : "danger",
+			});
+
+			if (data.status) {
+				setActiveStep(0);
+				setAssociado({
+					matricula: "",
+					sexo: { Name: "", Value: "" },
+					cidade: { Name: "", Value: "" },
+					orgao: { Name: "", Value: "" },
+					funcao: { Name: "", Value: "" },
+					local_trabalho: { Name: "", Value: "" },
+					banco: { Name: "", Value: "" },
+					forma_desconto: { Name: "", Value: "" },
+					valor_mensalidade: 0,
+				});
+				setPrevStep(false);
+				setTextNext("PRÓXIMO");
+				setMostrarDadosAssociado(false);
+				setCpf("");
+				setRg("");
+				setContraCheque("");
+				setComprovanteResidencia("");
+				setMatricula("");
+			}
+		} catch (error) {
+			setAlerta({
+				visible: true,
+				title: "ATENÇÃO!",
+				message: "Ocorreu um erro ao tentar cadastrar o associado.",
+				showCancel: false,
+				showConfirm: true,
+				confirmText: "FECHAR",
+				type: "danger",
+			});
 		}
 	};
 
@@ -290,13 +355,17 @@ function CadastrarAssociado(props) {
 			if (associado.nascimento == "") {
 				return false;
 			} else {
-				const { data } = await api.associados.get("/verificarCpf", {
-					cartao: associado.matricula + "00001",
-					cpf: associado.cpf,
-					nascimento: formatDate(associado.nascimento, "AMD"),
-				});
+				try {
+					const { data } = await api.associados.get("/verificarCpf", {
+						cartao: associado.matricula + "00001",
+						cpf: associado.cpf,
+						nascimento: formatDate(associado.nascimento, "AMD"),
+					});
 
-				return data.status;
+					return data.status;
+				} catch (error) {
+					return false;
+				}
 			}
 		}
 	}
@@ -384,43 +453,55 @@ function CadastrarAssociado(props) {
 		});
 
 		if (!result.cancelled) {
-			const { uri } = result;
+			try {
+				const { uri } = result;
 
-			let extensao = uri.split(".")[uri.split(".").length - 1];
+				let extensao = uri.split(".")[uri.split(".").length - 1];
 
-			const formulario = new FormData();
-			formulario.append("matricula", `${associado.matricula}`);
-			formulario.append("dependente", `00`);
-			formulario.append("tipo", tipo);
-			formulario.append("file", {
-				uri,
-				type: `image/${extensao}`,
-				name: `${associado.matricula}_${new Date().toJSON()}.${extensao}`,
-			});
+				const formulario = new FormData();
+				formulario.append("matricula", `${associado.matricula}`);
+				formulario.append("dependente", `00`);
+				formulario.append("tipo", tipo);
+				formulario.append("file", {
+					uri,
+					type: `image/${extensao}`,
+					name: `${associado.matricula}_${new Date().toJSON()}.${extensao}`,
+				});
 
-			const { data } = await api.geral.post(
-				"/enviarDocumentoTitular",
-				formulario,
-				"multipart/form-data"
-			);
+				const { data } = await api.geral.post(
+					"/enviarDocumentoTitular",
+					formulario,
+					"multipart/form-data"
+				);
 
-			if (data.status) {
-				switch (tipo) {
-					case "CPF":
-						setCpf(data.link);
-						break;
-					case "RG":
-						setRg(data.link);
-						break;
-					case "CC":
-						setContraCheque(data.link);
-						break;
-					case "CR":
-						setComprovanteResidencia(data.link);
-						break;
-					default:
-						break;
+				if (data.status) {
+					switch (tipo) {
+						case "CPF":
+							setCpf(data.link);
+							break;
+						case "RG":
+							setRg(data.link);
+							break;
+						case "CC":
+							setContraCheque(data.link);
+							break;
+						case "CR":
+							setComprovanteResidencia(data.link);
+							break;
+						default:
+							break;
+					}
 				}
+			} catch (error) {
+				setAlerta({
+					visible: true,
+					title: "ATENÇÃO!",
+					message: "Ocorreu um erro ao enviar o documento.",
+					showCancel: false,
+					showConfirm: true,
+					confirmText: "FECHAR",
+					type: "danger",
+				});
 			}
 		}
 	}

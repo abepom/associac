@@ -119,17 +119,21 @@ function AlterarTipoDependente(props) {
 				break;
 			case "23":
 			case "99":
-				const { data } = await api.geral.get("/listarTiposDependente");
+				try {
+					const { data } = await api.geral.get("/listarTiposDependente");
 
-				let list_tipos = [];
+					let list_tipos = [];
 
-				data.tipos.map((tipo) => {
-					if (tipo.cobra_mensalidade) {
-						list_tipos.push({ Name: tipo.descricao, Value: tipo.codigo });
-					}
-				});
+					data.tipos.map((tipo) => {
+						if (tipo.cobra_mensalidade) {
+							list_tipos.push({ Name: tipo.descricao, Value: tipo.codigo });
+						}
+					});
 
-				setTipos(list_tipos);
+					setTipos(list_tipos);
+				} catch (error) {
+					setTipos([]);
+				}
 
 				break;
 			default:
@@ -291,29 +295,33 @@ function AlterarTipoDependente(props) {
 		});
 
 		if (!result.cancelled) {
-			const { uri } = result;
+			try {
+				const { uri } = result;
 
-			let extensao = uri.split(".")[uri.split(".").length - 1];
+				let extensao = uri.split(".")[uri.split(".").length - 1];
 
-			const formulario = new FormData();
-			formulario.append("matricula", `${matricula}`);
-			formulario.append("dependente", `${dependente.cont}`);
-			formulario.append("usuario", usuario.usuario);
-			formulario.append("tipo", "AF");
-			formulario.append("file", {
-				uri,
-				type: `image/${extensao}`,
-				name: `${matricula}_${new Date().toJSON()}.${extensao}`,
-			});
+				const formulario = new FormData();
+				formulario.append("matricula", `${matricula}`);
+				formulario.append("dependente", `${dependente.cont}`);
+				formulario.append("usuario", usuario.usuario);
+				formulario.append("tipo", "AF");
+				formulario.append("file", {
+					uri,
+					type: `image/${extensao}`,
+					name: `${matricula}_${new Date().toJSON()}.${extensao}`,
+				});
 
-			const { data } = await api.geral.post(
-				"/enviarDocumentoTitular",
-				formulario,
-				"multipart/form-data"
-			);
+				const { data } = await api.geral.post(
+					"/enviarDocumentoTitular",
+					formulario,
+					"multipart/form-data"
+				);
 
-			if (data.status) {
-				setAtestado(data.link);
+				if (data.status) {
+					setAtestado(data.link);
+				}
+			} catch (error) {
+				setAtestado("");
 			}
 		}
 	};

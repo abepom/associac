@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
 	View,
 	SafeAreaView,
@@ -7,6 +7,7 @@ import {
 	TouchableOpacity,
 	Text,
 	Keyboard,
+	AsyncStorage,
 } from "react-native";
 import { TextInput } from "react-native-paper";
 import { tema } from "../../assets/style/Style";
@@ -15,17 +16,33 @@ import Alert from "../components/Alert";
 import api from "../../services/api";
 import { useUsuario } from "../store/Usuario";
 import Loading from "../components/Loading";
+import * as Updates from "expo-updates";
+import Constants from "expo-constants";
 
 function Login(props) {
 	const [usuario, setUsuario] = useUsuario();
-	const [login, setLogin] = useState("");
+	const [nome, setNome] = useState("");
 	const [senha, setSenha] = useState("");
 	const [alerta, setAlerta] = useState({ visible: false });
 
 	const senhaRef = useRef(null);
 
+	useEffect(() => {
+		AsyncStorage.clear();
+		verificarAtualizacoes();
+	}, []);
+
+	async function verificarAtualizacoes() {
+		if (Constants.isDevice) {
+			const { isAvailable } = await Updates.checkForUpdateAsync();
+			if (isAvailable) {
+				await Updates.fetchUpdateAsync();
+			}
+		}
+	}
+
 	const entrar = async () => {
-		if (login !== "" && senha !== "") {
+		if (nome && senha) {
 			Keyboard.dismiss();
 
 			setAlerta({
@@ -37,28 +54,40 @@ function Login(props) {
 				showConfirm: false,
 			});
 
-			const { data } = await api.intranet.post("/login", {
-				usuario: login,
-				senha,
-			});
-
-			if (data.status) {
-				setUsuario({
-					usuario: login,
-					senha: senha,
-					codigo_local: data.dados.codigo_local,
-					nome: data.dados.nome,
-					email: data.dados.email,
-					token: data.token,
+			try {
+				const { data } = await api.intranet.post("/login", {
+					usuario: nome,
+					senha,
 				});
 
-				props.navigation.reset({ index: 0, routes: [{ name: "Inicio" }] });
-				props.navigation.navigate("Inicio");
-			} else {
+				if (data.status) {
+					setUsuario({
+						usuario: nome,
+						senha: senha,
+						codigo_local: data.dados.codigo_local,
+						nome: data.dados.nome,
+						email: data.dados.email,
+						token: data.token,
+					});
+
+					props.navigation.reset({ index: 0, routes: [{ name: "Inicio" }] });
+					props.navigation.navigate("Inicio");
+				} else {
+					setAlerta({
+						visible: true,
+						title: "ATENÇÃO!",
+						message: data.message,
+						type: "danger",
+						showCancel: false,
+						showConfirm: true,
+						confirmText: "FECHAR",
+					});
+				}
+			} catch (error) {
 				setAlerta({
 					visible: true,
 					title: "ATENÇÃO!",
-					message: data.message,
+					message: "Ocorreu um erro ao tentar efetuar o login.",
 					type: "danger",
 					showCancel: false,
 					showConfirm: true,
@@ -135,9 +164,9 @@ function Login(props) {
 							>
 								<TextInput
 									label="Usuário"
-									value={login}
+									value={nome}
 									theme={tema}
-									onChangeText={(text) => setLogin(text)}
+									onChangeText={setNome}
 									style={{ fontSize: 25 }}
 									returnKeyType={"next"}
 									onSubmitEditing={() => senhaRef?.current?.focus()}
@@ -149,7 +178,7 @@ function Login(props) {
 									textContentType={"password"}
 									value={senha}
 									theme={tema}
-									onChangeText={(text) => setSenha(text)}
+									onChangeText={setSenha}
 									style={{ marginTop: 20, fontSize: 25 }}
 								/>
 								<View style={{ flexDirection: "row" }}>

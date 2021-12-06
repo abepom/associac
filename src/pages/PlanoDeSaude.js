@@ -54,18 +54,22 @@ function PlanoDeSaude(props) {
 	const [plano, setPlano] = useState({ Name: "", Value: "", valor_faixas: [] });
 
 	const listarPlanos = async () => {
-		const { data } = await api.geral.get("/listarPlanosDeSaude");
-		let plans = [];
+		try {
+			const { data } = await api.geral.get("/listarPlanosDeSaude");
+			let plans = [];
 
-		data.planos.map((plano) => {
-			plans.push({
-				Name: plano.plano + " | " + plano.nome_plano,
-				Value: plano.plano,
-				valor_mensalidade: plano.valor_mensalidade,
+			data.planos.map((plano) => {
+				plans.push({
+					Name: plano.plano + " | " + plano.nome_plano,
+					Value: plano.plano,
+					valor_mensalidade: plano.valor_mensalidade,
+				});
 			});
-		});
 
-		setPlanos(plans);
+			setPlanos(plans);
+		} catch (error) {
+			setPlanos([]);
+		}
 	};
 
 	const verificarMatricula = async () => {
@@ -94,42 +98,21 @@ function PlanoDeSaude(props) {
 				valor_faixas: [],
 			});
 
-			const retorno = await api.associados.get("/verificarMatricula", {
-				cartao: `${matricula}00001`,
-			});
-
-			setAssociado(retorno.data);
-
-			if (retorno.data.status) {
-				const { data } = await api.associados.get("/listarDependentes", {
+			try {
+				const retorno = await api.associados.get("/verificarMatricula", {
 					cartao: `${matricula}00001`,
 				});
 
-				let deps = [];
+				setAssociado(retorno.data);
 
-				dataFormat = formatDate(retorno.data.nascimento, "AMD");
+				if (retorno.data.status) {
+					const { data } = await api.associados.get("/listarDependentes", {
+						cartao: `${matricula}00001`,
+					});
 
-				if (isDate(new Date(dataFormat))) {
-					age = calculateAge(dataFormat);
-				} else {
-					age = 0;
-				}
+					let deps = [];
 
-				deps.push({
-					Name: retorno.data.nome,
-					Value: retorno.data.cd_dependente,
-					data_nascimento: retorno.data.nascimento,
-					idade: age,
-					estado_civil: { Name: "", Value: "" },
-					sexo: retorno.data.sexo.Name,
-					tipo: "TITULAR",
-					local_cobranca: { Name: "", Value: "" },
-					cpf: retorno.data.cpf,
-					valor_mensalidade: 0,
-				});
-
-				data.dependentes.map((dependente) => {
-					dataFormat = formatDate(dependente.data_nascimento, "AMD");
+					dataFormat = formatDate(retorno.data.nascimento, "AMD");
 
 					if (isDate(new Date(dataFormat))) {
 						age = calculateAge(dataFormat);
@@ -138,23 +121,62 @@ function PlanoDeSaude(props) {
 					}
 
 					deps.push({
-						Name: dependente.nome,
-						Value: dependente.cont,
-						data_nascimento: dependente.data_nascimento,
+						Name: retorno.data.nome,
+						Value: retorno.data.cd_dependente,
+						data_nascimento: retorno.data.nascimento,
 						idade: age,
 						estado_civil: { Name: "", Value: "" },
-						sexo: dependente.sexo === "M" ? "MASCULINO" : "FEMININO",
-						tipo: dependente.tipo.toUpperCase(),
+						sexo: retorno.data.sexo.Name,
+						tipo: "TITULAR",
 						local_cobranca: { Name: "", Value: "" },
-						cpf: dependente.cpf,
+						cpf: retorno.data.cpf,
 						valor_mensalidade: 0,
 					});
-				});
 
-				setDependentes(deps);
+					data.dependentes.map((dependente) => {
+						dataFormat = formatDate(dependente.data_nascimento, "AMD");
+
+						if (isDate(new Date(dataFormat))) {
+							age = calculateAge(dataFormat);
+						} else {
+							age = 0;
+						}
+
+						deps.push({
+							Name: dependente.nome,
+							Value: dependente.cont,
+							data_nascimento: dependente.data_nascimento,
+							idade: age,
+							estado_civil: { Name: "", Value: "" },
+							sexo: dependente.sexo === "M" ? "MASCULINO" : "FEMININO",
+							tipo: dependente.tipo.toUpperCase(),
+							local_cobranca: { Name: "", Value: "" },
+							cpf: dependente.cpf,
+							valor_mensalidade: 0,
+						});
+					});
+
+					setDependentes(deps);
+					setCarregando(false);
+					setMostrarDados(true);
+					Keyboard.dismiss();
+				}
+			} catch (error) {
+				setAssociado({});
+				setDependentes([]);
 				setCarregando(false);
-				setMostrarDados(true);
+				setMostrarDados(false);
 				Keyboard.dismiss();
+
+				setAlerta({
+					visible: true,
+					title: "ATENÇÃO!",
+					message: "Ocorreu um erro ao tentar verificar a matrícula.",
+					type: "danger",
+					confirmText: "FECHAR",
+					showConfirm: true,
+					showCancel: false,
+				});
 			}
 		} else {
 			setAlerta({
@@ -276,47 +298,59 @@ function PlanoDeSaude(props) {
 				confirmText: "FECHAR",
 			});
 		} else {
-			const { data } = await api.associados.post("/cadastrarPlanoDeSaude", {
-				beneficiario: {
-					...beneficiario,
-					data_nascimento: formatDate(beneficiario.data_nascimento, "AMD"),
-				},
-				plano,
-				associado,
-			});
-
-			setAlerta({
-				visible: true,
-				title: data.title,
-				message: data.message,
-				type: data.status ? "success" : "danger",
-				showCancel: false,
-				showConfirm: true,
-				confirmText: "FECHAR",
-			});
-
-			if (data.status) {
-				setMatricula("");
-				setBeneficiario({
-					Name: "",
-					Value: "",
-					data_nascimento: "",
-					idade: 0,
-					estado_civil: { Name: "", Value: "" },
-					sexo: "",
-					tipo: "",
-					local_cobranca: { Name: "", Value: "" },
-					cpf: "",
-					valor_mensalidade: 0,
+			try {
+				const { data } = await api.associados.post("/cadastrarPlanoDeSaude", {
+					beneficiario: {
+						...beneficiario,
+						data_nascimento: formatDate(beneficiario.data_nascimento, "AMD"),
+					},
+					plano,
+					associado,
 				});
-				setAssociado({});
-				setDependentes([]);
-				setPlano({
-					Name: "",
-					Value: "",
-					valor_faixas: [],
+
+				setAlerta({
+					visible: true,
+					title: data.title,
+					message: data.message,
+					type: data.status ? "success" : "danger",
+					showCancel: false,
+					showConfirm: true,
+					confirmText: "FECHAR",
 				});
-				setMostrarDados(false);
+
+				if (data.status) {
+					setMatricula("");
+					setBeneficiario({
+						Name: "",
+						Value: "",
+						data_nascimento: "",
+						idade: 0,
+						estado_civil: { Name: "", Value: "" },
+						sexo: "",
+						tipo: "",
+						local_cobranca: { Name: "", Value: "" },
+						cpf: "",
+						valor_mensalidade: 0,
+					});
+					setAssociado({});
+					setDependentes([]);
+					setPlano({
+						Name: "",
+						Value: "",
+						valor_faixas: [],
+					});
+					setMostrarDados(false);
+				}
+			} catch (error) {
+				setAlerta({
+					visible: true,
+					title: "ATENÇÃO!",
+					message: "Ocorreu um erro ao tentar cadastrar o plano de saúde.",
+					type: "danger",
+					showCancel: false,
+					showConfirm: true,
+					confirmText: "FECHAR",
+				});
 			}
 		}
 	};

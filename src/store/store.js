@@ -14,7 +14,7 @@ export const deleteStore = () => {
 };
 
 export const StoreProvider = ({ children }) => {
-	const [state, setState] = useState({ cartao: null, senha: null });
+	const [state, setState] = useState(null);
 
 	const carregarDados = async () => {
 		try {
@@ -23,7 +23,7 @@ export const StoreProvider = ({ children }) => {
 			if (!!data) {
 				setState({ ...JSON.parse(data) });
 			} else {
-				setState({ cartao: null, senha: null });
+				setState(null);
 			}
 		} catch (error) {}
 	};

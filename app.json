@@ -2,7 +2,7 @@
 	"expo": {
 		"name": "ASSOCIAC Mobile",
 		"description": "Aplicativo para gestão administrativa da ABEPOM.",
-		"slug": "associac_mobile",
+		"slug": "associac",
 		"version": "1.0.0",
 		"backgroundColor": "#03254E",
 		"primaryColor": "#03254E",
@@ -20,7 +20,7 @@
 			"supportsTablet": true
 		},
 		"android": {
-			"package": "com.nti_abepom.associac",
+			"package": "br.org.abepom.associac",
 			"backgroundColor": "#03254E",
 			"icon": "./assets/img/icon.png",
 			"adaptiveIcon": {

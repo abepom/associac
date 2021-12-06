@@ -31,21 +31,38 @@ function Dependentes(props) {
 		if (matricula !== "") {
 			setCarregando(true);
 
-			const { data } = await api.associados.get("/verificarMatricula", {
-				cartao: `${matricula}00001`,
-			});
-
-			setAssociado(data);
-
-			if (data.status) {
-				const { data } = await api.associados.get("/listarDependentes", {
+			try {
+				const { data } = await api.associados.get("/verificarMatricula", {
 					cartao: `${matricula}00001`,
 				});
 
-				setDependentes(data.dependentes);
+				setAssociado(data);
+
+				if (data.status) {
+					const { data } = await api.associados.get("/listarDependentes", {
+						cartao: `${matricula}00001`,
+					});
+
+					setDependentes(data.dependentes);
+					setCarregando(false);
+					setMostrarDados(true);
+					Keyboard.dismiss();
+				}
+			} catch (error) {
 				setCarregando(false);
-				setMostrarDados(true);
+				setDependentes([]);
+				setMostrarDados(false);
 				Keyboard.dismiss();
+
+				setAlerta({
+					visible: true,
+					title: "ATENÇÃO!",
+					message: "Ocorreu um erro ao listar os dependentes.",
+					type: "danger",
+					confirmText: "FECHAR",
+					showConfirm: true,
+					showCancel: false,
+				});
 			}
 		} else {
 			setAlerta({

@@ -29,14 +29,31 @@ function GerarSenha(props) {
 		if (matricula !== "") {
 			setCarregando(true);
 
-			const { data } = await api.associados.get("/verificarMatricula", {
-				cartao: `${matricula}00001`,
-			});
+			try {
+				const { data } = await api.associados.get("/verificarMatricula", {
+					cartao: `${matricula}00001`,
+				});
 
-			setAssociado(data);
-			setCarregando(false);
-			setMostrarDados(true);
-			Keyboard.dismiss();
+				setAssociado(data);
+				setCarregando(false);
+				setMostrarDados(true);
+				Keyboard.dismiss();
+			} catch (error) {
+				setAssociado({});
+				setCarregando(false);
+				setMostrarDados(false);
+				Keyboard.dismiss();
+
+				setAlerta({
+					visible: true,
+					title: "ATENÇÃO!",
+					message: "Ocorreu um erro ao verificar a matrícula.",
+					type: "danger",
+					confirmText: "FECHAR",
+					showConfirm: true,
+					showCancel: false,
+				});
+			}
 		} else {
 			setAlerta({
 				visible: true,
@@ -51,31 +68,43 @@ function GerarSenha(props) {
 	};
 
 	const gerarSenha = async () => {
-		const { data } = await api.associados.post("/gerarSenhaAppDependente", {
-			cartao: associado.cartao,
-			celular: associado.celular,
-		});
-
-		if (data.status) {
-			setMatricula("");
-			setAssociado({});
-			setMostrarDados(false);
-
-			setAlerta({
-				visible: true,
-				title: data.title,
-				message:
-					"Uma nova senha será enviada para o celular do titular. Caso o titular não receba o SMS, entre em contato com a ABEPOM.",
-				type: "success",
-				confirmText: "FECHAR",
-				showConfirm: true,
-				showCancel: false,
+		try {
+			const { data } = await api.associados.post("/gerarSenhaAppDependente", {
+				cartao: associado.cartao,
+				celular: associado.celular,
 			});
-		} else {
+
+			if (data.status) {
+				setMatricula("");
+				setAssociado({});
+				setMostrarDados(false);
+
+				setAlerta({
+					visible: true,
+					title: data.title,
+					message:
+						"Uma nova senha será enviada para o celular do titular. Caso o titular não receba o SMS, entre em contato com a ABEPOM.",
+					type: "success",
+					confirmText: "FECHAR",
+					showConfirm: true,
+					showCancel: false,
+				});
+			} else {
+				setAlerta({
+					visible: true,
+					title: data.title,
+					message: data.message,
+					type: "danger",
+					confirmText: "FECHAR",
+					showConfirm: true,
+					showCancel: false,
+				});
+			}
+		} catch (error) {
 			setAlerta({
 				visible: true,
-				title: data.title,
-				message: data.message,
+				title: "ATENÇÃO!",
+				message: "Ocorreu um erro ao tentar gerar a senha.",
 				type: "danger",
 				confirmText: "FECHAR",
 				showConfirm: true,

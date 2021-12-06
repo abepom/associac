@@ -88,22 +88,35 @@ function ConsultarDescontos(props) {
 		if (matricula !== "") {
 			setCarregando(true);
 
-			const { data } = await api.associados.get("/verificarMatricula", {
-				cartao: `${matricula}00001`,
-			});
+			try {
+				const { data } = await api.associados.get("/verificarMatricula", {
+					cartao: `${matricula}00001`,
+				});
 
-			setAssociado(data);
+				setAssociado(data);
 
-			const response = await api.associados.get("/descontosDoMes", {
-				cartao: `${matricula}00001`,
-				mes: ("0" + mes.Value).slice(-2),
-				ano: ano.Value,
-			});
+				const response = await api.associados.get("/descontosDoMes", {
+					cartao: `${matricula}00001`,
+					mes: ("0" + mes.Value).slice(-2),
+					ano: ano.Value,
+				});
 
-			setCarregando(false);
-			setMostrarDados(true);
-			setDescontos([...response.data.descontos]);
-			Keyboard.dismiss();
+				setCarregando(false);
+				setMostrarDados(true);
+				setDescontos([...response.data.descontos]);
+				Keyboard.dismiss();
+			} catch (error) {
+				Keyboard.dismiss();
+				setAlerta({
+					visible: true,
+					title: "ATENÇÃO!",
+					message: "Ocorreu um erro ao carregar os descontos.",
+					type: "danger",
+					confirmText: "FECHAR",
+					showConfirm: true,
+					showCancel: false,
+				});
+			}
 		} else {
 			setAlerta({
 				visible: true,
@@ -121,12 +134,20 @@ function ConsultarDescontos(props) {
 		setCarregandoProcedimento(true);
 		setModalComposicaoParcelamento(true);
 
-		const { data } = await api.associados.get("/procedimentosCoparticipacao", {
-			controle: controle.replace("CD: ", ""),
-		});
+		try {
+			const { data } = await api.associados.get(
+				"/procedimentosCoparticipacao",
+				{
+					controle: controle.replace("CD: ", ""),
+				}
+			);
 
-		setProcedimentosCopart(data.procedimentos);
-		setCarregandoProcedimento(false);
+			setProcedimentosCopart(data.procedimentos);
+			setCarregandoProcedimento(false);
+		} catch (error) {
+			setProcedimentosCopart([]);
+			setCarregandoProcedimento(false);
+		}
 	}
 
 	return (
