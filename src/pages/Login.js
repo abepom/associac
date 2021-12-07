@@ -21,8 +21,8 @@ import Constants from "expo-constants";
 
 function Login(props) {
 	const [usuario, setUsuario] = useUsuario();
-	const [nome, setNome] = useState("bruno");
-	const [senha, setSenha] = useState("jack2811");
+	const [nome, setNome] = useState("");
+	const [senha, setSenha] = useState("");
 	const [alerta, setAlerta] = useState({ visible: false });
 
 	const senhaRef = useRef(null);

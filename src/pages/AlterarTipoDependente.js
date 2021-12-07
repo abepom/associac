@@ -3,6 +3,7 @@ import {
 	AsyncStorage,
 	Image,
 	SafeAreaView,
+	ScrollView,
 	Text,
 	TouchableOpacity,
 	View,
@@ -336,7 +337,7 @@ function AlterarTipoDependente(props) {
 		<>
 			<Header titulo="Alterar Tipo de Dependente" {...props} />
 			<SafeAreaView style={{ flex: 1, zIndex: 100 }}>
-				<View style={{ flex: 1, margin: 20 }}>
+				<ScrollView style={{ flex: 1, margin: 20 }}>
 					<Text
 						style={{
 							textAlign: "center",
@@ -705,7 +706,7 @@ function AlterarTipoDependente(props) {
 							</Text>
 						</TouchableOpacity>
 					</View>
-				</View>
+				</ScrollView>
 			</SafeAreaView>
 			<Alert {...props} alerta={alerta} setAlerta={setAlerta} />
 		</>

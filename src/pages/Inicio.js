@@ -114,8 +114,8 @@ function Inicio(props) {
 											flexGrow: 1,
 											margin: 10,
 											width: portrait ? "47%" : 200,
-											height: 210,
-											padding: 10,
+											height: portrait ? 210 : 180,
+											padding: portrait ? 10 : 15,
 											justifyContent: "center",
 											alignItems: "center",
 										}}

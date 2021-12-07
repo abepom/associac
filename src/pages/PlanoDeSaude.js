@@ -6,6 +6,7 @@ import {
 	Text,
 	TouchableOpacity,
 	View,
+	ScrollView,
 } from "react-native";
 import { TextInputMask } from "react-native-masked-text";
 import { TextInput } from "react-native-paper";
@@ -442,7 +443,7 @@ function PlanoDeSaude(props) {
 						</View>
 						<View style={{ flex: 1 }}></View>
 					</View>
-					<View style={{ flex: 1, marginTop: 50 }}>
+					<ScrollView style={{ flex: 1, marginTop: 50 }}>
 						{carregando ? (
 							<View style={[styles.centralizado, { flex: 1 }]}>
 								<Loading size={120} />
@@ -1090,7 +1091,7 @@ function PlanoDeSaude(props) {
 								)}
 							</>
 						)}
-					</View>
+					</ScrollView>
 				</View>
 			</SafeAreaView>
 			<Alert {...props} alerta={alerta} setAlerta={setAlerta} />

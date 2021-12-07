@@ -8,6 +8,7 @@ import {
 	ScrollView,
 	Modal,
 	Keyboard,
+	Dimensions,
 } from "react-native";
 import { TextInputMask } from "react-native-masked-text";
 import { Button, IconButton, TextInput } from "react-native-paper";
@@ -41,6 +42,7 @@ function RecadastrarAssociado(props) {
 	const [pdf, setPdf] = useState("");
 	const [btnRecadastrar, setBtnRecadastrar] = useState(false);
 	const [alerta, setAlerta] = useState({});
+	const [portrait, setPortrait] = useState(false);
 
 	useEffect(() => {
 		listarCidades();
@@ -268,12 +270,10 @@ function RecadastrarAssociado(props) {
 		</head>
 		<body>
 			<center>
-				<img src="https://www.abepom.org.br/images/logomarca.png" style="width: 70px" />
-				<br />
-				<h4>ASSOCIAÇÃO BENEFICENTE DOS MILITARES ESTADUAIS DE SANTA CATARINA</h4>
-				<h4>REQUERIMENTO DE RECADASTRAMENTO</h4>
+				<img src="https://www.abepom.org.br/images/logomarca.png" style="width: 60px" />
+				<h5 style="margin-top:0px;">ASSOCIAÇÃO BENEFICENTE DOS MILITARES ESTADUAIS DE SANTA <br />REQUERIMENTO DE RECADASTRAMENTO</h5>
 			</center>  
-			<table width="100%" border="1" cellspacing="0" cellpadding="4" align="center" style="font-size:9px;">
+			<table width="100%" border="1" cellspacing="0" cellpadding="4" align="center" style="font-size:9px">
 				<tbody>
 					<tr>
 						<td style="width: 33%"><b>NOME:</b> ${associado.nome}</td>
@@ -314,7 +314,7 @@ function RecadastrarAssociado(props) {
 					</tr>
 				</tbody>
 			</table>
-			<p align="justify" style="font-size:12px">
+			<p align="justify" style="font-size: 11px">
 				O associado acima qualificado vem por meio do presente instrumento, isento de qualquer tipo de constrangimento ou coação, requerer seu recadastramento junto ao quadro 
 				social da ABEPOM, com base nos termos dos artigos 3º, 4º, 5º, 6º, 7º e 8º do Estatuto Social vigente cujo teor tem amplo conhecimento, autorizando desde já, que a sua 
 				contribuição mensal bem como, quaisquer outros encargos devidos, decorrentes da prestação de serviços ou fruição dos benefícios, sejam descontados mediante consignação 
@@ -323,16 +323,16 @@ function RecadastrarAssociado(props) {
 				no seu Plano e Regulamento de BENEFÍCIOS e SERVIÇOS, cujo teor também conhece) sejam debitados em sua conta corrente bancária, através da qual recebe os seus 
 				vencimentos. Declaro também, que estou ciente nas previsões do artigo 7º, §1º e § 2º do Estatuto Social*.
 			</p> 
-			<p align="justify" style="font-size:12px">
+			<p align="justify" style="font-size: 11px">
 				Sendo empregado da ABEPOM, autorizo na Rescisão Contratual, que quaisquer débitos contraídos junto a associação, sejam descontados no ato da rescisão.
 			</p>  
-			<p align="justify" style="font-size:9px">
+			<p align="justify" style="font-size: 9px">
 				* “7º - São dependentes dos associados, a esposa ou o esposo, a companheira ou o companheiro em união estável devidamente comprovada, os filhos até 18 (dezoito) anos 
 				de idade e os filhos absolutamente incapazes. §1º - O limite de idade para os filhos previsto no caput, poderá ser ampliado até o ser comprovada semestralmente. §2º - 
 				Podem ainda ser inscritos como dependentes o enteado e o menor que se ache sob sua guarda judicial, o pai, a mãe, o sogro ou dependência econômica do associado 
 				devidamente comprovada, cuja regulamentação sobre a comprovação da dependência econômica, meio de Diretriz fixada pelo Conselho de Administração.
 			</p>  
-			<p align="justify" style="font-size:12px">Nestes termos, pede deferimento.</p>
+			<p align="justify" style="font-size:11px">Nestes termos, pede deferimento.</p>
 			`);
 
 		setModal(true);
@@ -436,6 +436,16 @@ function RecadastrarAssociado(props) {
 			setMatricula(props.route.params.associado.matricula);
 			setMostrarDados(true);
 		}
+
+		Dimensions.addEventListener("change", ({ window: { width, height } }) => {
+			if (width < height) {
+				// PORTRAIT
+				setPortrait(true);
+			} else {
+				// LANDSCAPE
+				setPortrait(false);
+			}
+		});
 	}, []);
 
 	return (
@@ -451,7 +461,13 @@ function RecadastrarAssociado(props) {
 						paddingTop: 20,
 					}}
 				>
-					<View style={{ flex: 1, width: "90%", marginBottom: 20 }}>
+					<View
+						style={{
+							width: "90%",
+							minHeight: portrait ? 500 : 430,
+							marginBottom: portrait ? 20 : 0,
+						}}
+					>
 						<WebView source={{ html: pdf }} />
 					</View>
 					<View
@@ -460,7 +476,7 @@ function RecadastrarAssociado(props) {
 							width: 380,
 							backgroundColor: "#ccc",
 							position: "absolute",
-							top: 730,
+							top: portrait ? 680 : 590,
 							zIndex: 999999,
 						}}
 					/>
@@ -468,7 +484,6 @@ function RecadastrarAssociado(props) {
 						ref={ref}
 						style={{ flex: 1, height: 350 }}
 						onOK={handleOK}
-						onEmpty={() => console.log("VAZIO")}
 						descriptionText=""
 						webStyle={`
 						.m-signature-pad {width: 450px; height: 150px; margin-left: auto; margin-right: auto; margin-top: 10px; }
@@ -480,14 +495,14 @@ function RecadastrarAssociado(props) {
 						style={{
 							alignItems: "center",
 							position: "absolute",
-							top: 780,
+							top: portrait ? 720 : 615,
 						}}
 					>
 						<Text>Assinatura de</Text>
 						<Text style={{ fontWeight: "bold" }}>
 							{associado?.nome?.toUpperCase()}
 						</Text>
-						<View style={{ flexDirection: "row", marginTop: 20 }}>
+						<View style={{ flexDirection: "row", marginTop: 5 }}>
 							<Text style={{ marginHorizontal: 7 }}>LOCAL: FLORIANOPOLIS </Text>
 							<Text style={{ marginHorizontal: 7 }}>DATA: 25/11/2021</Text>
 						</View>
@@ -495,7 +510,7 @@ function RecadastrarAssociado(props) {
 					<View
 						style={{
 							position: "absolute",
-							top: 900,
+							top: portrait ? 900 : 655,
 							flexDirection: "row",
 							justifyContent: "center",
 							alignItems: "center",
@@ -508,12 +523,16 @@ function RecadastrarAssociado(props) {
 								alignItems: "center",
 							}}
 						>
-							<Text style={{ marginTop: 40, textAlign: "center" }}>
-								bruno.horn
+							<Text
+								style={{
+									marginTop: 40,
+									textAlign: "center",
+									fontWeight: "bold",
+								}}
+							>
+								{nome}
 							</Text>
-							<Text style={{ textAlign: "center" }}>
-								Responsável pelo cadastro
-							</Text>
+							<Text style={{ textAlign: "center" }}>Representante ABEPOM</Text>
 						</View>
 						<View
 							style={{
