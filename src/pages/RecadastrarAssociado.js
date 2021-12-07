@@ -26,7 +26,7 @@ import { useUsuario } from "../store/Usuario";
 
 function RecadastrarAssociado(props) {
 	const ref = useRef();
-	const [usuario] = useUsuario();
+	const [{ nome, token }] = useUsuario();
 	const [matricula, setMatricula] = useState("");
 	const [associado, setAssociado] = useState({
 		sexo: { Name: "", Value: "" },
@@ -52,8 +52,11 @@ function RecadastrarAssociado(props) {
 			setCarregando(true);
 
 			try {
-				const { data } = await api.associados.get("/verificarMatricula", {
-					cartao: `${matricula}00001`,
+				const { data } = await api({
+					url: "/associados/verificarMatricula",
+					method: "GET",
+					params: { cartao: matricula },
+					headers: { "x-access-token": token },
 				});
 
 				setAssociado(data);
@@ -98,7 +101,7 @@ function RecadastrarAssociado(props) {
 
 	async function listarCidades() {
 		try {
-			const { data } = await api.geral.get("/listarCidades");
+			const { data } = await api.get("/listarCidades");
 
 			let cids = [];
 
@@ -117,7 +120,11 @@ function RecadastrarAssociado(props) {
 
 	async function listarLotacoes() {
 		try {
-			const { data } = await api.geral.get("/listarLotacoes");
+			const { data } = await api({
+				url: "/listarLotacoes",
+				method: "GET",
+				headers: { "x-access-token": token },
+			});
 
 			let lots = [];
 
@@ -190,8 +197,22 @@ function RecadastrarAssociado(props) {
 	}
 
 	async function recadastrar() {
+		setAlerta({
+			visible: true,
+			title: "EFETUANDO RECADASTRAMENTO",
+			message: <Loading size={125} />,
+			showConfirm: false,
+			showCancel: false,
+			showIcon: false,
+		});
+
 		try {
-			const { data } = await api.associados.post("/recadastrar", { associado });
+			const { data } = await api({
+				url: "/associados/recadastrar",
+				method: "POST",
+				data: { associado },
+				headers: { "x-access-token": token },
+			});
 
 			if (data.status) {
 				setAssociado({
@@ -340,9 +361,7 @@ function RecadastrarAssociado(props) {
 				</center>
 				<div style="display: flex; flex: 1; flex-direction: row; width: 100%;margin-top: 50px;">
 					<div style="display: flex; flex: 1; justify-content: center;">
-						<p style="text-align: center"><b>${
-							usuario.nome
-						}</b><br />Representante ABEPOM</p>
+						<p style="text-align: center"><b>${nome}</b><br />Representante ABEPOM</p>
 					</div>
 					<div style="display: flex; flex: 1; justify-content: center;">
 						<p style="text-align: center">Cel Aroldo<br />Presidente da ABEPOM</p>
@@ -362,10 +381,15 @@ function RecadastrarAssociado(props) {
 				name: `REQUERIMENTO_RECADASTRO_${associado.matricula}.pdf`,
 			});
 
-			const { data } = await api.associados.post(
-				"/cadastrarAssinatura",
+			const { data } = await api.post(
+				"/associados/cadastrarAssinatura",
 				formulario,
-				"multipart/form-data"
+				{
+					headers: {
+						"Content-Type": `multipart/form-data; boundary=${formulario._boundary}`,
+						"x-access-token": token,
+					},
+				}
 			);
 
 			if (data.status) {

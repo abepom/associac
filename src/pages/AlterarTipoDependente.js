@@ -23,7 +23,7 @@ import { useUsuario } from "../store/Usuario";
 function AlterarTipoDependente(props) {
 	const { navigation } = props;
 	const data_atual = new Date();
-	const [usuario] = useUsuario();
+	const [{ token }] = useUsuario();
 	const [matricula, setMatricula] = useState(props.route.params.matricula);
 	const [dependente, setDependente] = useState({
 		...props.route.params.dependente,
@@ -120,7 +120,7 @@ function AlterarTipoDependente(props) {
 			case "23":
 			case "99":
 				try {
-					const { data } = await api.geral.get("/listarTiposDependente");
+					const { data } = await api.get("/listarTiposDependente");
 
 					let list_tipos = [];
 
@@ -232,10 +232,12 @@ function AlterarTipoDependente(props) {
 				showConfirm: false,
 			});
 
-			const { data, status } = await api.associados.post(
-				"/alterarTipoDependente",
-				{ dependente, matricula }
-			);
+			const { data, status } = await api({
+				url: "/associados/alterarTipoDependente",
+				method: "POST",
+				data: { dependente, matricula },
+				headers: { "x-access-token": token },
+			});
 
 			if (status == 401) {
 				setAlerta({
@@ -303,7 +305,6 @@ function AlterarTipoDependente(props) {
 				const formulario = new FormData();
 				formulario.append("matricula", `${matricula}`);
 				formulario.append("dependente", `${dependente.cont}`);
-				formulario.append("usuario", usuario.usuario);
 				formulario.append("tipo", "AF");
 				formulario.append("file", {
 					uri,
@@ -311,11 +312,12 @@ function AlterarTipoDependente(props) {
 					name: `${matricula}_${new Date().toJSON()}.${extensao}`,
 				});
 
-				const { data } = await api.geral.post(
-					"/enviarDocumentoTitular",
-					formulario,
-					"multipart/form-data"
-				);
+				const { data } = await api.post("/enviarDocumentoTitular", formulario, {
+					headers: {
+						"Content-Type": `multipart/form-data; boundary=${formulario._boundary}`,
+						"x-access-token": token,
+					},
+				});
 
 				if (data.status) {
 					setAtestado(data.link);

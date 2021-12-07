@@ -16,9 +16,11 @@ import Loading from "../components/Loading";
 import Messages from "../components/Messages";
 import images from "../utils/images";
 import Alert from "../components/Alert";
+import { useUsuario } from "../store/Usuario";
 
 function GerarSenha(props) {
 	const { navigation } = props;
+	const [{ token }] = useUsuario();
 	const [matricula, setMatricula] = useState("");
 	const [associado, setAssociado] = useState({});
 	const [carregando, setCarregando] = useState(false);
@@ -30,8 +32,11 @@ function GerarSenha(props) {
 			setCarregando(true);
 
 			try {
-				const { data } = await api.associados.get("/verificarMatricula", {
-					cartao: `${matricula}00001`,
+				const { data } = await api({
+					url: "/associados/verificarMatricula",
+					method: "GET",
+					params: { cartao: matricula },
+					headers: { "x-access-token": token },
 				});
 
 				setAssociado(data);
@@ -69,7 +74,7 @@ function GerarSenha(props) {
 
 	const gerarSenha = async () => {
 		try {
-			const { data } = await api.associados.post("/gerarSenhaAppDependente", {
+			const { data } = await api.post("/associados/gerarSenhaAppDependente", {
 				cartao: associado.cartao,
 				celular: associado.celular,
 			});

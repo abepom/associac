@@ -17,9 +17,11 @@ import Alert from "../components/Alert";
 import api from "../../services/api";
 import Loading from "../components/Loading";
 import Messages from "../components/Messages";
+import { useUsuario } from "../store/Usuario";
 
 function Dependentes(props) {
 	const { navigation } = props;
+	const [{ token }] = useUsuario();
 	const [matricula, setMatricula] = useState("");
 	const [alerta, setAlerta] = useState({});
 	const [carregando, setCarregando] = useState(false);
@@ -32,15 +34,20 @@ function Dependentes(props) {
 			setCarregando(true);
 
 			try {
-				const { data } = await api.associados.get("/verificarMatricula", {
-					cartao: `${matricula}00001`,
+				const { data } = await api({
+					url: "/associados/verificarMatricula",
+					method: "GET",
+					params: { cartao: matricula },
+					headers: { "x-access-token": token },
 				});
 
 				setAssociado(data);
 
 				if (data.status) {
-					const { data } = await api.associados.get("/listarDependentes", {
-						cartao: `${matricula}00001`,
+					const { data } = await api.get("/associados/listarDependentes", {
+						params: {
+							cartao: `${matricula}00001`,
+						},
 					});
 
 					setDependentes(data.dependentes);

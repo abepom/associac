@@ -21,10 +21,12 @@ import Loading from "../components/Loading";
 import Messages from "../components/Messages";
 import styles, { tema } from "../../assets/style/Style";
 import Alert from "../components/Alert";
+import { useUsuario } from "../store/Usuario";
 
 function ConsultarDescontos(props) {
 	let data_atual = new Date();
 	let total = 0;
+	const [{ token }] = useUsuario();
 	const [matricula, setMatricula] = useState("");
 	const [associado, setAssociado] = useState({
 		matricula: "",
@@ -89,16 +91,21 @@ function ConsultarDescontos(props) {
 			setCarregando(true);
 
 			try {
-				const { data } = await api.associados.get("/verificarMatricula", {
-					cartao: `${matricula}00001`,
+				const { data } = await api({
+					url: "/associados/verificarMatricula",
+					method: "GET",
+					params: { cartao: matricula },
+					headers: { "x-access-token": token },
 				});
 
 				setAssociado(data);
 
-				const response = await api.associados.get("/descontosDoMes", {
-					cartao: `${matricula}00001`,
-					mes: ("0" + mes.Value).slice(-2),
-					ano: ano.Value,
+				const response = await api.get("/associados/descontosDoMes", {
+					params: {
+						cartao: `${matricula}00001`,
+						mes: ("0" + mes.Value).slice(-2),
+						ano: ano.Value,
+					},
 				});
 
 				setCarregando(false);
@@ -135,10 +142,12 @@ function ConsultarDescontos(props) {
 		setModalComposicaoParcelamento(true);
 
 		try {
-			const { data } = await api.associados.get(
-				"/procedimentosCoparticipacao",
+			const { data } = await api.get(
+				"/associados/procedimentosCoparticipacao",
 				{
-					controle: controle.replace("CD: ", ""),
+					params: {
+						controle: controle.replace("CD: ", ""),
+					},
 				}
 			);
 
@@ -716,6 +725,7 @@ function ConsultarDescontos(props) {
 												<Messages
 													titulo={`MATRÍCULA INVÁLIDA!`}
 													subtitulo="A matrícula informada não foi encontrada ou está inválida."
+													cor={tema.colors.vermelho}
 												/>
 											) : (
 												<Messages

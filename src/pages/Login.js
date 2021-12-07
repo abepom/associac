@@ -11,18 +11,18 @@ import {
 } from "react-native";
 import { TextInput } from "react-native-paper";
 import { tema } from "../../assets/style/Style";
-import images from "../utils/images";
+import Loading from "../components/Loading";
 import Alert from "../components/Alert";
 import api from "../../services/api";
 import { useUsuario } from "../store/Usuario";
-import Loading from "../components/Loading";
+import images from "../utils/images";
 import * as Updates from "expo-updates";
 import Constants from "expo-constants";
 
 function Login(props) {
 	const [usuario, setUsuario] = useUsuario();
-	const [nome, setNome] = useState("");
-	const [senha, setSenha] = useState("");
+	const [nome, setNome] = useState("bruno");
+	const [senha, setSenha] = useState("jack2811");
 	const [alerta, setAlerta] = useState({ visible: false });
 
 	const senhaRef = useRef(null);
@@ -55,7 +55,7 @@ function Login(props) {
 			});
 
 			try {
-				const { data } = await api.intranet.post("/login", {
+				const { data } = await api.post("/intranet/login", {
 					usuario: nome,
 					senha,
 				});

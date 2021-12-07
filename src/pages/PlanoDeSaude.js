@@ -24,7 +24,7 @@ import { useUsuario } from "../store/Usuario";
 
 function PlanoDeSaude(props) {
 	let d = new Date();
-	const [usuario] = useUsuario();
+	const [{ token }] = useUsuario();
 	const [matricula, setMatricula] = useState("");
 	const [alerta, setAlerta] = useState({});
 	const [carregando, setCarregando] = useState(false);
@@ -55,7 +55,12 @@ function PlanoDeSaude(props) {
 
 	const listarPlanos = async () => {
 		try {
-			const { data } = await api.geral.get("/listarPlanosDeSaude");
+			const { data } = await api({
+				url: "/listarPlanosDeSaude",
+				method: "GET",
+				headers: { "x-access-token": token },
+			});
+
 			let plans = [];
 
 			data.planos.map((plano) => {
@@ -99,15 +104,20 @@ function PlanoDeSaude(props) {
 			});
 
 			try {
-				const retorno = await api.associados.get("/verificarMatricula", {
-					cartao: `${matricula}00001`,
+				const retorno = await api({
+					url: "/associados/verificarMatricula",
+					method: "GET",
+					params: { cartao: matricula },
+					headers: { "x-access-token": token },
 				});
 
 				setAssociado(retorno.data);
 
 				if (retorno.data.status) {
-					const { data } = await api.associados.get("/listarDependentes", {
-						cartao: `${matricula}00001`,
+					const { data } = await api.get("/associados/listarDependentes", {
+						params: {
+							cartao: `${matricula}00001`,
+						},
 					});
 
 					let deps = [];
@@ -299,13 +309,18 @@ function PlanoDeSaude(props) {
 			});
 		} else {
 			try {
-				const { data } = await api.associados.post("/cadastrarPlanoDeSaude", {
-					beneficiario: {
-						...beneficiario,
-						data_nascimento: formatDate(beneficiario.data_nascimento, "AMD"),
+				const { data } = await api({
+					url: "/associados/cadastrarPlanoDeSaude",
+					method: "POST",
+					data: {
+						beneficiario: {
+							...beneficiario,
+							data_nascimento: formatDate(beneficiario.data_nascimento, "AMD"),
+						},
+						plano,
+						associado,
 					},
-					plano,
-					associado,
+					headers: { "x-access-token": token },
 				});
 
 				setAlerta({

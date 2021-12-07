@@ -25,22 +25,24 @@ import Alert from "../components/Alert";
 import Loading from "../components/Loading";
 import { useUsuario } from "../store/Usuario";
 
+const ASSOCIADO_INITIAL = {
+	matricula: "",
+	sexo: { Name: "", Value: "" },
+	cidade: { Name: "", Value: "" },
+	orgao: { Name: "", Value: "" },
+	funcao: { Name: "", Value: "" },
+	local_trabalho: { Name: "", Value: "" },
+	banco: { Name: "", Value: "" },
+	forma_desconto: { Name: "", Value: "" },
+	valor_mensalidade: 0,
+	paga_joia: 0,
+};
+
 function CadastrarAssociado(props) {
 	const { navigation } = props;
 	const [{ usuario, nome, token }] = useUsuario();
 	const [matricula, setMatricula] = useState("");
-	const [associado, setAssociado] = useState({
-		matricula: "",
-		sexo: { Name: "", Value: "" },
-		cidade: { Name: "", Value: "" },
-		orgao: { Name: "", Value: "" },
-		funcao: { Name: "", Value: "" },
-		local_trabalho: { Name: "", Value: "" },
-		banco: { Name: "", Value: "" },
-		forma_desconto: { Name: "", Value: "" },
-		valor_mensalidade: 0,
-		paga_joia: 0,
-	});
+	const [associado, setAssociado] = useState(ASSOCIADO_INITIAL);
 	const [cidades, setCidades] = useState([]);
 	const [orgaos, setOrgaos] = useState([]);
 	const [lotacoes, setLotacoes] = useState([]);
@@ -105,7 +107,7 @@ function CadastrarAssociado(props) {
 
 	async function listarCidades() {
 		try {
-			const { data } = await api.geral.get("/listarCidades");
+			const { data } = await api.get("/listarCidades");
 			let cids = [];
 
 			data.cidades.map((cidade) => {
@@ -123,7 +125,11 @@ function CadastrarAssociado(props) {
 
 	async function listarOrgaos() {
 		try {
-			const { data } = await api.geral.get("/listarOrgaos");
+			const { data } = await api({
+				url: "/listarOrgaos",
+				method: "GET",
+				headers: { "x-access-token": token },
+			});
 
 			let orgs = [];
 
@@ -142,7 +148,7 @@ function CadastrarAssociado(props) {
 
 	async function listarBancos() {
 		try {
-			const { data } = await api.geral.get("/listarBancos");
+			const { data } = await api.get("/listarBancos");
 
 			let bancs = [];
 
@@ -161,7 +167,11 @@ function CadastrarAssociado(props) {
 
 	async function listarFuncoes() {
 		try {
-			const { data } = await api.geral.get("/listarFuncoes");
+			const { data } = await api({
+				url: "/listarFuncoes",
+				method: "GET",
+				headers: { "x-access-token": token },
+			});
 
 			let funcs = [];
 
@@ -180,7 +190,11 @@ function CadastrarAssociado(props) {
 
 	async function listarLotacoes() {
 		try {
-			const { data } = await api.geral.get("/listarLotacoes");
+			const { data } = await api({
+				url: "/listarLotacoes",
+				method: "GET",
+				headers: { "x-access-token": token },
+			});
 
 			let lots = [];
 
@@ -199,7 +213,11 @@ function CadastrarAssociado(props) {
 
 	async function listarFormas() {
 		try {
-			const { data } = await api.geral.get("/listarFormasDesconto");
+			const { data } = await api({
+				url: "/listarFormasDesconto",
+				method: "GET",
+				headers: { "x-access-token": token },
+			});
 
 			let forms = [];
 
@@ -222,14 +240,17 @@ function CadastrarAssociado(props) {
 				setCarregando(true);
 
 				try {
-					const { data } = await api.associados.get("/verificarMatricula", {
-						cartao: matricula,
+					const { data } = await api({
+						url: "/associados/verificarMatricula",
+						method: "GET",
+						params: { cartao: matricula },
+						headers: { "x-access-token": token },
 					});
 
-					setMostrarDadosAssociado(true);
-					setAssociado(data);
-
 					if (data.status) {
+						setAssociado(data);
+						setMostrarDadosAssociado(true);
+
 						if (data.tipo === "01") {
 							setBtnRecadastrar(true);
 							setNextStep(false);
@@ -238,25 +259,25 @@ function CadastrarAssociado(props) {
 							setNextStep(true);
 						}
 					} else {
+						setAssociado(ASSOCIADO_INITIAL);
 						setBtnRecadastrar(false);
 						setNextStep(true);
+
+						setAlerta({
+							visible: true,
+							title: "ATENÇÃO!",
+							message: data.message,
+							type: "danger",
+							confirmText: "FECHAR",
+							showConfirm: true,
+							showCancel: false,
+						});
 					}
 
 					setCarregando(false);
 				} catch (error) {
 					setCarregando(false);
-					setAssociado({
-						matricula: "",
-						sexo: { Name: "", Value: "" },
-						cidade: { Name: "", Value: "" },
-						orgao: { Name: "", Value: "" },
-						funcao: { Name: "", Value: "" },
-						local_trabalho: { Name: "", Value: "" },
-						banco: { Name: "", Value: "" },
-						forma_desconto: { Name: "", Value: "" },
-						valor_mensalidade: 0,
-						paga_joia: 0,
-					});
+					setAssociado(ASSOCIADO_INITIAL);
 					setBtnRecadastrar(false);
 					setNextStep(false);
 					setAlerta({
@@ -298,9 +319,21 @@ function CadastrarAssociado(props) {
 	};
 
 	const cadastrarAssociado = async () => {
+		setAlerta({
+			visible: true,
+			title: "CARREGANDO ASSOCIADO",
+			message: <Loading size={125} />,
+			showConfirm: false,
+			showCancel: false,
+			showIcon: false,
+		});
+
 		try {
-			const { data } = await api.geral.post("/cadastrarAssociado", {
-				associado,
+			const { data } = await api({
+				url: "/cadastrarAssociado",
+				method: "POST",
+				data: { associado },
+				headers: { "x-access-token": token },
 			});
 
 			setAlerta({
@@ -315,17 +348,7 @@ function CadastrarAssociado(props) {
 
 			if (data.status) {
 				setActiveStep(0);
-				setAssociado({
-					matricula: "",
-					sexo: { Name: "", Value: "" },
-					cidade: { Name: "", Value: "" },
-					orgao: { Name: "", Value: "" },
-					funcao: { Name: "", Value: "" },
-					local_trabalho: { Name: "", Value: "" },
-					banco: { Name: "", Value: "" },
-					forma_desconto: { Name: "", Value: "" },
-					valor_mensalidade: 0,
-				});
+				setAssociado(ASSOCIADO_INITIAL);
 				setPrevStep(false);
 				setTextNext("PRÓXIMO");
 				setMostrarDadosAssociado(false);
@@ -356,10 +379,13 @@ function CadastrarAssociado(props) {
 				return false;
 			} else {
 				try {
-					const { data } = await api.associados.get("/verificarCpf", {
-						cartao: associado.matricula + "00001",
-						cpf: associado.cpf,
-						nascimento: formatDate(associado.nascimento, "AMD"),
+					const { data } = await api.get("/associados/verificarCpf", {
+						params: {
+							cartao: associado.matricula + "00001",
+							cpf: associado.cpf,
+							nascimento: formatDate(associado.nascimento, "AMD"),
+						},
+						headers: { "x-access-token": token },
 					});
 
 					return data.status;
@@ -468,11 +494,12 @@ function CadastrarAssociado(props) {
 					name: `${associado.matricula}_${new Date().toJSON()}.${extensao}`,
 				});
 
-				const { data } = await api.geral.post(
-					"/enviarDocumentoTitular",
-					formulario,
-					"multipart/form-data"
-				);
+				const { data } = await api.post("/enviarDocumentoTitular", formulario, {
+					headers: {
+						"Content-Type": `multipart/form-data; boundary=${formulario._boundary}`,
+						"x-access-token": token,
+					},
+				});
 
 				if (data.status) {
 					switch (tipo) {
@@ -491,6 +518,16 @@ function CadastrarAssociado(props) {
 						default:
 							break;
 					}
+				} else {
+					setAlerta({
+						visible: true,
+						title: "ATENÇÃO!",
+						message: data.message,
+						showCancel: false,
+						showConfirm: true,
+						confirmText: "FECHAR",
+						type: "danger",
+					});
 				}
 			} catch (error) {
 				setAlerta({
@@ -889,9 +926,16 @@ function CadastrarAssociado(props) {
 													flex: 1,
 													margin: 20,
 													backgroundColor: "#fff",
-													borderWidth: associado.tipo === "01" ? 2 : 0,
-													borderColor:
-														associado.tipo === "01" ? "#07A85C" : "#fff",
+													borderWidth: associado.status
+														? associado.tipo === "01"
+															? 2
+															: 0
+														: 0,
+													borderColor: associado.status
+														? associado.tipo === "01"
+															? "#07A85C"
+															: "#fff"
+														: "#fff",
 													padding: 20,
 													borderRadius: 6,
 													elevation: 1,
