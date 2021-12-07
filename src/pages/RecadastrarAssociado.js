@@ -484,9 +484,9 @@ function RecadastrarAssociado(props) {
 				>
 					<View
 						style={{
+							flex: 1,
 							width: "90%",
-							minHeight: portrait ? 500 : 430,
-							marginBottom: portrait ? 20 : 0,
+							marginBottom: 20,
 						}}
 					>
 						<WebView source={{ html: pdf }} />
@@ -497,7 +497,7 @@ function RecadastrarAssociado(props) {
 							width: 380,
 							backgroundColor: "#ccc",
 							position: "absolute",
-							top: portrait ? 680 : 590,
+							top: 735,
 							zIndex: 999999,
 						}}
 					/>
@@ -505,6 +505,16 @@ function RecadastrarAssociado(props) {
 						ref={ref}
 						style={{ flex: 1, height: 350 }}
 						onOK={handleOK}
+						onEmpty={() =>
+							setAlerta({
+								visible: true,
+								title: "ATENÇÃO!",
+								message: "Para confirmar é necessário preencher a assinatura.",
+								showCancel: false,
+								showConfirm: true,
+								confirmText: "FECHAR",
+							})
+						}
 						descriptionText=""
 						webStyle={`
 						.m-signature-pad {width: 450px; height: 150px; margin-left: auto; margin-right: auto; margin-top: 10px; }
@@ -516,7 +526,7 @@ function RecadastrarAssociado(props) {
 						style={{
 							alignItems: "center",
 							position: "absolute",
-							top: portrait ? 720 : 615,
+							top: 780,
 						}}
 					>
 						<Text>Assinatura de</Text>
@@ -531,7 +541,7 @@ function RecadastrarAssociado(props) {
 					<View
 						style={{
 							position: "absolute",
-							top: portrait ? 900 : 655,
+							top: 900,
 							flexDirection: "row",
 							justifyContent: "center",
 							alignItems: "center",

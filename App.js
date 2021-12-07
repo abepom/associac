@@ -58,7 +58,7 @@ export default function App() {
 						<Stack.Screen
 							name="RecadastrarAssociado"
 							component={RecadastrarAssociado}
-							options={{ headerShown: false }}
+							options={{ headerShown: false, orientation: "portrait" }}
 						/>
 						<Stack.Screen
 							name="PlanoDeSaude"

@@ -439,9 +439,9 @@ function AlterarTipoDependente(props) {
 								)}
 							/>
 						</View>
-						<View style={{ flex: 1 }}>
+						<View style={{ flex: 1, marginRight: 5 }}>
 							<TextInput
-								label="Data de Nascimento"
+								label="Nascimento"
 								mode={"outlined"}
 								theme={tema}
 								value={dependente.data_nascimento}
