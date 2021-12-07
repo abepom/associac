@@ -23,22 +23,24 @@ import styles, { tema } from "../../assets/style/Style";
 import Alert from "../components/Alert";
 import { useUsuario } from "../store/Usuario";
 
+const ASSOCIADO_INITIAL = {
+	matricula: "",
+	sexo: { Name: "", Value: "" },
+	cidade: { Name: "", Value: "" },
+	orgao: { Name: "", Value: "" },
+	funcao: { Name: "", Value: "" },
+	local_trabalho: { Name: "", Value: "" },
+	banco: { Name: "", Value: "" },
+	forma_desconto: { Name: "", Value: "" },
+	valor_mensalidade: 0,
+};
+
 function ConsultarDescontos(props) {
 	let data_atual = new Date();
 	let total = 0;
 	const [{ token }] = useUsuario();
 	const [matricula, setMatricula] = useState("");
-	const [associado, setAssociado] = useState({
-		matricula: "",
-		sexo: { Name: "", Value: "" },
-		cidade: { Name: "", Value: "" },
-		orgao: { Name: "", Value: "" },
-		funcao: { Name: "", Value: "" },
-		local_trabalho: { Name: "", Value: "" },
-		banco: { Name: "", Value: "" },
-		forma_desconto: { Name: "", Value: "" },
-		valor_mensalidade: 0,
-	});
+	const [associado, setAssociado] = useState(ASSOCIADO_INITIAL);
 	const [carregando, setCarregando] = useState(false);
 	const [mostrarDados, setMostrarDados] = useState(false);
 	const [descontos, setDescontos] = useState([]);
@@ -98,19 +100,36 @@ function ConsultarDescontos(props) {
 					headers: { "x-access-token": token },
 				});
 
-				setAssociado(data);
+				if (data.status) {
+					setAssociado(data);
 
-				const response = await api.get("/associados/descontosDoMes", {
-					params: {
-						cartao: `${matricula}00001`,
-						mes: ("0" + mes.Value).slice(-2),
-						ano: ano.Value,
-					},
-				});
+					const response = await api.get("/associados/descontosDoMes", {
+						params: {
+							cartao: `${matricula}00001`,
+							mes: ("0" + mes.Value).slice(-2),
+							ano: ano.Value,
+						},
+					});
+
+					setDescontos([...response.data.descontos]);
+					setMostrarDados(true);
+				} else {
+					setAssociado(ASSOCIADO_INITIAL);
+					setDepndentes([]);
+					setMostrarDados(false);
+
+					setAlerta({
+						visible: true,
+						title: "ATENÇÃO!",
+						message: data.message,
+						type: "danger",
+						confirmText: "FECHAR",
+						showConfirm: true,
+						showCancel: false,
+					});
+				}
 
 				setCarregando(false);
-				setMostrarDados(true);
-				setDescontos([...response.data.descontos]);
 				Keyboard.dismiss();
 			} catch (error) {
 				Keyboard.dismiss();

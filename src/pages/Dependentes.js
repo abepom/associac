@@ -51,10 +51,24 @@ function Dependentes(props) {
 					});
 
 					setDependentes(data.dependentes);
-					setCarregando(false);
 					setMostrarDados(true);
-					Keyboard.dismiss();
+				} else {
+					setDependentes([]);
+					setMostrarDados(false);
+
+					setAlerta({
+						visible: true,
+						title: "ATENÇÃO!",
+						message: data.message,
+						type: "danger",
+						confirmText: "FECHAR",
+						showConfirm: true,
+						showCancel: false,
+					});
 				}
+
+				setCarregando(false);
+				Keyboard.dismiss();
 			} catch (error) {
 				setCarregando(false);
 				setDependentes([]);

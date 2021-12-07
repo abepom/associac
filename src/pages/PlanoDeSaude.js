@@ -168,10 +168,24 @@ function PlanoDeSaude(props) {
 					});
 
 					setDependentes(deps);
-					setCarregando(false);
 					setMostrarDados(true);
-					Keyboard.dismiss();
+				} else {
+					setDependentes([]);
+					setMostrarDados(false);
+
+					setAlerta({
+						visible: true,
+						title: "ATENÇÃO!",
+						message: retorno.data.message,
+						type: "danger",
+						confirmText: "FECHAR",
+						showConfirm: true,
+						showCancel: false,
+					});
 				}
+
+				setCarregando(false);
+				Keyboard.dismiss();
 			} catch (error) {
 				setAssociado({});
 				setDependentes([]);

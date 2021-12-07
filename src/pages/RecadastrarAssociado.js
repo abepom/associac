@@ -25,15 +25,24 @@ import { WebView } from "react-native-webview";
 import Alert from "../components/Alert";
 import { useUsuario } from "../store/Usuario";
 
+const ASSOCIADO_INITIAL = {
+	matricula: "",
+	sexo: { Name: "", Value: "" },
+	cidade: { Name: "", Value: "" },
+	orgao: { Name: "", Value: "" },
+	funcao: { Name: "", Value: "" },
+	local_trabalho: { Name: "", Value: "" },
+	banco: { Name: "", Value: "" },
+	forma_desconto: { Name: "", Value: "" },
+	valor_mensalidade: 0,
+	paga_joia: 0,
+};
+
 function RecadastrarAssociado(props) {
 	const ref = useRef();
 	const [{ nome, token }] = useUsuario();
 	const [matricula, setMatricula] = useState("");
-	const [associado, setAssociado] = useState({
-		sexo: { Name: "", Value: "" },
-		local_trabalho: { Name: "", Value: "" },
-		cidade: { Name: "", Value: "" },
-	});
+	const [associado, setAssociado] = useState(ASSOCIADO_INITIAL);
 	const [carregando, setCarregando] = useState(false);
 	const [mostrarDados, setMostrarDados] = useState(false);
 	const [cidades, setCidades] = useState([]);
@@ -61,18 +70,29 @@ function RecadastrarAssociado(props) {
 					headers: { "x-access-token": token },
 				});
 
-				setAssociado(data);
-				setCarregando(false);
-				setMostrarDados(true);
 				setBtnRecadastrar(false);
 				setPdf("");
-				Keyboard.dismiss();
+				setCarregando(false);
+
+				if (data.status) {
+					setAssociado(data);
+					setMostrarDados(true);
+					Keyboard.dismiss();
+				} else {
+					setAssociado(ASSOCIADO_INITIAL);
+					setMostrarDados(false);
+					setAlerta({
+						visible: true,
+						title: "ATENÇÃO!",
+						message: data.message,
+						type: "danger",
+						confirmText: "FECHAR",
+						showConfirm: true,
+						showCancel: false,
+					});
+				}
 			} catch (error) {
-				setAssociado({
-					sexo: { Name: "", Value: "" },
-					local_trabalho: { Name: "", Value: "" },
-					cidade: { Name: "", Value: "" },
-				});
+				setAssociado(ASSOCIADO_INITIAL);
 				setCarregando(false);
 				setMostrarDados(false);
 				setBtnRecadastrar(true);
@@ -89,6 +109,7 @@ function RecadastrarAssociado(props) {
 				});
 			}
 		} else {
+			setAssociado(ASSOCIADO_INITIAL);
 			setAlerta({
 				visible: true,
 				title: "ATENÇÃO!",

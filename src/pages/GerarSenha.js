@@ -39,9 +39,24 @@ function GerarSenha(props) {
 					headers: { "x-access-token": token },
 				});
 
-				setAssociado(data);
+				if (data.status) {
+					setAssociado(data);
+					setMostrarDados(true);
+				} else {
+					setAssociado({});
+					setMostrarDados(false);
+					setAlerta({
+						visible: true,
+						title: "ATENÇÃO!",
+						message: data.message,
+						type: "danger",
+						confirmText: "FECHAR",
+						showConfirm: true,
+						showCancel: false,
+					});
+				}
+
 				setCarregando(false);
-				setMostrarDados(true);
 				Keyboard.dismiss();
 			} catch (error) {
 				setAssociado({});
