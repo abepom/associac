@@ -121,7 +121,11 @@ function AlterarTipoDependente(props) {
 			case "23":
 			case "99":
 				try {
-					const { data } = await api.get("/listarTiposDependente");
+					const { data } = await api({
+						url: "/listarTiposDependente",
+						method: "GET",
+						headers: { "x-access-token": token },
+					});
 
 					let list_tipos = [];
 

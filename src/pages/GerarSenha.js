@@ -89,9 +89,14 @@ function GerarSenha(props) {
 
 	const gerarSenha = async () => {
 		try {
-			const { data } = await api.post("/associados/gerarSenhaAppDependente", {
-				cartao: associado.cartao,
-				celular: associado.celular,
+			const { data } = await api({
+				url: "/associados/gerarSenhaAppDependente",
+				method: "POST",
+				data: {
+					cartao: associado.cartao,
+					celular: associado.celular,
+				},
+				headers: { "x-access-token": token },
 			});
 
 			if (data.status) {

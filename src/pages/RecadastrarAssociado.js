@@ -124,7 +124,11 @@ function RecadastrarAssociado(props) {
 
 	async function listarCidades() {
 		try {
-			const { data } = await api.get("/listarCidades");
+			const { data } = await api({
+				url: "/listarCidades",
+				method: "GET",
+				headers: { "x-access-token": token },
+			});
 
 			let cids = [];
 

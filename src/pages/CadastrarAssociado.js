@@ -107,7 +107,12 @@ function CadastrarAssociado(props) {
 
 	async function listarCidades() {
 		try {
-			const { data } = await api.get("/listarCidades");
+			const { data } = await api({
+				url: "/listarCidades",
+				method: "GET",
+				headers: { "x-access-token": token },
+			});
+
 			let cids = [];
 
 			data.cidades.map((cidade) => {
@@ -148,7 +153,11 @@ function CadastrarAssociado(props) {
 
 	async function listarBancos() {
 		try {
-			const { data } = await api.get("/listarBancos");
+			const { data } = await api({
+				url: "/listarBancos",
+				method: "GET",
+				headers: { "x-access-token": token },
+			});
 
 			let bancs = [];
 
@@ -379,7 +388,9 @@ function CadastrarAssociado(props) {
 				return false;
 			} else {
 				try {
-					const { data } = await api.get("/associados/verificarCpf", {
+					const { data } = await api({
+						url: "/associados/verificarCpf",
+						method: "GET",
 						params: {
 							cartao: associado.matricula + "00001",
 							cpf: associado.cpf,

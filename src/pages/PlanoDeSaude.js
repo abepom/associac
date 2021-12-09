@@ -115,10 +115,13 @@ function PlanoDeSaude(props) {
 				setAssociado(retorno.data);
 
 				if (retorno.data.status) {
-					const { data } = await api.get("/associados/listarDependentes", {
+					const { data } = await api({
+						url: "/associados/listarDependentes",
+						method: "GET",
 						params: {
 							cartao: `${matricula}00001`,
 						},
+						headers: { "x-access-token": token },
 					});
 
 					let deps = [];

@@ -44,10 +44,13 @@ function Dependentes(props) {
 				setAssociado(data);
 
 				if (data.status) {
-					const { data } = await api.get("/associados/listarDependentes", {
+					const { data } = await api({
+						url: "/associados/listarDependentes",
+						method: "GET",
 						params: {
 							cartao: `${matricula}00001`,
 						},
+						headers: { "x-access-token": token },
 					});
 
 					setDependentes(data.dependentes);
