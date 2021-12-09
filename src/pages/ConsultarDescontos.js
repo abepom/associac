@@ -103,12 +103,15 @@ function ConsultarDescontos(props) {
 				if (data.status) {
 					setAssociado(data);
 
-					const response = await api.get("/associados/descontosDoMes", {
+					const response = await api({
+						url: "/associados/descontosDoMes",
+						method: "GET",
 						params: {
 							cartao: `${matricula}00001`,
 							mes: ("0" + mes.Value).slice(-2),
 							ano: ano.Value,
 						},
+						headers: { "x-access-token": token },
 					});
 
 					setDescontos([...response.data.descontos]);
@@ -161,14 +164,14 @@ function ConsultarDescontos(props) {
 		setModalComposicaoParcelamento(true);
 
 		try {
-			const { data } = await api.get(
-				"/associados/procedimentosCoparticipacao",
-				{
-					params: {
-						controle: controle.replace("CD: ", ""),
-					},
-				}
-			);
+			const { data } = await api({
+				url: "/associados/procedimentosCoparticipacao",
+				method: "GET",
+				params: {
+					controle: controle.replace("CD: ", ""),
+				},
+				headers: { "x-access-token": token },
+			});
 
 			setProcedimentosCopart(data.procedimentos);
 			setCarregandoProcedimento(false);
