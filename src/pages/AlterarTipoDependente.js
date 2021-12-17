@@ -141,6 +141,30 @@ function AlterarTipoDependente(props) {
 				}
 
 				break;
+			case "08":
+				setTipos([
+					{
+						Name: dependente.tipo.toUpperCase(),
+						Value: dependente.cod_dep,
+					},
+					{
+						Name: "CONJUGE",
+						Value: "02",
+					},
+				]);
+				break;
+			case "02":
+				setTipos([
+					{
+						Name: dependente.tipo.toUpperCase(),
+						Value: dependente.cod_dep,
+					},
+					{
+						Name: "COMPANHEIRO(A)",
+						Value: "08",
+					},
+				]);
+				break;
 			default:
 				setTipos([
 					{
@@ -567,7 +591,7 @@ function AlterarTipoDependente(props) {
 								mode={"outlined"}
 								theme={tema}
 								value={dependente.instagram}
-								maxLength={14}
+								maxLength={100}
 								style={{ fontSize: 18 }}
 								onChangeText={(text) =>
 									setDependente({ ...dependente, instagram: text })
@@ -580,7 +604,7 @@ function AlterarTipoDependente(props) {
 								mode={"outlined"}
 								theme={tema}
 								value={dependente.facebook}
-								maxLength={14}
+								maxLength={100}
 								style={{ fontSize: 18 }}
 								onChangeText={(text) =>
 									setDependente({ ...dependente, facebook: text })

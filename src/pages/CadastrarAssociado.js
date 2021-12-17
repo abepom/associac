@@ -268,7 +268,7 @@ function CadastrarAssociado(props) {
 							setNextStep(true);
 						}
 					} else {
-						setAssociado(ASSOCIADO_INITIAL);
+						setAssociado({ ...ASSOCIADO_INITIAL, matricula });
 						setBtnRecadastrar(false);
 						setNextStep(true);
 

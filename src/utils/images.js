@@ -17,6 +17,7 @@ import chave from "../../assets/img/chave.png";
 import sucesso from "../../assets/img/success.png";
 import atencao from "../../assets/img/warning.png";
 import sair from "../../assets/img/sair.png";
+import lock from "../../assets/img/lock.png";
 
 export default {
 	bg,
@@ -38,4 +39,5 @@ export default {
 	sucesso,
 	atencao,
 	sair,
+	lock,
 };

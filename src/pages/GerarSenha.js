@@ -6,6 +6,7 @@ import {
 	TouchableOpacity,
 	Image,
 	Keyboard,
+	FlatList,
 } from "react-native";
 import { TextInputMask } from "react-native-masked-text";
 import { TextInput } from "react-native-paper";
@@ -23,6 +24,7 @@ function GerarSenha(props) {
 	const [{ token }] = useUsuario();
 	const [matricula, setMatricula] = useState("");
 	const [associado, setAssociado] = useState({});
+	const [dependentes, setDependentes] = useState([]);
 	const [carregando, setCarregando] = useState(false);
 	const [mostrarDados, setMostrarDados] = useState(false);
 	const [alerta, setAlerta] = useState({});
@@ -41,6 +43,17 @@ function GerarSenha(props) {
 
 				if (data.status) {
 					setAssociado(data);
+
+					const response = await api({
+						url: "/associados/listarDependentes",
+						method: "GET",
+						params: {
+							cartao: `${matricula}00001`,
+						},
+						headers: { "x-access-token": token },
+					});
+
+					setDependentes(response.data.dependentes);
 					setMostrarDados(true);
 				} else {
 					setAssociado({});
@@ -87,28 +100,27 @@ function GerarSenha(props) {
 		}
 	};
 
-	const gerarSenha = async () => {
+	const gerarSenha = async (cartao, celular, tipo) => {
 		try {
 			const { data } = await api({
 				url: "/associados/gerarSenhaAppDependente",
 				method: "POST",
 				data: {
-					cartao: associado.cartao,
-					celular: associado.celular,
+					cartao,
+					celular,
 				},
 				headers: { "x-access-token": token },
 			});
 
 			if (data.status) {
-				setMatricula("");
-				setAssociado({});
-				setMostrarDados(false);
-
 				setAlerta({
 					visible: true,
 					title: data.title,
-					message:
-						"Uma nova senha será enviada para o celular do titular. Caso o titular não receba o SMS, entre em contato com a ABEPOM.",
+					message: `Uma nova senha será enviada para o celular do ${
+						tipo == 1 ? "titular" : "dependente"
+					}. Caso o ${
+						tipo == 1 ? "titular" : "dependente"
+					} não receba o SMS, entre em contato com a ABEPOM.`,
 					type: "success",
 					confirmText: "FECHAR",
 					showConfirm: true,
@@ -136,6 +148,110 @@ function GerarSenha(props) {
 				showCancel: false,
 			});
 		}
+	};
+
+	const modalSenhaTitular = () => {
+		if (associado.cartao === "") {
+			setAlerta({
+				visible: true,
+				title: "ATENÇÃO!",
+				message: "O titular informado não possui o cartão da ABEPOM.",
+				type: "danger",
+				confirmText: "FECHAR",
+				showConfirm: true,
+				showCancel: false,
+			});
+		} else {
+			if (!associado.ativo) {
+				setAlerta({
+					visible: true,
+					title: "ATENÇÃO!",
+					message: "O titular informado consta como inativo.",
+					type: "danger",
+					confirmText: "FECHAR",
+					showConfirm: true,
+					showCancel: false,
+				});
+			} else {
+				if (associado.celular === "") {
+					setAlerta({
+						visible: true,
+						title: "ATENÇÃO!",
+						message:
+							"O titular informado não possui o celular cadastrado na ABEPOM.",
+						type: "danger",
+						confirmText: "FECHAR",
+						showConfirm: true,
+						showCancel: false,
+					});
+				} else {
+					setAlerta({
+						visible: true,
+						title: "ATENÇÃO!",
+						message:
+							"Não é possível gerar uma nova senha para o titular informado.",
+						type: "danger",
+						confirmText: "FECHAR",
+						showConfirm: true,
+						showCancel: false,
+					});
+				}
+			}
+		}
+	};
+
+	const modalSenhaDependente = (item) => {
+		if (item.cartao === "") {
+			setAlerta({
+				visible: true,
+				title: "ATENÇÃO!",
+				message: "O dependente selecionado não possui o cartão da ABEPOM.",
+				type: "danger",
+				confirmText: "FECHAR",
+				showConfirm: true,
+				showCancel: false,
+			});
+		} else {
+			if (item.celular === "") {
+				setAlerta({
+					visible: true,
+					title: "ATENÇÃO!",
+					message:
+						"O dependente selecionado não possui o celular cadastrado na ABEPOM.",
+					type: "danger",
+					confirmText: "FECHAR",
+					showConfirm: true,
+					showCancel: false,
+				});
+			} else {
+				setAlerta({
+					visible: true,
+					title: "ATENÇÃO!",
+					message:
+						"Não é possível gerar uma nova senha para o dependente selecionado.",
+					type: "danger",
+					confirmText: "FECHAR",
+					showConfirm: true,
+					showCancel: false,
+				});
+			}
+		}
+	};
+
+	const confirmarEnvio = (cartao, celular, tipo) => {
+		setAlerta({
+			visible: true,
+			title: "ATENÇÃO!",
+			message: `Você deseja enviar um SMS para o ${
+				tipo == 1 ? "titular" : "dependente"
+			} com a senha do ABEPOM Mobile no número ${celular}?`,
+			type: "warning",
+			confirmText: "SIM, ENVIAR!",
+			showConfirm: true,
+			showCancel: true,
+			cancelText: "FECHAR",
+			confirmFunction: () => gerarSenha(cartao, celular, tipo),
+		});
 	};
 
 	return (
@@ -228,100 +344,132 @@ function GerarSenha(props) {
 														flexDirection: "row",
 													}}
 												>
-													<View style={{ flex: 1 }}>
-														<Text style={{ fontWeight: "bold" }}>
+													<View style={{ flex: 9 }}>
+														<Text
+															style={{
+																fontSize: 20,
+																color: tema.colors.primary,
+																fontWeight: "bold",
+															}}
+														>
 															{associado.nome}
 														</Text>
 														{associado.tipo === "01" ? (
-															<Text style={{ color: tema.colors.verde }}>
+															<Text
+																style={{
+																	fontSize: 16,
+																	color: tema.colors.verde,
+																}}
+															>
 																ASSOCIADO ABEPOM
 															</Text>
 														) : (
-															<Text style={{ color: tema.colors.vermelho }}>
+															<Text
+																style={{
+																	fontSize: 16,
+																	color: tema.colors.vermelho,
+																}}
+															>
 																NÃO ASSOCIADO
 															</Text>
 														)}
 													</View>
-													<View style={{ flex: 1 }}>
-														<Text style={{ textAlign: "right" }}>
-															Nascimento: {associado.nascimento}
-														</Text>
-														<Text style={{ textAlign: "right" }}>
-															{associado.email}
-														</Text>
-													</View>
-												</View>
-												<View style={{ flexDirection: "row", flex: 1 }}>
-													<View style={{ flex: 1 }} />
-													<View style={{ flex: 2 }}>
-														{associado.tipo === "01" ? (
+													<View
+														style={{
+															flex: 2,
+															justifyContent: "center",
+															alignItems: "center",
+														}}
+													>
+														{associado.celular !== "" ? (
 															<>
-																{associado.cartao !== "" &&
-																	associado.ativo &&
-																	associado.celular !== "" && (
-																		<TouchableOpacity
-																			onPress={() => gerarSenha()}
-																			style={{
-																				flexDirection: "row",
-																				margin: 20,
-																				backgroundColor: "#031e3f",
-																				justifyContent: "center",
-																				padding: 20,
-																				borderRadius: 6,
-																			}}
-																		>
-																			<Text
-																				style={{
-																					color: "#fff",
-																					fontSize: 17,
-																					marginRight: 10,
-																				}}
-																			>
-																				GERAR SENHA PARA TITULAR
-																			</Text>
-																			<Image
-																				source={images.chave}
-																				style={{
-																					width: 20,
-																					height: 20,
-																					tintColor: "#fff",
-																				}}
-																				tintColor={"#fff"}
-																			/>
-																		</TouchableOpacity>
-																	)}
-																{associado.cartao === "" && (
-																	<View style={{ height: 100 }}>
-																		<Messages
-																			titulo={`SEM CARTÃO`}
-																			subtitulo="O associado informado não possui o cartão da ABEPOM."
-																			cor={tema.colors.vermelho}
-																			imagem={images.atencao}
-																		/>
-																	</View>
-																)}
-																{!associado.ativo && (
-																	<View style={{ height: 100 }}>
-																		<Messages
-																			titulo={`ASSOCIADO INATIVO`}
-																			subtitulo="O associado informado consta como inativo."
-																			cor={tema.colors.vermelho}
-																			imagem={images.atencao}
-																		/>
-																	</View>
-																)}
-																{associado.celular === "" && (
-																	<View style={{ height: 100 }}>
-																		<Messages
-																			titulo={`ASSOCIADO SEM CELULAR`}
-																			subtitulo="O associado informado não possui o celular cadastrado na ABEPOM."
-																			cor={tema.colors.vermelho}
-																			imagem={images.atencao}
-																		/>
-																	</View>
-																)}
+																<Text
+																	style={{
+																		fontSize: 16,
+																		color: tema.colors.primary,
+																	}}
+																>
+																	CELULAR
+																</Text>
+																<Text
+																	style={{
+																		fontSize: 16,
+																		color: tema.colors.primary,
+																	}}
+																>
+																	{associado.celular}
+																</Text>
 															</>
 														) : (
+															<>
+																<Text
+																	style={{
+																		fontSize: 16,
+																		color: tema.colors.primary,
+																	}}
+																>
+																	NÃO POSSUI
+																</Text>
+																<Text
+																	style={{
+																		fontSize: 16,
+																		color: tema.colors.primary,
+																	}}
+																>
+																	CELULAR
+																</Text>
+															</>
+														)}
+													</View>
+													<View
+														style={{
+															flex: 1,
+															justifyContent: "center",
+															alignItems: "center",
+														}}
+													>
+														{associado.cartao !== "" &&
+														associado.ativo &&
+														associado.celular !== "" ? (
+															<TouchableOpacity
+																onPress={() =>
+																	confirmarEnvio(
+																		associado.cartao,
+																		associado.celular,
+																		1
+																	)
+																}
+															>
+																<Image
+																	source={images.chave}
+																	style={{
+																		width: 30,
+																		height: 30,
+																		tintColor: tema.colors.primary,
+																	}}
+																	tintColor={tema.colors.primary}
+																/>
+															</TouchableOpacity>
+														) : (
+															<TouchableOpacity
+																onPress={() => modalSenhaTitular()}
+															>
+																<Image
+																	source={images.atencao}
+																	style={{
+																		width: 30,
+																		height: 30,
+																		tintColor: tema.colors.primary,
+																	}}
+																	tintColor={tema.colors.primary}
+																/>
+															</TouchableOpacity>
+														)}
+													</View>
+												</View>
+												<View style={{ flexDirection: "row" }}>
+													<View style={{ flex: 1 }}>
+														{associado.tipo !== "01" && (
 															<TouchableOpacity
 																onPress={() =>
 																	navigation.navigate("CadastrarAssociado")
@@ -356,7 +504,140 @@ function GerarSenha(props) {
 															</TouchableOpacity>
 														)}
 													</View>
-													<View style={{ flex: 1 }} />
+												</View>
+												<View style={{ flex: 1 }}>
+													<FlatList
+														data={dependentes}
+														keyExtractor={(item) => item.cont}
+														numColumns={1}
+														renderItem={({ item }) => {
+															return (
+																<TouchableOpacity
+																	style={{
+																		backgroundColor: "#fff",
+																		elevation: 1,
+																		borderRadius: 6,
+																		flexGrow: 1,
+																		marginVertical: 5,
+																		padding: 20,
+																		flexDirection: "row",
+																	}}
+																>
+																	<View style={{ flex: 9 }}>
+																		<Text
+																			style={{
+																				fontSize: 20,
+																				color: tema.colors.primary,
+																			}}
+																		>
+																			{item.nome.toUpperCase()}
+																		</Text>
+																		<Text
+																			style={{
+																				fontSize: 16,
+																				color: tema.colors.primary,
+																			}}
+																		>
+																			TIPO: {item.tipo.toUpperCase()}
+																		</Text>
+																	</View>
+																	<View
+																		style={{
+																			flex: 2,
+																			justifyContent: "center",
+																			alignItems: "center",
+																		}}
+																	>
+																		{item.celular !== "" ? (
+																			<>
+																				<Text
+																					style={{
+																						fontSize: 16,
+																						color: tema.colors.primary,
+																					}}
+																				>
+																					CELULAR
+																				</Text>
+																				<Text
+																					style={{
+																						fontSize: 16,
+																						color: tema.colors.primary,
+																					}}
+																				>
+																					{item.celular}
+																				</Text>
+																			</>
+																		) : (
+																			<>
+																				<Text
+																					style={{
+																						fontSize: 16,
+																						color: tema.colors.primary,
+																					}}
+																				>
+																					NÃO POSSUI
+																				</Text>
+																				<Text
+																					style={{
+																						fontSize: 16,
+																						color: tema.colors.primary,
+																					}}
+																				>
+																					CELULAR
+																				</Text>
+																			</>
+																		)}
+																	</View>
+																	<View
+																		style={{
+																			flex: 1,
+																			justifyContent: "center",
+																			alignItems: "center",
+																		}}
+																	>
+																		{item.cartao !== "" &&
+																		item.celular !== "" ? (
+																			<TouchableOpacity
+																				onPress={() =>
+																					confirmarEnvio(
+																						item.cartao,
+																						item.celular,
+																						2
+																					)
+																				}
+																			>
+																				<Image
+																					source={images.chave}
+																					style={{
+																						width: 30,
+																						height: 30,
+																						tintColor: tema.colors.primary,
+																					}}
+																					tintColor={tema.colors.primary}
+																				/>
+																			</TouchableOpacity>
+																		) : (
+																			<TouchableOpacity
+																				onPress={() =>
+																					modalSenhaDependente(item)
+																				}
+																			>
+																				<Image
+																					source={images.atencao}
+																					style={{
+																						width: 30,
+																						height: 30,
+																						tintColor: tema.colors.primary,
+																					}}
+																					tintColor={tema.colors.primary}
+																				/>
+																			</TouchableOpacity>
+																		)}
+																	</View>
+																</TouchableOpacity>
+															);
+														}}
+													/>
 												</View>
 											</>
 										) : (

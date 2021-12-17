@@ -44,7 +44,6 @@ function ConsultarDescontos(props) {
 	const [carregando, setCarregando] = useState(false);
 	const [mostrarDados, setMostrarDados] = useState(false);
 	const [descontos, setDescontos] = useState([]);
-	const [refreshing, setRefreshing] = useState(false);
 	const [modalComposicaoParcelamento, setModalComposicaoParcelamento] =
 		useState(false);
 	const [procedimentosCopart, setProcedimentosCopart] = useState([]);
@@ -83,10 +82,6 @@ function ConsultarDescontos(props) {
 		Name: `${data_atual.getFullYear()}`,
 		Value: data_atual.getFullYear(),
 	});
-
-	const onRefresh = useCallback(() => {
-		setRefreshing(true);
-	}, []);
 
 	async function carregarDescontos() {
 		if (matricula !== "") {
@@ -517,22 +512,7 @@ function ConsultarDescontos(props) {
 							) : (
 								<>
 									{mostrarDados && (
-										<ScrollView
-											refreshControl={
-												<RefreshControl
-													refreshing={refreshing}
-													onRefresh={onRefresh}
-													progressBackgroundColor={tema.colors.background}
-													tintColor={"#fff"}
-													colors={[
-														tema.colors.verde,
-														tema.colors.vermelho,
-														tema.colors.primary,
-													]}
-												/>
-											}
-											style={styles.containerScroll}
-										>
+										<ScrollView style={styles.containerScroll}>
 											{associado.status && (
 												<View
 													style={{
