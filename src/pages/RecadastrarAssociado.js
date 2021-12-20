@@ -39,7 +39,8 @@ const ASSOCIADO_INITIAL = {
 };
 
 function RecadastrarAssociado(props) {
-	const ref = useRef();
+	const refAssoc = useRef();
+	const refColab = useRef();
 	const [{ nome, token }] = useUsuario();
 	const [matricula, setMatricula] = useState("");
 	const [associado, setAssociado] = useState(ASSOCIADO_INITIAL);
@@ -48,10 +49,12 @@ function RecadastrarAssociado(props) {
 	const [cidades, setCidades] = useState([]);
 	const [lotacoes, setLotacoes] = useState([]);
 	const [modal, setModal] = useState(false);
+	const [modalAssinatura, setModalAssinatura] = useState(false);
+	const [assinaturaAssociado, setAssinaturaAssociado] = useState("");
+	const [assinaturaColaborador, setAssinaturaColaborador] = useState("");
 	const [pdf, setPdf] = useState("");
 	const [btnRecadastrar, setBtnRecadastrar] = useState(false);
 	const [alerta, setAlerta] = useState({});
-	const [portrait, setPortrait] = useState(false);
 
 	useEffect(() => {
 		listarCidades();
@@ -73,6 +76,8 @@ function RecadastrarAssociado(props) {
 				setBtnRecadastrar(false);
 				setPdf("");
 				setCarregando(false);
+				setAssinaturaAssociado("");
+				setAssinaturaColaborador("");
 
 				if (data.status) {
 					setAssociado(data);
@@ -284,6 +289,9 @@ function RecadastrarAssociado(props) {
 	}
 
 	const abrirModal = () => {
+		setAssinaturaAssociado("");
+		setAssinaturaColaborador("");
+
 		setPdf(`
 		<!DOCTYPE html>
 		<html lang="en">
@@ -298,7 +306,7 @@ function RecadastrarAssociado(props) {
 				<img src="https://www.abepom.org.br/images/logomarca.png" style="width: 60px" />
 				<h5 style="margin-top:0px;">ASSOCIAÇÃO BENEFICENTE DOS MILITARES ESTADUAIS DE SANTA <br />REQUERIMENTO DE RECADASTRAMENTO</h5>
 			</center>  
-			<table width="100%" border="1" cellspacing="0" cellpadding="4" align="center" style="font-size:9px">
+			<table width="100%" border="1" cellspacing="0" cellpadding="4" align="center" style="font-size:11px">
 				<tbody>
 					<tr>
 						<td style="width: 33%"><b>NOME:</b> ${associado.nome}</td>
@@ -339,7 +347,7 @@ function RecadastrarAssociado(props) {
 					</tr>
 				</tbody>
 			</table>
-			<p align="justify" style="font-size: 11px">
+			<p align="justify" style="font-size: 12px">
 				O associado acima qualificado vem por meio do presente instrumento, isento de qualquer tipo de constrangimento ou coação, requerer seu recadastramento junto ao quadro 
 				social da ABEPOM, com base nos termos dos artigos 3º, 4º, 5º, 6º, 7º e 8º do Estatuto Social vigente cujo teor tem amplo conhecimento, autorizando desde já, que a sua 
 				contribuição mensal bem como, quaisquer outros encargos devidos, decorrentes da prestação de serviços ou fruição dos benefícios, sejam descontados mediante consignação 
@@ -348,45 +356,56 @@ function RecadastrarAssociado(props) {
 				no seu Plano e Regulamento de BENEFÍCIOS e SERVIÇOS, cujo teor também conhece) sejam debitados em sua conta corrente bancária, através da qual recebe os seus 
 				vencimentos. Declaro também, que estou ciente nas previsões do artigo 7º, §1º e § 2º do Estatuto Social*.
 			</p> 
-			<p align="justify" style="font-size: 11px">
+			<p align="justify" style="font-size: 12px">
 				Sendo empregado da ABEPOM, autorizo na Rescisão Contratual, que quaisquer débitos contraídos junto a associação, sejam descontados no ato da rescisão.
 			</p>  
-			<p align="justify" style="font-size: 9px">
+			<p align="justify" style="font-size: 10px">
 				* “7º - São dependentes dos associados, a esposa ou o esposo, a companheira ou o companheiro em união estável devidamente comprovada, os filhos até 18 (dezoito) anos 
 				de idade e os filhos absolutamente incapazes. §1º - O limite de idade para os filhos previsto no caput, poderá ser ampliado até o ser comprovada semestralmente. §2º - 
 				Podem ainda ser inscritos como dependentes o enteado e o menor que se ache sob sua guarda judicial, o pai, a mãe, o sogro ou dependência econômica do associado 
 				devidamente comprovada, cuja regulamentação sobre a comprovação da dependência econômica, meio de Diretriz fixada pelo Conselho de Administração.
 			</p>  
-			<p align="justify" style="font-size:11px">Nestes termos, pede deferimento.</p>
+			<p align="justify" style="font-size:12px">Nestes termos, pede deferimento.</p>
 			`);
 
 		setModal(true);
 	};
 
-	const handleOK = async (signature) => {
-		setModal(false);
-		setAlerta({
-			visible: true,
-			title: "CARREGANDO ASSINATURA",
-			message: <Loading size={125} />,
-			showConfirm: false,
-			showCancel: false,
-			showIcon: false,
-		});
+	const handleOKAssoc = (signature) => {
+		setAssinaturaAssociado(signature);
 
+		return true;
+	};
+
+	const handleOKColab = (signature) => {
+		setAssinaturaColaborador(signature);
+
+		return true;
+	};
+
+	const handleOK = async () => {
+		console.log("ASSOCIADO: ", assinaturaAssociado);
+		console.log("COLAB: ", assinaturaColaborador);
+
+		setModal(false);
+		setModalAssinatura(false);
 		let html =
 			pdf +
 			` 
 				<p align="justify" style="font-size: 12px;">Local: Florianpolis</p>
 				<p align="justify" style="font-size: 12px;">Data: 25/11/1990</p>
 				<center>
-					<img src="${signature}" style="width: 300px;" />
+					<img src="${assinaturaAssociado}" style="width: 300px;" />
 					<hr style="width: 60%; margin-top: -15px;" />
 					<p>Assinatura de<br/><b>${associado?.nome?.toUpperCase()}</b></p>
 				</center>
 				<div style="display: flex; flex: 1; flex-direction: row; width: 100%;margin-top: 50px;">
 					<div style="display: flex; flex: 1; justify-content: center;">
-						<p style="text-align: center"><b>${nome}</b><br />Representante ABEPOM</p>
+						<center>
+							<img src="${assinaturaColaborador}" style="width: 250px;" /><br />
+							<p style="text-align: center"><b>${nome}</b>
+							<br />Representante ABEPOM</p>
+						</center>
 					</div>
 					<div style="display: flex; flex: 1; justify-content: center;">
 						<p style="text-align: center">Cel Aroldo<br />Presidente da ABEPOM</p>
@@ -448,11 +467,29 @@ function RecadastrarAssociado(props) {
 	};
 
 	const handleClear = () => {
-		ref.current.clearSignature();
+		refAssoc.current.clearSignature();
+		refColab.current.clearSignature();
 	};
 
-	const handleConfirm = () => {
-		ref.current.readSignature();
+	const handleConfirm = async () => {
+		await refAssoc.current.readSignature();
+		await refColab.current.readSignature();
+
+		console.log("RETORNO ASS: ", assinaturaAssociado);
+		console.log("RETORNO COLAB: ", assinaturaColaborador);
+
+		if (assinaturaAssociado !== "" && assinaturaColaborador !== "") {
+			setAlerta({
+				visible: true,
+				title: "CARREGANDO ASSINATURA",
+				message: <Loading size={125} />,
+				showConfirm: false,
+				showCancel: false,
+				showIcon: false,
+			});
+
+			handleOK();
+		}
 	};
 
 	useEffect(() => {
@@ -461,16 +498,6 @@ function RecadastrarAssociado(props) {
 			setMatricula(props.route.params.associado.matricula);
 			setMostrarDados(true);
 		}
-
-		Dimensions.addEventListener("change", ({ window: { width, height } }) => {
-			if (width < height) {
-				// PORTRAIT
-				setPortrait(true);
-			} else {
-				// LANDSCAPE
-				setPortrait(false);
-			}
-		});
 	}, []);
 
 	return (
@@ -488,7 +515,7 @@ function RecadastrarAssociado(props) {
 				>
 					<View
 						style={{
-							flex: 1,
+							flex: 2,
 							width: "90%",
 							marginBottom: 20,
 						}}
@@ -497,55 +524,43 @@ function RecadastrarAssociado(props) {
 					</View>
 					<View
 						style={{
-							height: 2,
-							width: 380,
-							backgroundColor: "#ccc",
-							position: "absolute",
-							top: 735,
-							zIndex: 999999,
-						}}
-					/>
-					<Signature
-						ref={ref}
-						style={{ flex: 1, height: 350 }}
-						onOK={handleOK}
-						onEmpty={() =>
-							setAlerta({
-								visible: true,
-								title: "ATENÇÃO!",
-								message: "Para confirmar é necessário preencher a assinatura.",
-								showCancel: false,
-								showConfirm: true,
-								confirmText: "FECHAR",
-							})
-						}
-						descriptionText=""
-						webStyle={`
-						.m-signature-pad {width: 450px; height: 150px; margin-left: auto; margin-right: auto; margin-top: 10px; }
-						.m-signature-pad--body {border: none;}
-						.m-signature-pad--footer{ display: none;}
-						`}
-					/>
-					<View
-						style={{
+							flex: 1,
 							alignItems: "center",
-							position: "absolute",
-							top: 780,
 						}}
 					>
-						<Text>Assinatura de</Text>
-						<Text style={{ fontWeight: "bold" }}>
-							{associado?.nome?.toUpperCase()}
-						</Text>
-						<View style={{ flexDirection: "row", marginTop: 5 }}>
-							<Text style={{ marginHorizontal: 7 }}>LOCAL: FLORIANOPOLIS </Text>
-							<Text style={{ marginHorizontal: 7 }}>DATA: 25/11/2021</Text>
-						</View>
+						{assinaturaAssociado === "" ? (
+							<Button
+								onPress={() => {
+									setModal(false);
+									setModalAssinatura(true);
+								}}
+								color={"#fff"}
+								style={{ backgroundColor: tema.colors.primary }}
+							>
+								CLIQUE AQUI PARA ASSINAR
+							</Button>
+						) : (
+							<>
+								<Image
+									source={{ uri: assinaturaAssociado }}
+									style={{ width: 400, height: 100 }}
+								/>
+								<Text>Assinatura de</Text>
+								<Text style={{ fontWeight: "bold" }}>
+									{associado?.nome?.toUpperCase()}
+								</Text>
+								<View style={{ flexDirection: "row", marginTop: 5 }}>
+									<Text style={{ marginHorizontal: 7 }}>
+										LOCAL: FLORIANOPOLIS{" "}
+									</Text>
+									<Text style={{ marginHorizontal: 7 }}>DATA: 25/11/2021</Text>
+								</View>
+							</>
+						)}
 					</View>
 					<View
 						style={{
-							position: "absolute",
-							top: 900,
+							flex: 1,
 							flexDirection: "row",
 							justifyContent: "center",
 							alignItems: "center",
@@ -558,6 +573,12 @@ function RecadastrarAssociado(props) {
 								alignItems: "center",
 							}}
 						>
+							{assinaturaColaborador !== "" && (
+								<Image
+									source={{ uri: assinaturaColaborador }}
+									style={{ width: 280, height: 70 }}
+								/>
+							)}
 							<Text
 								style={{
 									marginTop: 40,
@@ -583,6 +604,91 @@ function RecadastrarAssociado(props) {
 					<View
 						style={{
 							flexDirection: "row",
+							justifyContent: "center",
+							width: "90%",
+							alignItems: "center",
+							bottom: 20,
+						}}
+					>
+						<Button
+							onPress={() => setModal(false)}
+							color={"#fff"}
+							style={{ backgroundColor: tema.colors.primary }}
+						>
+							FECHAR
+						</Button>
+					</View>
+				</View>
+			</Modal>
+			<Modal visible={modalAssinatura}>
+				<View
+					style={{
+						flex: 1,
+						justifyContent: "center",
+						alignContent: "center",
+						alignItems: "center",
+						paddingTop: 35,
+					}}
+				>
+					<Text style={{ fontSize: 20, marginBottom: 10 }}>
+						Recolha a assinatura do associado na área destacada abaixo:{" "}
+					</Text>
+					<Text>Assinatura de</Text>
+					<Text style={{ fontWeight: "bold" }}>
+						{associado?.nome?.toUpperCase()}
+					</Text>
+					<Signature
+						ref={refAssoc}
+						style={{ height: 150 }}
+						onOK={handleOKAssoc}
+						onEmpty={() =>
+							setAlerta({
+								visible: true,
+								title: "ATENÇÃO!",
+								message:
+									"Para confirmar é necessário preencher a assinatura do associado.",
+								showCancel: false,
+								showConfirm: true,
+								confirmText: "FECHAR",
+							})
+						}
+						descriptionText=""
+						webStyle={`
+						.m-signature-pad {width: 80%; height: 250px; margin-left: auto; margin-right: auto; margin-top: 10px; margin-bottom: 0px; }
+						.m-signature-pad--body {border: none;}
+						.m-signature-pad--footer{ display: none;}
+						`}
+					/>
+					<Text style={{ fontSize: 20, marginBottom: 10 }}>
+						Recolha a assinatura do colaborador na área destacada abaixo:{" "}
+					</Text>
+					<Text>Assinatura de</Text>
+					<Text style={{ fontWeight: "bold" }}>{nome?.toUpperCase()}</Text>
+					<Signature
+						ref={refColab}
+						style={{ height: 100 }}
+						onOK={handleOKColab}
+						onEmpty={() =>
+							setAlerta({
+								visible: true,
+								title: "ATENÇÃO!",
+								message:
+									"Para confirmar é necessário preencher a assinatura do colaborador.",
+								showCancel: false,
+								showConfirm: true,
+								confirmText: "FECHAR",
+							})
+						}
+						descriptionText=""
+						webStyle={`
+						.m-signature-pad {width: 80%; height: 250px; margin-left: auto; margin-right: auto; margin-top: 10px; }
+						.m-signature-pad--body {border: none;}
+						.m-signature-pad--footer{ display: none;}
+						`}
+					/>
+					<View
+						style={{
+							flexDirection: "row",
 							justifyContent: "space-between",
 							width: "90%",
 							alignItems: "center",
@@ -594,17 +700,20 @@ function RecadastrarAssociado(props) {
 							color={"#fff"}
 							style={{ backgroundColor: tema.colors.vermelho }}
 						>
-							LIMPAR
+							LIMPAR ASSINATURAS
 						</Button>
 						<Button
 							onPress={handleConfirm}
 							color={"#fff"}
 							style={{ backgroundColor: tema.colors.verde }}
 						>
-							CONFIRMAR
+							CONFIRMAR ASSINATURAS
 						</Button>
 						<Button
-							onPress={() => setModal(false)}
+							onPress={() => {
+								setModal(true);
+								setModalAssinatura(false);
+							}}
 							color={"#fff"}
 							style={{ backgroundColor: tema.colors.primary }}
 						>
