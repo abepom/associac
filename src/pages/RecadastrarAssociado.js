@@ -384,9 +384,6 @@ function RecadastrarAssociado(props) {
 	};
 
 	const handleOK = async () => {
-		console.log("ASSOCIADO: ", assinaturaAssociado);
-		console.log("COLAB: ", assinaturaColaborador);
-
 		setModal(false);
 		setModalAssinatura(false);
 		let html =
@@ -403,12 +400,17 @@ function RecadastrarAssociado(props) {
 					<div style="display: flex; flex: 1; justify-content: center;">
 						<center>
 							<img src="${assinaturaColaborador}" style="width: 250px;" /><br />
+							<hr style="width: 80%; margin-top: -15px;" />
 							<p style="text-align: center"><b>${nome}</b>
 							<br />Representante ABEPOM</p>
 						</center>
 					</div>
 					<div style="display: flex; flex: 1; justify-content: center;">
-						<p style="text-align: center">Cel Aroldo<br />Presidente da ABEPOM</p>
+						<center>
+							<img src="${assinaturaColaborador}" style="width: 250px;" /><br />
+							<hr style="width: 80%; margin-top: -15px;" />
+							<p style="text-align: center">Cel Aroldo<br />Presidente da ABEPOM</p>
+						</center>
 					</div>
 				</div>
 			</body>
@@ -474,9 +476,6 @@ function RecadastrarAssociado(props) {
 	const handleConfirm = async () => {
 		await refAssoc.current.readSignature();
 		await refColab.current.readSignature();
-
-		console.log("RETORNO ASS: ", assinaturaAssociado);
-		console.log("RETORNO COLAB: ", assinaturaColaborador);
 
 		if (assinaturaAssociado !== "" && assinaturaColaborador !== "") {
 			setAlerta({
