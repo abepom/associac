@@ -8,7 +8,6 @@ import {
 	ScrollView,
 	Modal,
 	Keyboard,
-	Dimensions,
 } from "react-native";
 import { TextInputMask } from "react-native-masked-text";
 import { Button, IconButton, TextInput } from "react-native-paper";

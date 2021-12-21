@@ -11,6 +11,7 @@ import Constants from "expo-constants";
 import GerarSenha from "./src/pages/GerarSenha";
 import RecadastrarAssociado from "./src/pages/RecadastrarAssociado";
 import PlanoDeSaude from "./src/pages/PlanoDeSaude";
+import Planos from "./src/pages/Planos";
 import Dependentes from "./src/pages/Dependentes";
 import AlterarTipoDependente from "./src/pages/AlterarTipoDependente";
 import { StoreProvider } from "./src/store/store";
@@ -64,6 +65,11 @@ export default function App() {
 							name="PlanoDeSaude"
 							component={PlanoDeSaude}
 							options={{ headerShown: false }}
+						/>
+						<Stack.Screen
+							name="Planos"
+							component={Planos}
+							options={{ headerShown: false, orientation: "portrait" }}
 						/>
 						<Stack.Screen
 							name="Dependentes"

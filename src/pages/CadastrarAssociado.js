@@ -271,16 +271,6 @@ function CadastrarAssociado(props) {
 						setAssociado({ ...ASSOCIADO_INITIAL, matricula });
 						setBtnRecadastrar(false);
 						setNextStep(true);
-
-						setAlerta({
-							visible: true,
-							title: "ATENÇÃO!",
-							message: data.message,
-							type: "danger",
-							confirmText: "FECHAR",
-							showConfirm: true,
-							showCancel: false,
-						});
 					}
 
 					setCarregando(false);
@@ -1086,7 +1076,7 @@ function CadastrarAssociado(props) {
 											mode={"outlined"}
 											theme={tema}
 											style={{ fontSize: 18 }}
-											value={associado.sexo.Name.substring(0, 1).toUpperCase()}
+											value={true}
 											onChangeText={(text) =>
 												setAssociado({ ...associado, sexo: text })
 											}
@@ -1319,6 +1309,7 @@ function CadastrarAssociado(props) {
 											maxLength={1}
 											style={{ fontSize: 18 }}
 											ref={digitoRef}
+											keyboardType="number-pad"
 											onChangeText={(text) =>
 												setAssociado({ ...associado, digito: text })
 											}

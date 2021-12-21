@@ -51,8 +51,6 @@ function PlanoDeSaude(props) {
 		cpf: "",
 		valor_mensalidade: 0,
 	});
-	const [planos, setPlanos] = useState([]);
-	const [plano, setPlano] = useState({ Name: "", Value: "", valor_faixas: [] });
 
 	const listarPlanos = async () => {
 		try {
@@ -145,6 +143,7 @@ function PlanoDeSaude(props) {
 						local_cobranca: { Name: "", Value: "" },
 						cpf: retorno.data.cpf,
 						valor_mensalidade: 0,
+						possui_plano: retorno.data.possui_plano == 1 ? true : false,
 					});
 
 					data.dependentes.map((dependente) => {
@@ -167,6 +166,7 @@ function PlanoDeSaude(props) {
 							local_cobranca: { Name: "", Value: "" },
 							cpf: dependente.cpf,
 							valor_mensalidade: 0,
+							possui_plano: dependente.possui_plano == 1 ? true : false,
 						});
 					});
 
@@ -281,6 +281,8 @@ function PlanoDeSaude(props) {
 
 	const selecionarBeneficiario = (key) => {
 		setBeneficiario(key);
+
+		console.log(key);
 
 		if (plano?.Name !== "") {
 			selecionarPlano(plano, key);
@@ -1074,7 +1076,24 @@ function PlanoDeSaude(props) {
 														}}
 													>
 														<TouchableOpacity
-															onPress={() => incluirPlano()}
+															onPress={() => {
+																if (beneficiario.possui_plano) {
+																	setAlerta({
+																		visible: true,
+																		title: "ATENÇÃO!",
+																		message:
+																			"O beneficiário escolhido já possui um plano de saúde ativo. Deseja cancelar e cadastrar este novo?",
+																		type: "warning",
+																		confirmText: "SIM",
+																		cancelText: "FECHAR",
+																		showConfirm: true,
+																		showCancel: true,
+																		confirmFunction: () => incluirPlano(),
+																	});
+																} else {
+																	incluirPlano();
+																}
+															}}
 															style={{
 																backgroundColor: tema.colors.primary,
 																padding: 20,
