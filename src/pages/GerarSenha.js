@@ -207,9 +207,14 @@ function GerarSenha(props) {
 				title: "ATENÇÃO!",
 				message: "O dependente selecionado não possui o cartão da ABEPOM.",
 				type: "danger",
-				confirmText: "FECHAR",
+				confirmText: "ATUALIZAR TELEFONE",
+				cancelText: "FECHAR",
 				showConfirm: true,
-				showCancel: false,
+				showCancel: true,
+				confirmFunction: ()=> navigation.navigate("AlterarTipoDependente", {
+					matricula,
+					dependente: item,
+				})
 			});
 		} else {
 			if (item.celular === "") {
@@ -219,9 +224,14 @@ function GerarSenha(props) {
 					message:
 						"O dependente selecionado não possui o celular cadastrado na ABEPOM.",
 					type: "danger",
-					confirmText: "FECHAR",
+					confirmText: "ATUALIZAR TELEFONE",
+					cancelText: "FECHAR",
 					showConfirm: true,
-					showCancel: false,
+					showCancel: true,
+					confirmFunction: ()=> navigation.navigate("AlterarTipoDependente", {
+						matricula,
+						dependente: item,
+					})
 				});
 			} else {
 				setAlerta({
@@ -230,9 +240,14 @@ function GerarSenha(props) {
 					message:
 						"Não é possível gerar uma nova senha para o dependente selecionado.",
 					type: "danger",
-					confirmText: "FECHAR",
+					confirmText: "ATUALIZAR TELEFONE",
+					cancelText: "FECHAR",
 					showConfirm: true,
-					showCancel: false,
+					showCancel: true,
+					confirmFunction: ()=> navigation.navigate("AlterarTipoDependente", {
+						matricula,
+						dependente: item,
+					})
 				});
 			}
 		}
@@ -513,6 +528,12 @@ function GerarSenha(props) {
 														renderItem={({ item }) => {
 															return (
 																<TouchableOpacity
+																onPress={()=>item.cartao !== "" &&
+																item.celular !== "" ? confirmarEnvio(
+																	item.cartao,
+																	item.celular,
+																	2
+																):modalSenhaDependente(item) }
 																	style={{
 																		backgroundColor: "#fff",
 																		elevation: 1,
@@ -597,15 +618,7 @@ function GerarSenha(props) {
 																	>
 																		{item.cartao !== "" &&
 																		item.celular !== "" ? (
-																			<TouchableOpacity
-																				onPress={() =>
-																					confirmarEnvio(
-																						item.cartao,
-																						item.celular,
-																						2
-																					)
-																				}
-																			>
+																			
 																				<Image
 																					source={images.chave}
 																					style={{
@@ -615,13 +628,8 @@ function GerarSenha(props) {
 																					}}
 																					tintColor={tema.colors.primary}
 																				/>
-																			</TouchableOpacity>
 																		) : (
-																			<TouchableOpacity
-																				onPress={() =>
-																					modalSenhaDependente(item)
-																				}
-																			>
+																			
 																				<Image
 																					source={images.atencao}
 																					style={{
@@ -631,7 +639,6 @@ function GerarSenha(props) {
 																					}}
 																					tintColor={tema.colors.primary}
 																				/>
-																			</TouchableOpacity>
 																		)}
 																	</View>
 																</TouchableOpacity>

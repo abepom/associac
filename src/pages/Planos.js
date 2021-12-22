@@ -73,11 +73,11 @@ function Planos(props) {
 	const [nextStep, setNextStep] = useState(false);
 	const [prevStep, setPrevStep] = useState(false);
 	const [textNext, setTextNext] = useState("PRÓXIMO");
-	const [cpf, setCpf] = useState("");
-	const [rg, setRg] = useState("");
-	const [cartaoSUS, setCartaoSUS] = useState("");
-	const [comprovanteResidencia, setComprovanteResidencia] = useState("");
-	const [declaracaoSaude, setDeclaracaoSaude] = useState("");
+	const [cpf, setCpf] = useState("1");
+	const [rg, setRg] = useState("1");
+	const [cartaoSUS, setCartaoSUS] = useState("1");
+	const [comprovanteResidencia, setComprovanteResidencia] = useState("1");
+	const [declaracaoSaude, setDeclaracaoSaude] = useState("1");
 	const [alerta, setAlerta] = useState({});
 	const [carregando, setCarregando] = useState(false);
 	const [modal, setModal] = useState(false);
@@ -444,8 +444,6 @@ function Planos(props) {
 	const selecionarBeneficiario = (key) => {
 		setBeneficiario(key);
 
-		console.log(key);
-
 		if (plano?.Name !== "") {
 			selecionarPlano(plano, key);
 			setNextStep(true);
@@ -459,6 +457,8 @@ function Planos(props) {
 	};
 
 	const incluirNoPlano = async (cancelar = false) => {
+		console.log("ASS1: ", assinaturaAssociado);
+		console.log("ASS2: ",assinaturaBeneficiario);
 		setAlerta({
 			visible: true,
 			title: "CADASTRANDO DADOS DO PLANO",
@@ -502,7 +502,7 @@ function Planos(props) {
 						<div style="display: flex; flex: 5;">
 							Nome: ${associado.nome}
 						</div>
-						<div style="display: flex; flex: 1">
+						<div style="display: flex; flex: 2">
 							Matrícula: ${associado.matricula}
 						</div>
 					</div>
@@ -540,18 +540,8 @@ function Planos(props) {
 				</div>
 				<div style="display: flex; flex: 1; margin-top: 30px;">
 					<div style="display: flex; flex-direction: row; flex: 1; justify-content: center; align-items: center;">
-						<div style="display: flex; flex: 1; justify-content: center">
-							<center>
-								<img src="${assinaturaBeneficiario}" style="width: 350px" />
-								<br />
-								<hr style="width: 80%" />
-								<br />
-								${beneficiario.Name} <br />
-								Assinatura do Associado
-							</center>
-						</div>
 						${
-							beneficiario?.codigo_tipo !== "00"
+							beneficiario?.codigo_tipo == "00"
 								? `
 						<div style="display: flex; flex: 1; justify-content: center">
 							<center>
@@ -560,10 +550,19 @@ function Planos(props) {
 								<hr style="width: 80%" />
 								<br />
 								${associado.nome}<br />
-								Assinatura do Titular do Plano de Saúde
+								Assinatura do Associado
 							</center>
 						</div>`
-								: null
+								: `<div style="display: flex; flex: 1; justify-content: center">
+								<center>
+									<img src="${assinaturaBeneficiario}" style="width: 350px" />
+									<br />
+									<hr style="width: 80%" />
+									<br />
+									${beneficiario.Name} <br />
+									Assinatura do Titular do Plano de Saúde
+								</center>
+							</div>`
 						}
 					</div>
 				</div>
@@ -579,18 +578,8 @@ function Planos(props) {
 				<p align="justify">Local: Florianpolis<br />Data: 25/11/1990</p>
 				<div style="display: flex; flex: 1; margin-top: 30px;">
 					<div style="display: flex; flex-direction: row; flex: 1; justify-content: center; align-items: center;">
-						<div style="display: flex; flex: 1; justify-content: center">
-							<center>
-								<img src="${assinaturaBeneficiario}" style="width: 350px" />
-								<br />
-								<hr style="width: 80%" />
-								<br />
-								${beneficiario.Name} <br />
-								Assinatura do Associado
-							</center>
-						</div>
 						${
-							beneficiario?.codigo_tipo !== "00"
+							beneficiario?.codigo_tipo == "00"
 								? `
 						<div style="display: flex; flex: 1; justify-content: center">
 							<center>
@@ -599,10 +588,19 @@ function Planos(props) {
 								<hr style="width: 80%" />
 								<br />
 								${associado.nome}<br />
-								Assinatura do Titular do Plano de Saúde
+								Assinatura do Associado
 							</center>
 						</div>`
-								: null
+								: `<div style="display: flex; flex: 1; justify-content: center">
+								<center>
+									<img src="${assinaturaBeneficiario}" style="width: 350px" />
+									<br />
+									<hr style="width: 80%" />
+									<br />
+									${beneficiario.Name} <br />
+									Assinatura do Titular do Plano de Saúde
+								</center>
+							</div>`
 						}
 					</div>
 				</div>
@@ -631,6 +629,8 @@ function Planos(props) {
 					},
 				}
 			);
+
+			console.log(data);
 
 			if (data.status) {
 				let erros = 0;
@@ -691,17 +691,19 @@ function Planos(props) {
 							confirmText: "FECHAR",
 						});
 
+						console.log(retorno.data)
+
 						if (retorno.data.status) {
 							setActiveStep(0);
 							setAssociado(ASSOCIADO_INITIAL);
 							setPrevStep(false);
 							setTextNext("PRÓXIMO");
 							setMostrarDadosAssociado(false);
-							setCpf("");
-							setRg("");
-							setCartaoSUS("");
-							setComprovanteResidencia("");
-							setDeclaracaoSaude("");
+							setCpf("1");
+							setRg("1");
+							setCartaoSUS("1");
+							setComprovanteResidencia("1");
+							setDeclaracaoSaude("1");
 							setMatricula("");
 							setBeneficiario(BENEFICIARIO_INITIAL);
 							setPlano(PLANO_INITIAL);
@@ -731,6 +733,9 @@ function Planos(props) {
 				});
 			}
 		} catch (error) {
+
+			console.log(error);
+
 			setAlerta({
 				visible: true,
 				title: "ATENÇÃO!",

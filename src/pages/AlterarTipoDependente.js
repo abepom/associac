@@ -25,9 +25,9 @@ function AlterarTipoDependente(props) {
 	const { navigation } = props;
 	const data_atual = new Date();
 	const [{ token }] = useUsuario();
-	const [matricula, setMatricula] = useState(props.route.params.matricula);
+	const [matricula, setMatricula] = useState(props?.route?.params?.matricula ?? "");
 	const [dependente, setDependente] = useState({
-		...props.route.params.dependente,
+		...props?.route?.params?.dependente ?? null,
 		novo_tipo: { Name: "", Value: "" },
 		telefone: "",
 	});
