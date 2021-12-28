@@ -653,6 +653,16 @@ function RecadastrarAssociado(props) {
 						descriptionText=""
 						webStyle={`
 						.m-signature-pad {width: 80%; height: 250px; margin-left: auto; margin-right: auto; margin-top: 10px; margin-bottom: 0px; }
+						.m-signature-pad::before{
+							position: absolute;
+							top: 210px;
+							content: " ";
+							width: 70%;
+							background: #aaa;
+							height:2px;
+							left: 15%;
+							right: 15%;
+						}
 						.m-signature-pad--body {border: none;}
 						.m-signature-pad--footer{ display: none;}
 						`}
@@ -680,6 +690,16 @@ function RecadastrarAssociado(props) {
 						descriptionText=""
 						webStyle={`
 						.m-signature-pad {width: 80%; height: 250px; margin-left: auto; margin-right: auto; margin-top: 10px; }
+						.m-signature-pad::before{
+							position: absolute;
+							top: 210px;
+							content: " ";
+							width: 70%;
+							background: #aaa;
+							height:2px;
+							left: 15%;
+							right: 15%;
+						}
 						.m-signature-pad--body {border: none;}
 						.m-signature-pad--footer{ display: none;}
 						`}

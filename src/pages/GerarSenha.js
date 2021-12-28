@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
 	SafeAreaView,
 	View,
@@ -27,7 +27,7 @@ function GerarSenha(props) {
 	const [dependentes, setDependentes] = useState([]);
 	const [carregando, setCarregando] = useState(false);
 	const [mostrarDados, setMostrarDados] = useState(false);
-	const [alerta, setAlerta] = useState({});
+	const [alerta, setAlerta] = useState({ visible: false });
 
 	const verificarMatricula = async () => {
 		if (matricula !== "") {
@@ -151,6 +151,7 @@ function GerarSenha(props) {
 	};
 
 	const modalSenhaTitular = () => {
+		setAlerta({ visible: false });
 		if (associado.cartao === "") {
 			setAlerta({
 				visible: true,
@@ -201,6 +202,8 @@ function GerarSenha(props) {
 	};
 
 	const modalSenhaDependente = (item) => {
+		setAlerta({ visible: false });
+
 		if (item.cartao === "") {
 			setAlerta({
 				visible: true,
@@ -211,10 +214,13 @@ function GerarSenha(props) {
 				cancelText: "FECHAR",
 				showConfirm: true,
 				showCancel: true,
-				confirmFunction: ()=> navigation.navigate("AlterarTipoDependente", {
-					matricula,
-					dependente: item,
-				})
+				confirmFunction: () => {
+					setAlerta({ visible: false });
+					navigation.navigate("AlterarTipoDependente", {
+						matricula,
+						dependente: item,
+					});
+				},
 			});
 		} else {
 			if (item.celular === "") {
@@ -228,10 +234,13 @@ function GerarSenha(props) {
 					cancelText: "FECHAR",
 					showConfirm: true,
 					showCancel: true,
-					confirmFunction: ()=> navigation.navigate("AlterarTipoDependente", {
-						matricula,
-						dependente: item,
-					})
+					confirmFunction: () => {
+						setAlerta({ visible: false });
+						navigation.navigate("AlterarTipoDependente", {
+							matricula,
+							dependente: item,
+						});
+					},
 				});
 			} else {
 				setAlerta({
@@ -244,16 +253,20 @@ function GerarSenha(props) {
 					cancelText: "FECHAR",
 					showConfirm: true,
 					showCancel: true,
-					confirmFunction: ()=> navigation.navigate("AlterarTipoDependente", {
-						matricula,
-						dependente: item,
-					})
+					confirmFunction: () => {
+						setAlerta({ visible: false });
+						navigation.navigate("AlterarTipoDependente", {
+							matricula,
+							dependente: item,
+						});
+					},
 				});
 			}
 		}
 	};
 
 	const confirmarEnvio = (cartao, celular, tipo) => {
+		setAlerta({ visible: false });
 		setAlerta({
 			visible: true,
 			title: "ATENÇÃO!",
@@ -268,6 +281,10 @@ function GerarSenha(props) {
 			confirmFunction: () => gerarSenha(cartao, celular, tipo),
 		});
 	};
+
+	useEffect(() => {
+		setAlerta({ visible: false });
+	}, []);
 
 	return (
 		<>
@@ -348,7 +365,16 @@ function GerarSenha(props) {
 									<>
 										{associado.status ? (
 											<>
-												<View
+												<TouchableOpacity
+													onPress={() =>
+														associado.cartao !== "" && associado.celular !== ""
+															? confirmarEnvio(
+																	associado.cartao,
+																	associado.celular,
+																	1
+															  )
+															: modalSenhaTitular()
+													}
 													style={{
 														width: "100%",
 														backgroundColor: tema.colors.background,
@@ -481,7 +507,7 @@ function GerarSenha(props) {
 															</TouchableOpacity>
 														)}
 													</View>
-												</View>
+												</TouchableOpacity>
 												<View style={{ flexDirection: "row" }}>
 													<View style={{ flex: 1 }}>
 														{associado.tipo !== "01" && (
@@ -528,12 +554,15 @@ function GerarSenha(props) {
 														renderItem={({ item }) => {
 															return (
 																<TouchableOpacity
-																onPress={()=>item.cartao !== "" &&
-																item.celular !== "" ? confirmarEnvio(
-																	item.cartao,
-																	item.celular,
-																	2
-																):modalSenhaDependente(item) }
+																	onPress={() =>
+																		item.cartao !== "" && item.celular !== ""
+																			? confirmarEnvio(
+																					item.cartao,
+																					item.celular,
+																					2
+																			  )
+																			: modalSenhaDependente(item)
+																	}
 																	style={{
 																		backgroundColor: "#fff",
 																		elevation: 1,
@@ -618,27 +647,25 @@ function GerarSenha(props) {
 																	>
 																		{item.cartao !== "" &&
 																		item.celular !== "" ? (
-																			
-																				<Image
-																					source={images.chave}
-																					style={{
-																						width: 30,
-																						height: 30,
-																						tintColor: tema.colors.primary,
-																					}}
-																					tintColor={tema.colors.primary}
-																				/>
+																			<Image
+																				source={images.chave}
+																				style={{
+																					width: 30,
+																					height: 30,
+																					tintColor: tema.colors.primary,
+																				}}
+																				tintColor={tema.colors.primary}
+																			/>
 																		) : (
-																			
-																				<Image
-																					source={images.atencao}
-																					style={{
-																						width: 30,
-																						height: 30,
-																						tintColor: tema.colors.primary,
-																					}}
-																					tintColor={tema.colors.primary}
-																				/>
+																			<Image
+																				source={images.atencao}
+																				style={{
+																					width: 30,
+																					height: 30,
+																					tintColor: tema.colors.primary,
+																				}}
+																				tintColor={tema.colors.primary}
+																			/>
 																		)}
 																	</View>
 																</TouchableOpacity>

@@ -47,7 +47,7 @@ function Inicio(props) {
 			id: 5,
 			image: images.cadastrar_plano_saude,
 			title: "Cadastrar Planos\nde Saúde",
-			link: "Planos",
+			link: "PlanosDeSaude",
 		},
 		{
 			id: 6,

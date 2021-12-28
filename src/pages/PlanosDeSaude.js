@@ -59,7 +59,7 @@ const BENEFICIARIO_INITIAL = {
 
 const PLANO_INITIAL = { Name: "", Value: "", valor_faixas: [] };
 
-function Planos(props) {
+function PlanosDeSaude(props) {
 	let d = new Date();
 	const [{ token }] = useUsuario();
 	const [matricula, setMatricula] = useState("");
@@ -73,11 +73,11 @@ function Planos(props) {
 	const [nextStep, setNextStep] = useState(false);
 	const [prevStep, setPrevStep] = useState(false);
 	const [textNext, setTextNext] = useState("PRÓXIMO");
-	const [cpf, setCpf] = useState("1");
-	const [rg, setRg] = useState("1");
-	const [cartaoSUS, setCartaoSUS] = useState("1");
-	const [comprovanteResidencia, setComprovanteResidencia] = useState("1");
-	const [declaracaoSaude, setDeclaracaoSaude] = useState("1");
+	const [cpf, setCpf] = useState("");
+	const [rg, setRg] = useState("");
+	const [cartaoSUS, setCartaoSUS] = useState("");
+	const [comprovanteResidencia, setComprovanteResidencia] = useState("");
+	const [declaracaoSaude, setDeclaracaoSaude] = useState("");
 	const [alerta, setAlerta] = useState({});
 	const [carregando, setCarregando] = useState(false);
 	const [modal, setModal] = useState(false);
@@ -458,7 +458,7 @@ function Planos(props) {
 
 	const incluirNoPlano = async (cancelar = false) => {
 		console.log("ASS1: ", assinaturaAssociado);
-		console.log("ASS2: ",assinaturaBeneficiario);
+		console.log("ASS2: ", assinaturaBeneficiario);
 		setAlerta({
 			visible: true,
 			title: "CADASTRANDO DADOS DO PLANO",
@@ -691,7 +691,7 @@ function Planos(props) {
 							confirmText: "FECHAR",
 						});
 
-						console.log(retorno.data)
+						console.log(retorno.data);
 
 						if (retorno.data.status) {
 							setActiveStep(0);
@@ -733,7 +733,6 @@ function Planos(props) {
 				});
 			}
 		} catch (error) {
-
 			console.log(error);
 
 			setAlerta({
@@ -1130,6 +1129,16 @@ function Planos(props) {
 						descriptionText=""
 						webStyle={`
 						.m-signature-pad {width: 80%; height: 250px; margin-left: auto; margin-right: auto; margin-top: 10px; margin-bottom: 0px; }
+						.m-signature-pad::before{
+							position: absolute;
+							top: 210px;
+							content: " ";
+							width: 70%;
+							background: #aaa;
+							height:2px;
+							left: 15%;
+							right: 15%;
+						}
 						.m-signature-pad--body {border: none;}
 						.m-signature-pad--footer{ display: none;}
 						`}
@@ -1161,6 +1170,16 @@ function Planos(props) {
 								descriptionText=""
 								webStyle={`
 								.m-signature-pad {width: 80%; height: 250px; margin-left: auto; margin-right: auto; margin-top: 10px; }
+								.m-signature-pad::before{
+									position: absolute;
+									top: 210px;
+									content: " ";
+									width: 70%;
+									background: #aaa;
+									height:2px;
+									left: 15%;
+									right: 15%;
+								}
 								.m-signature-pad--body {border: none;}
 								.m-signature-pad--footer{ display: none;}
 								`}
@@ -2167,50 +2186,6 @@ function Planos(props) {
 										<View style={{ flex: 1 }}></View>
 									</View>
 								</View>
-								{/* <Signature
-									ref={refAssinatura}
-									style={{ height: 280 }}
-									onOK={handleOK}
-									onEmpty={() =>
-										setAlerta({
-											visible: true,
-											title: "ATENÇÃO!",
-											message:
-												"Para confirmar é necessário preencher a assinatura do associado.",
-											showCancel: false,
-											showConfirm: true,
-											confirmText: "FECHAR",
-										})
-									}
-									descriptionText=""
-									webStyle={`
-									.m-signature-pad {width: 80%; height: 250px; margin-left: auto; margin-right: auto; margin-top: 10px; margin-bottom: 0px; }
-									.m-signature-pad--body {border: none;}
-									.m-signature-pad--footer{ display: none;}
-									body, html{background-color: #f1f1f1}
-									`}
-								/> 
-								<View style={{ flexDirection: "row" }}>
-									<View style={{ flex: 1 }}></View>
-									<View style={{ flex: 1 }}>
-										<TouchableOpacity
-											onPress={() => refAssinatura.current.clearSignature()}
-											style={{
-												backgroundColor: tema.colors.vermelho,
-												padding: 20,
-												borderRadius: 6,
-												marginTop: 20,
-												justifyContent: "center",
-												alignItems: "center",
-											}}
-										>
-											<Text style={{ color: "#fff", fontSize: 20 }}>
-												LIMPAR ASSINATURA
-											</Text>
-										</TouchableOpacity>
-									</View>
-									<View style={{ flex: 1 }}></View>
-								</View>*/}
 							</ProgressStep>
 						</ProgressSteps>
 						{prevStep && (
@@ -2256,4 +2231,4 @@ function Planos(props) {
 	);
 }
 
-export default Planos;
+export default PlanosDeSaude;
