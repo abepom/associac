@@ -13,6 +13,7 @@ import images from "../utils/images";
 import app from "../../app.json";
 import { tema } from "../../assets/style/Style";
 import { useUsuario } from "../store/Usuario";
+import * as ScreenOrientation from "expo-screen-orientation";
 
 function Inicio(props) {
 	const { navigation } = props;
@@ -57,7 +58,20 @@ function Inicio(props) {
 		},
 	];
 
-	useEffect(() => {
+	useEffect(async () => {
+		let orientation = await ScreenOrientation.getOrientationAsync();
+
+		switch (parseInt(orientation)) {
+			case 0:
+			case 1:
+			case 2:
+				setPortrait(true);
+				break;
+			default:
+				setPortrait(false);
+				break;
+		}
+
 		Dimensions.addEventListener("change", ({ window: { width, height } }) => {
 			if (width < height) {
 				// PORTRAIT

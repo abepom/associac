@@ -3,7 +3,7 @@
 		"name": "ASSOCIAC Mobile",
 		"description": "Aplicativo para gestão administrativa da ABEPOM.",
 		"slug": "associac",
-		"version": "1.0.0",
+		"version": "1.0.1",
 		"backgroundColor": "#03254E",
 		"primaryColor": "#03254E",
 		"icon": "./assets/img/icon.png",

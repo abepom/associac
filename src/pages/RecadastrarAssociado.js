@@ -393,14 +393,14 @@ function RecadastrarAssociado(props) {
 				<center>
 					<img src="${assinaturaAssociado}" style="width: 300px;" />
 					<hr style="width: 60%; margin-top: -15px;" />
-					<p>Assinatura de<br/><b>${associado?.nome?.toUpperCase()}</b></p>
+					<p style="font-size:12px !important;">Assinatura de<br/><b>${associado?.nome?.toUpperCase()}</b></p>
 				</center>
 				<div style="display: flex; flex: 1; flex-direction: row; width: 100%;margin-top: 50px;">
 					<div style="display: flex; flex: 1; justify-content: center;">
 						<center>
 							<img src="${assinaturaColaborador}" style="width: 250px;" /><br />
 							<hr style="width: 80%; margin-top: -15px;" />
-							<p style="text-align: center"><b>${nome}</b>
+							<p style="text-align: center; font-size:12px !important;"><b>${nome}</b>
 							<br />Representante ABEPOM</p>
 						</center>
 					</div>
@@ -408,7 +408,7 @@ function RecadastrarAssociado(props) {
 						<center>
 							<img src="${assinaturaColaborador}" style="width: 250px;" /><br />
 							<hr style="width: 80%; margin-top: -15px;" />
-							<p style="text-align: center">Cel Aroldo<br />Presidente da ABEPOM</p>
+							<p style="text-align: center; font-size:12px !important;">Cel Aroldo<br />Presidente da ABEPOM</p>
 						</center>
 					</div>
 				</div>
@@ -472,10 +472,7 @@ function RecadastrarAssociado(props) {
 		refColab.current.clearSignature();
 	};
 
-	const handleConfirm = async () => {
-		await refAssoc.current.readSignature();
-		await refColab.current.readSignature();
-
+	const handleConfirm = () => {
 		if (assinaturaAssociado !== "" && assinaturaColaborador !== "") {
 			setAlerta({
 				visible: true,
@@ -488,6 +485,14 @@ function RecadastrarAssociado(props) {
 
 			handleOK();
 		}
+	};
+
+	const handleEndAssociado = () => {
+		refAssoc.current.readSignature();
+	};
+
+	const handleEndColaborador = () => {
+		refColab.current.readSignature();
 	};
 
 	useEffect(() => {
@@ -650,6 +655,7 @@ function RecadastrarAssociado(props) {
 								confirmText: "FECHAR",
 							})
 						}
+						onEnd={handleEndAssociado}
 						descriptionText=""
 						webStyle={`
 						.m-signature-pad {width: 80%; height: 250px; margin-left: auto; margin-right: auto; margin-top: 10px; margin-bottom: 0px; }
@@ -687,6 +693,7 @@ function RecadastrarAssociado(props) {
 								confirmText: "FECHAR",
 							})
 						}
+						onEnd={handleEndColaborador}
 						descriptionText=""
 						webStyle={`
 						.m-signature-pad {width: 80%; height: 250px; margin-left: auto; margin-right: auto; margin-top: 10px; }
@@ -1104,7 +1111,7 @@ function RecadastrarAssociado(props) {
 														)}
 													/>
 												</View>
-												<View style={{ flex: 1, marginRight: 5 }}>
+												<View style={{ flex: 2, marginRight: 5 }}>
 													<TouchableOpacity
 														onPress={() => buscarCep()}
 														style={{
@@ -1115,6 +1122,7 @@ function RecadastrarAssociado(props) {
 															backgroundColor: "#031e3f",
 															borderRadius: 6,
 															marginTop: 8,
+															paddingHorizontal: 10,
 														}}
 													>
 														<IconButton
@@ -1357,13 +1365,14 @@ function RecadastrarAssociado(props) {
 													)}
 												/>
 											</View>
-											<View style={{ flex: 3, marginVertical: 15 }}>
+											<View style={{ flex: 1, marginVertical: 15 }}>
 												<TextInput
 													label="Observação"
 													value={associado.observacao}
 													multiline
-													numberOfLines={10}
+													numberOfLines={7}
 													mode={"outlined"}
+													style={{ maxHeight: 200 }}
 													onChangeText={(text) =>
 														setAssociado({ ...associado, observacao: text })
 													}

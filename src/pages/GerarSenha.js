@@ -417,7 +417,7 @@ function GerarSenha(props) {
 													</View>
 													<View
 														style={{
-															flex: 2,
+															flex: 3,
 															justifyContent: "center",
 															alignItems: "center",
 														}}
@@ -426,7 +426,7 @@ function GerarSenha(props) {
 															<>
 																<Text
 																	style={{
-																		fontSize: 16,
+																		fontSize: 15,
 																		color: tema.colors.primary,
 																	}}
 																>
@@ -434,7 +434,7 @@ function GerarSenha(props) {
 																</Text>
 																<Text
 																	style={{
-																		fontSize: 16,
+																		fontSize: 15,
 																		color: tema.colors.primary,
 																	}}
 																>
@@ -445,7 +445,7 @@ function GerarSenha(props) {
 															<>
 																<Text
 																	style={{
-																		fontSize: 16,
+																		fontSize: 15,
 																		color: tema.colors.primary,
 																	}}
 																>
@@ -453,7 +453,7 @@ function GerarSenha(props) {
 																</Text>
 																<Text
 																	style={{
-																		fontSize: 16,
+																		fontSize: 15,
 																		color: tema.colors.primary,
 																	}}
 																>
@@ -593,7 +593,7 @@ function GerarSenha(props) {
 																	</View>
 																	<View
 																		style={{
-																			flex: 2,
+																			flex: 3,
 																			justifyContent: "center",
 																			alignItems: "center",
 																		}}
@@ -602,7 +602,7 @@ function GerarSenha(props) {
 																			<>
 																				<Text
 																					style={{
-																						fontSize: 16,
+																						fontSize: 15,
 																						color: tema.colors.primary,
 																					}}
 																				>
@@ -610,7 +610,7 @@ function GerarSenha(props) {
 																				</Text>
 																				<Text
 																					style={{
-																						fontSize: 16,
+																						fontSize: 15,
 																						color: tema.colors.primary,
 																					}}
 																				>
@@ -621,7 +621,7 @@ function GerarSenha(props) {
 																			<>
 																				<Text
 																					style={{
-																						fontSize: 16,
+																						fontSize: 15,
 																						color: tema.colors.primary,
 																					}}
 																				>
@@ -629,7 +629,7 @@ function GerarSenha(props) {
 																				</Text>
 																				<Text
 																					style={{
-																						fontSize: 16,
+																						fontSize: 15,
 																						color: tema.colors.primary,
 																					}}
 																				>

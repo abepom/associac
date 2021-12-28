@@ -28,6 +28,7 @@ import Signature from "react-native-signature-canvas";
 import calculateAge from "../functions/calculateAge";
 import WebView from "react-native-webview";
 import * as Print from "expo-print";
+import * as ScreenOrientation from "expo-screen-orientation";
 
 const ASSOCIADO_INITIAL = {
 	matricula: "",
@@ -55,9 +56,10 @@ const BENEFICIARIO_INITIAL = {
 	cpf: "",
 	valor_mensalidade: 0,
 	possui_plano: false,
+	nome_plano: "",
 };
 
-const PLANO_INITIAL = { Name: "", Value: "", valor_faixas: [] };
+const PLANO_INITIAL = { Name: "", Value: "", valor_faixas: [], nome_plano: "" };
 
 function PlanosDeSaude(props) {
 	let d = new Date();
@@ -83,6 +85,13 @@ function PlanosDeSaude(props) {
 	const [modal, setModal] = useState(false);
 	const [modalAssinatura, setModalAssinatura] = useState(false);
 	const [imagemAmpliada, setImagemAmpliada] = useState("");
+	const [dataVigencia, setDataVigencia] = useState(
+		("0" + d.getDate()).slice(-2) +
+			"/" +
+			("0" + (d.getMonth() + 1)).slice(-2) +
+			"/" +
+			d.getFullYear()
+	);
 	const [dataMovimentacao] = useState(
 		("0" + d.getDate()).slice(-2) +
 			"/" +
@@ -97,6 +106,7 @@ function PlanosDeSaude(props) {
 	const [nomePlano, setNomePlano] = useState("");
 	const [assinaturaAssociado, setAssinaturaAssociado] = useState("");
 	const [assinaturaBeneficiario, setAssinaturaBeneficiario] = useState("");
+	const [mostrarBotoes, setMostrarBotoes] = useState(true);
 
 	const refAssociado = useRef();
 	const refBeneficiario = useRef();
@@ -116,6 +126,7 @@ function PlanosDeSaude(props) {
 					Name: plano.plano + " | " + plano.nome_plano,
 					Value: plano.plano,
 					valor_mensalidade: plano.valor_mensalidade,
+					nome_plano: plano.nome_plano_documento,
 				});
 			});
 
@@ -233,6 +244,7 @@ function PlanosDeSaude(props) {
 								cpf: dependente.cpf,
 								valor_mensalidade: 0,
 								possui_plano: dependente.possui_plano == 1 ? true : false,
+								nome_plano: dependente.nome_plano,
 							});
 						});
 
@@ -457,8 +469,6 @@ function PlanosDeSaude(props) {
 	};
 
 	const incluirNoPlano = async (cancelar = false) => {
-		console.log("ASS1: ", assinaturaAssociado);
-		console.log("ASS2: ", assinaturaBeneficiario);
 		setAlerta({
 			visible: true,
 			title: "CADASTRANDO DADOS DO PLANO",
@@ -513,8 +523,15 @@ function PlanosDeSaude(props) {
 					</div>
 				</div>
 				<div style="display: flex; flex: 1;">
+					<div style="display: flex; flex-direction: column; flex: 1; justify-content: center; align-items: center;">
+						<h4 style="text-align: center">ESCOLHA DO PLANO - ${nomePlano}<br />${
+				plano.nome_plano
+			}</h4>
+					</div>
+				</div>
+				<div style="display: flex; flex: 1;">
 					<div style="display: flex; flex-direction: row; flex: 1; justify-content: center; align-items: center;">
-					<h4>ESCOLHA DO PLANO - ${nomePlano}</h4>
+					<h5>DATA DE INÍCIO DE VIGÊNCIA: ${dataVigencia} (SUJEITA A ANÁLISE DA OPERADORA)</h5>
 					</div>
 				</div>
 				<div style="display: flex; flex: 1;">
@@ -554,6 +571,16 @@ function PlanosDeSaude(props) {
 							</center>
 						</div>`
 								: `<div style="display: flex; flex: 1; justify-content: center">
+									<center>
+										<img src="${assinaturaAssociado}" style="width: 350px" />
+										<br />
+										<hr style="width: 80%" />
+										<br />
+										${associado.nome}<br />
+										Assinatura do Associado
+									</center>
+								</div>
+								<div style="display: flex; flex: 1; justify-content: center">
 								<center>
 									<img src="${assinaturaBeneficiario}" style="width: 350px" />
 									<br />
@@ -562,7 +589,8 @@ function PlanosDeSaude(props) {
 									${beneficiario.Name} <br />
 									Assinatura do Titular do Plano de Saúde
 								</center>
-							</div>`
+							</div>
+							`
 						}
 					</div>
 				</div>
@@ -571,11 +599,10 @@ function PlanosDeSaude(props) {
 						<h4>TERMOS</h4>
 					</div>
 				</div>
-			</div>` +
+			</div><div style="font-size: 12px !important;">` +
 			pdf +
-			`	
-				<br />
-				<p align="justify">Local: Florianpolis<br />Data: 25/11/1990</p>
+			`</div>	
+				<p align="justify" style="font-size: 12px">Local: Florianpolis<br />Data: 25/11/1990</p>
 				<div style="display: flex; flex: 1; margin-top: 30px;">
 					<div style="display: flex; flex-direction: row; flex: 1; justify-content: center; align-items: center;">
 						${
@@ -592,6 +619,16 @@ function PlanosDeSaude(props) {
 							</center>
 						</div>`
 								: `<div style="display: flex; flex: 1; justify-content: center">
+								<center>
+									<img src="${assinaturaAssociado}" style="width: 350px" />
+									<br />
+									<hr style="width: 80%" />
+									<br />
+									${associado.nome}<br />
+									Assinatura do Associado
+								</center>
+							</div>
+							<div style="display: flex; flex: 1; justify-content: center">
 								<center>
 									<img src="${assinaturaBeneficiario}" style="width: 350px" />
 									<br />
@@ -629,8 +666,6 @@ function PlanosDeSaude(props) {
 					},
 				}
 			);
-
-			console.log(data);
 
 			if (data.status) {
 				let erros = 0;
@@ -677,6 +712,7 @@ function PlanosDeSaude(props) {
 								plano,
 								associado,
 								cancelar,
+								dataVigencia,
 							},
 							headers: { "x-access-token": token },
 						});
@@ -690,8 +726,6 @@ function PlanosDeSaude(props) {
 							showConfirm: true,
 							confirmText: "FECHAR",
 						});
-
-						console.log(retorno.data);
 
 						if (retorno.data.status) {
 							setActiveStep(0);
@@ -733,8 +767,6 @@ function PlanosDeSaude(props) {
 				});
 			}
 		} catch (error) {
-			console.log(error);
-
 			setAlerta({
 				visible: true,
 				title: "ATENÇÃO!",
@@ -774,6 +806,8 @@ function PlanosDeSaude(props) {
 			aspect: [4, 3],
 			quality: 0.5,
 		});
+
+		ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT);
 
 		if (!result.cancelled) {
 			try {
@@ -891,6 +925,11 @@ function PlanosDeSaude(props) {
 					msgErro += "Selecionar o estado civil do beneficiário.\n";
 				}
 
+				if (dataVigencia == "") {
+					erros++;
+					msgErro += "Informe a data de vigência do plano.\n";
+				}
+
 				if (erros > 0) {
 					setAlerta({
 						visible: true,
@@ -992,16 +1031,16 @@ function PlanosDeSaude(props) {
 		setNextStep(true);
 	};
 
-	const handleOKAssoc = (signature) => {
-		setAssinaturaAssociado(signature);
+	const handleOKAssoc = async (signature) => {
+		await setAssinaturaAssociado(signature);
 
 		return true;
 	};
 
-	const handleOKBenef = (signature) => {
-		setAssinaturaBeneficiario(signature);
+	const handleOKBenef = async (signature) => {
+		await setAssinaturaBeneficiario(signature);
 
-		return true;
+		return signature;
 	};
 
 	const handleClear = () => {
@@ -1012,11 +1051,7 @@ function PlanosDeSaude(props) {
 	};
 
 	const handleConfirm = async () => {
-		await refAssociado.current.readSignature();
-
 		if (beneficiario?.codigo_tipo !== "00") {
-			await refBeneficiario.current.readSignature();
-
 			if (assinaturaAssociado !== "" && assinaturaBeneficiario !== "") {
 				handleOK();
 			}
@@ -1027,9 +1062,33 @@ function PlanosDeSaude(props) {
 		}
 	};
 
+	const handleEndAssociado = () => {
+		refAssociado.current.readSignature();
+	};
+
+	const handleEndBeneficiario = () => {
+		refBeneficiario.current.readSignature();
+	};
+
+	const _keyboardDidShow = () => {
+		setMostrarBotoes(false);
+	};
+
+	const _keyboardDidHide = () => {
+		setMostrarBotoes(true);
+	};
+
 	useEffect(() => {
+		Keyboard.addListener("keyboardDidShow", _keyboardDidShow);
+		Keyboard.addListener("keyboardDidHide", _keyboardDidHide);
+
 		listarPlanos();
 		listarTermos();
+
+		return () => {
+			Keyboard.removeListener("keyboardDidShow", _keyboardDidShow);
+			Keyboard.removeListener("keyboardDidHide", _keyboardDidHide);
+		};
 	}, []);
 
 	return (
@@ -1126,6 +1185,7 @@ function PlanosDeSaude(props) {
 								confirmText: "FECHAR",
 							})
 						}
+						onEnd={handleEndAssociado}
 						descriptionText=""
 						webStyle={`
 						.m-signature-pad {width: 80%; height: 250px; margin-left: auto; margin-right: auto; margin-top: 10px; margin-bottom: 0px; }
@@ -1167,6 +1227,7 @@ function PlanosDeSaude(props) {
 										confirmText: "FECHAR",
 									})
 								}
+								onEnd={handleEndBeneficiario}
 								descriptionText=""
 								webStyle={`
 								.m-signature-pad {width: 80%; height: 250px; margin-left: auto; margin-right: auto; margin-top: 10px; }
@@ -1205,7 +1266,9 @@ function PlanosDeSaude(props) {
 						<Button
 							onPress={handleConfirm}
 							color={"#fff"}
-							style={{ backgroundColor: tema.colors.verde }}
+							style={{
+								backgroundColor: tema.colors.verde,
+							}}
 						>
 							CONFIRMAR ASSINATURAS
 						</Button>
@@ -1362,6 +1425,7 @@ function PlanosDeSaude(props) {
 											value={associado.nome}
 											style={{ fontSize: 18 }}
 											disabled
+											dense
 										/>
 									</View>
 									<View style={{ flex: 2 }}>
@@ -1369,6 +1433,7 @@ function PlanosDeSaude(props) {
 											label="Data de Nascimento"
 											mode={"outlined"}
 											theme={tema}
+											dense
 											value={associado.nascimento}
 											style={{ fontSize: 18 }}
 											disabled
@@ -1393,6 +1458,7 @@ function PlanosDeSaude(props) {
 											value={associado.endereco}
 											style={{ fontSize: 18 }}
 											disabled
+											dense
 										/>
 									</View>
 									<View style={{ flex: 1, marginRight: 5 }}>
@@ -1403,6 +1469,7 @@ function PlanosDeSaude(props) {
 											value={associado.numero}
 											style={{ fontSize: 18 }}
 											disabled
+											dense
 										/>
 									</View>
 									<View style={{ flex: 2 }}>
@@ -1413,11 +1480,12 @@ function PlanosDeSaude(props) {
 											value={associado.complemento}
 											style={{ fontSize: 18 }}
 											disabled
+											dense
 										/>
 									</View>
 								</View>
 								<View style={{ flexDirection: "row", marginBottom: 5 }}>
-									<View style={{ flex: 2, marginRight: 5 }}>
+									<View style={{ flex: 4, marginRight: 5 }}>
 										<TextInput
 											label="Cidade"
 											mode={"outlined"}
@@ -1425,9 +1493,10 @@ function PlanosDeSaude(props) {
 											value={associado.cidade.Name + " / SC"}
 											style={{ fontSize: 18 }}
 											disabled
+											dense
 										/>
 									</View>
-									<View style={{ flex: 1, marginRight: 5 }}>
+									<View style={{ flex: 1 }}>
 										<TextInput
 											label="CEP"
 											mode={"outlined"}
@@ -1435,9 +1504,12 @@ function PlanosDeSaude(props) {
 											value={associado.cep}
 											style={{ fontSize: 18 }}
 											disabled
+											dense
 										/>
 									</View>
-									<View style={{ flex: 2 }}>
+								</View>
+								<View style={{ flexDirection: "row", marginBottom: 5 }}>
+									<View style={{ flex: 1, marginRight: 5 }}>
 										<TextInput
 											label="Telefone Comercial"
 											mode={"outlined"}
@@ -1445,10 +1517,9 @@ function PlanosDeSaude(props) {
 											value={associado.telefone_comercial}
 											style={{ fontSize: 18 }}
 											disabled
+											dense
 										/>
 									</View>
-								</View>
-								<View style={{ flexDirection: "row", marginBottom: 5 }}>
 									<View style={{ flex: 1, marginRight: 5 }}>
 										<TextInput
 											label="Telefone Residencial"
@@ -1457,9 +1528,10 @@ function PlanosDeSaude(props) {
 											value={associado.telefone_residencial}
 											style={{ fontSize: 18 }}
 											disabled
+											dense
 										/>
 									</View>
-									<View style={{ flex: 1, marginRight: 5 }}>
+									<View style={{ flex: 1 }}>
 										<TextInput
 											label="Celular"
 											mode={"outlined"}
@@ -1467,9 +1539,12 @@ function PlanosDeSaude(props) {
 											value={associado.celular}
 											style={{ fontSize: 18 }}
 											disabled
+											dense
 										/>
 									</View>
-									<View style={{ flex: 3 }}>
+								</View>
+								<View style={{ flexDirection: "row", marginBottom: 5 }}>
+									<View style={{ flex: 1 }}>
 										<TextInput
 											label="E-mail"
 											mode={"outlined"}
@@ -1477,6 +1552,7 @@ function PlanosDeSaude(props) {
 											value={associado.email}
 											style={{ fontSize: 18 }}
 											disabled
+											dense
 										/>
 									</View>
 								</View>
@@ -1495,436 +1571,525 @@ function PlanosDeSaude(props) {
 										Ultima atualização em {associado.data_recadastro}
 									</Text>
 								</View>
-								<View
-									style={{
-										flexDirection: "row",
-										marginBottom: 5,
-										marginTop: 20,
-									}}
-								>
-									<View style={{ flex: 2, marginRight: 5 }}>
-										<TextInput
-											label="Beneficiário"
-											mode={"outlined"}
-											theme={tema}
-											style={{ fontSize: 18 }}
-											value={beneficiario}
-											onChangeText={(text) => setBeneficiario(text)}
-											render={() => (
-												<PickerModal
-													renderSelectView={(disabled, selected, showModal) => (
-														<TouchableOpacity
-															style={{
-																flexDirection: "row",
-																flex: 1,
-																justifyContent: "flex-start",
-																alignItems: "center",
-																paddingLeft: 10,
-															}}
-															disabled={disabled}
-															onPress={showModal}
-														>
-															<View style={{ flex: 3 }}>
-																<Text
+								<ScrollView>
+									<View
+										style={{
+											flexDirection: "row",
+											marginBottom: 5,
+											marginTop: 20,
+										}}
+									>
+										<View style={{ flex: 1, marginRight: 5 }}>
+											<TextInput
+												label="Beneficiário"
+												mode={"outlined"}
+												theme={tema}
+												style={{ fontSize: 18 }}
+												value={beneficiario}
+												onChangeText={(text) => setBeneficiario(text)}
+												dense
+												render={() => (
+													<PickerModal
+														renderSelectView={(
+															disabled,
+															selected,
+															showModal
+														) => (
+															<TouchableOpacity
+																style={{
+																	flexDirection: "row",
+																	flex: 1,
+																	justifyContent: "flex-start",
+																	alignItems: "center",
+																	paddingLeft: 10,
+																}}
+																disabled={disabled}
+																onPress={showModal}
+															>
+																<View style={{ flex: 3 }}>
+																	<Text
+																		style={{
+																			fontSize: beneficiario ? 15 : 12,
+																		}}
+																	>
+																		{beneficiario.Name === ""
+																			? "SELECIONE"
+																			: beneficiario.Name}
+																	</Text>
+																</View>
+																<View
 																	style={{
-																		fontSize: beneficiario ? 15 : 12,
+																		flex: 1,
+																		alignItems: "flex-end",
+																		paddingRight: 10,
 																	}}
 																>
-																	{beneficiario.Name === ""
-																		? "SELECIONE"
-																		: beneficiario.Name}
-																</Text>
-															</View>
-															<View
-																style={{
-																	flex: 1,
-																	alignItems: "flex-end",
-																	paddingRight: 10,
-																}}
-															>
-																<Image
-																	source={images.seta}
-																	tintColor={"#031e3f"}
-																	style={{
-																		width: 10,
-																		height: 10,
-																		right: 0,
-																		tintColor: "#031e3f",
-																		transform: [{ rotate: "90deg" }],
-																	}}
-																/>
-															</View>
-														</TouchableOpacity>
-													)}
-													modalAnimationType="fade"
-													selected={beneficiario}
-													selectPlaceholderText="SELECIONE O BENEFICIÁRIO"
-													searchPlaceholderText="DIGITE O BENEFICIÁRIO"
-													onSelected={(key) => selecionarBeneficiario(key)}
-													onClosed={() => setBeneficiario(beneficiario)}
-													items={dependentes}
-												/>
-											)}
-										/>
+																	<Image
+																		source={images.seta}
+																		tintColor={"#031e3f"}
+																		style={{
+																			width: 10,
+																			height: 10,
+																			right: 0,
+																			tintColor: "#031e3f",
+																			transform: [{ rotate: "90deg" }],
+																		}}
+																	/>
+																</View>
+															</TouchableOpacity>
+														)}
+														modalAnimationType="fade"
+														selected={beneficiario}
+														selectPlaceholderText="SELECIONE O BENEFICIÁRIO"
+														searchPlaceholderText="DIGITE O BENEFICIÁRIO"
+														onSelected={(key) => selecionarBeneficiario(key)}
+														onClosed={() => setBeneficiario(beneficiario)}
+														items={dependentes}
+													/>
+												)}
+											/>
+										</View>
 									</View>
-									<View style={{ flex: 2 }}>
-										<TextInput
-											label="Plano"
-											mode={"outlined"}
-											theme={tema}
-											style={{ fontSize: 18 }}
-											value={plano}
-											onChangeText={(text) => setPlano(text)}
-											render={() => (
-												<PickerModal
-													renderSelectView={(disabled, selected, showModal) => (
-														<TouchableOpacity
-															style={{
-																flexDirection: "row",
-																flex: 1,
-																justifyContent: "flex-start",
-																alignItems: "center",
-																paddingLeft: 10,
-															}}
-															disabled={disabled}
-															onPress={showModal}
-														>
-															<View style={{ flex: 3 }}>
-																<Text
-																	style={{
-																		fontSize: plano ? 15 : 12,
-																	}}
-																>
-																	{plano.Name === "" ? "SELECIONE" : plano.Name}
-																</Text>
-															</View>
-															<View
-																style={{
-																	flex: 1,
-																	alignItems: "flex-end",
-																	paddingRight: 10,
-																}}
-															>
-																<Image
-																	source={images.seta}
-																	tintColor={"#031e3f"}
-																	style={{
-																		width: 10,
-																		height: 10,
-																		right: 0,
-																		tintColor: "#031e3f",
-																		transform: [{ rotate: "90deg" }],
-																	}}
-																/>
-															</View>
-														</TouchableOpacity>
-													)}
-													modalAnimationType="fade"
-													selected={plano}
-													selectPlaceholderText="SELECIONE O PLANO"
-													searchPlaceholderText="DIGITE O PLANO"
-													onSelected={(key) => selecionarPlano(key)}
-													onClosed={() => setPlano(plano)}
-													items={planos}
-												/>
-											)}
-										/>
-									</View>
-								</View>
-								<View style={{ flexDirection: "row", marginBottom: 5 }}>
-									<View style={{ flex: 1, marginRight: 5 }}>
-										<TextInput
-											label="Data de Nascimento"
-											mode={"outlined"}
-											theme={tema}
-											value={beneficiario.data_nascimento}
-											style={{ fontSize: 18 }}
-											disabled
-										/>
-									</View>
-									<View style={{ flex: 1, marginRight: 5 }}>
-										<TextInput
-											label="Idade"
-											mode={"outlined"}
-											theme={tema}
-											value={beneficiario.idade.toString()}
-											style={{ fontSize: 18 }}
-											disabled
-										/>
-									</View>
-									<View style={{ flex: 1 }}>
-										<TextInput
-											label="Estado Civil"
-											mode={"outlined"}
-											theme={tema}
-											value={beneficiario.estado_civil}
-											style={{ fontSize: 18 }}
-											onChangeText={(text) =>
-												setBeneficiario({
-													...beneficiario,
-													estado_civil: text,
-												})
-											}
-											render={() => (
-												<PickerModal
-													renderSelectView={(disabled, selected, showModal) => (
-														<TouchableOpacity
-															style={{
-																flexDirection: "row",
-																flex: 1,
-																justifyContent: "flex-start",
-																alignItems: "center",
-																paddingLeft: 10,
-															}}
-															disabled={disabled}
-															onPress={showModal}
-														>
-															<View style={{ flex: 3 }}>
-																<Text
-																	style={{
-																		fontSize: beneficiario ? 15 : 12,
-																	}}
-																>
-																	{beneficiario.estado_civil.Name === ""
-																		? "SELECIONE"
-																		: beneficiario.estado_civil.Name}
-																</Text>
-															</View>
-															<View
-																style={{
-																	flex: 1,
-																	alignItems: "flex-end",
-																	paddingRight: 10,
-																}}
-															>
-																<Image
-																	source={images.seta}
-																	tintColor={"#031e3f"}
-																	style={{
-																		width: 10,
-																		height: 10,
-																		right: 0,
-																		tintColor: "#031e3f",
-																		transform: [{ rotate: "90deg" }],
-																	}}
-																/>
-															</View>
-														</TouchableOpacity>
-													)}
-													modalAnimationType="fade"
-													selected={beneficiario.estado_civil}
-													selectPlaceholderText="SELECIONE O ESTADO CIVIL"
-													searchPlaceholderText="DIGITE O ESTADO CIVIL"
-													onSelected={(key) =>
-														setBeneficiario({
-															...beneficiario,
-															estado_civil: key,
-														})
-													}
-													onClosed={() => setBeneficiario(beneficiario)}
-													items={[
-														{
-															Name: "Solteiro(a)",
-															Value: "Solteiro(a)",
-														},
-														{ Name: "Casado(a)", Value: "Casado(a)" },
-														{
-															Name: "Desquitado(a)",
-															Value: "Desquitado(a)",
-														},
-														{ Name: "Viúvo(a)", Value: "Viúvo(a)" },
-														{
-															Name: "Divorciado(a)",
-															Value: "Divorciado(a)",
-														},
-														{
-															Name: "Separado(a) Judicialmente",
-															Value: "Separado(a) Judicialmente",
-														},
-														{
-															Name: "Amasiado(a)",
-															Value: "Amasiado(a)",
-														},
-														{ Name: "Outro", Value: "Outro" },
-													]}
-												/>
-											)}
-										/>
-									</View>
-								</View>
-								<View style={{ flexDirection: "row", marginBottom: 5 }}>
-									<View style={{ flex: 1, marginRight: 5 }}>
-										<TextInput
-											label="Sexo"
-											mode={"outlined"}
-											theme={tema}
-											value={beneficiario.sexo}
-											style={{ fontSize: 18 }}
-											disabled
-										/>
-									</View>
-									<View style={{ flex: 1, marginRight: 5 }}>
-										<TextInput
-											label="Tipo de Dependente"
-											mode={"outlined"}
-											theme={tema}
-											value={beneficiario.tipo}
-											style={{ fontSize: 18 }}
-											disabled
-										/>
-									</View>
-									<View style={{ flex: 1, marginRight: 5 }}>
-										<TextInput
-											label="CPF"
-											mode={"outlined"}
-											theme={tema}
-											value={beneficiario.cpf}
-											style={{ fontSize: 18 }}
-											disabled={beneficiario?.cpf === "" ? false : true}
-											maxLength={14}
-											keyboardType={"number-pad"}
-											onChangeText={(text) =>
-												setBeneficiario({ ...beneficiario, cpf: text })
-											}
-											render={(props) => (
-												<TextInputMask
-													{...props}
-													type={"custom"}
-													options={{
-														mask: "999.999.999-99",
-													}}
-												/>
-											)}
-										/>
-									</View>
-									<View style={{ flex: 1 }}>
-										<TextInput
-											label="Local de Cobrança"
-											mode={"outlined"}
-											theme={tema}
-											value={beneficiario.local_cobranca}
-											style={{ fontSize: 18 }}
-											onChangeText={(text) =>
-												setBeneficiario({
-													...beneficiario,
-													local_cobranca: text,
-												})
-											}
-											render={() => (
-												<PickerModal
-													renderSelectView={(disabled, selected, showModal) => (
-														<TouchableOpacity
-															style={{
-																flexDirection: "row",
-																flex: 1,
-																justifyContent: "flex-start",
-																alignItems: "center",
-																paddingLeft: 10,
-															}}
-															disabled={disabled}
-															onPress={showModal}
-														>
-															<View style={{ flex: 3 }}>
-																<Text
-																	style={{
-																		fontSize: beneficiario ? 15 : 12,
-																	}}
-																>
-																	{beneficiario.local_cobranca.Name === ""
-																		? "SELECIONE"
-																		: beneficiario.local_cobranca.Name}
-																</Text>
-															</View>
-															<View
-																style={{
-																	flex: 1,
-																	alignItems: "flex-end",
-																	paddingRight: 10,
-																}}
-															>
-																<Image
-																	source={images.seta}
-																	tintColor={"#031e3f"}
-																	style={{
-																		width: 10,
-																		height: 10,
-																		right: 0,
-																		tintColor: "#031e3f",
-																		transform: [{ rotate: "90deg" }],
-																	}}
-																/>
-															</View>
-														</TouchableOpacity>
-													)}
-													modalAnimationType="fade"
-													selected={beneficiario.local_cobranca}
-													selectPlaceholderText="SELECIONE O LOCAL DE COBRANÇA"
-													searchPlaceholderText="DIGITE O LOCAL DE COBRANÇA"
-													onSelected={(key) =>
-														setBeneficiario({
-															...beneficiario,
-															local_cobranca: key,
-														})
-													}
-													onClosed={() => setBeneficiario(beneficiario)}
-													items={[
-														{ Name: "Folha", Value: "1-Folha" },
-														{ Name: "Boleto", Value: "2-Boleto" },
-														{
-															Name: "Conta Corrente",
-															Value: "3-Conta Corrente",
-														},
-													]}
-												/>
-											)}
-										/>
-									</View>
-								</View>
-								<View
-									style={{
-										flexDirection: "row",
-										justifyContent: "flex-start",
-										marginBottom: 5,
-									}}
-								>
-									<View style={{ flex: 2, marginRight: 5 }}>
-										<TextInput
-											label="Valor Mensal do Plano"
-											mode={"outlined"}
-											theme={tema}
+									{beneficiario?.possui_plano && (
+										<View
 											style={{
-												fontSize: 20,
-												fontWeight: "bold",
-												color: tema.colors.primary,
+												backgroundColor: tema.colors.amarelo,
+												padding: 10,
+												borderRadius: 6,
+												marginVertical: 5,
 											}}
-											value={beneficiario.valor_mensalidade.toString()}
-											disabled
-											render={(props) => (
-												<TextInputMask
-													{...props}
-													type={"money"}
-													options={{
-														precision: 2,
-														separator: ",",
-														delimiter: ".",
-														unit: "R$ ",
-														suffixUnit: "",
-													}}
-												/>
-											)}
-										/>
+										>
+											<Text style={{ textAlign: "justify" }}>
+												O beneficiário escolhido já possui o plano de saúde
+												ativo:{" "}
+												<Text style={{ fontWeight: "bold" }}>
+													{beneficiario?.nome_plano?.toString()}
+												</Text>
+												. Caso continue, ao final do cadastro será solicitado o
+												cancelamento do plano ativo.
+											</Text>
+										</View>
+									)}
+									<View
+										style={{
+											flexDirection: "row",
+											marginBottom: 5,
+										}}
+									>
+										<View style={{ flex: 1 }}>
+											<TextInput
+												label="Plano"
+												mode={"outlined"}
+												theme={tema}
+												style={{ fontSize: 18 }}
+												value={plano}
+												onChangeText={(text) => setPlano(text)}
+												dense
+												render={() => (
+													<PickerModal
+														renderSelectView={(
+															disabled,
+															selected,
+															showModal
+														) => (
+															<TouchableOpacity
+																style={{
+																	flexDirection: "row",
+																	flex: 1,
+																	justifyContent: "flex-start",
+																	alignItems: "center",
+																	paddingLeft: 10,
+																}}
+																disabled={disabled}
+																onPress={showModal}
+															>
+																<View style={{ flex: 3 }}>
+																	<Text
+																		style={{
+																			fontSize: plano ? 15 : 12,
+																		}}
+																	>
+																		{plano.Name === ""
+																			? "SELECIONE"
+																			: plano.Name}
+																	</Text>
+																</View>
+																<View
+																	style={{
+																		flex: 1,
+																		alignItems: "flex-end",
+																		paddingRight: 10,
+																	}}
+																>
+																	<Image
+																		source={images.seta}
+																		tintColor={"#031e3f"}
+																		style={{
+																			width: 10,
+																			height: 10,
+																			right: 0,
+																			tintColor: "#031e3f",
+																			transform: [{ rotate: "90deg" }],
+																		}}
+																	/>
+																</View>
+															</TouchableOpacity>
+														)}
+														modalAnimationType="fade"
+														selected={plano}
+														selectPlaceholderText="SELECIONE O PLANO"
+														searchPlaceholderText="DIGITE O PLANO"
+														onSelected={(key) => selecionarPlano(key)}
+														onClosed={() => setPlano(plano)}
+														items={planos}
+													/>
+												)}
+											/>
+										</View>
 									</View>
-									<View style={{ flex: 2 }}>
-										<TextInput
-											label="Data de Movimentação"
-											mode={"outlined"}
-											theme={tema}
-											value={dataMovimentacao}
-											style={{ fontSize: 18 }}
-											disabled
-										/>
+									<View style={{ flexDirection: "row", marginBottom: 5 }}>
+										<View style={{ flex: 1, marginRight: 5 }}>
+											<TextInput
+												label="Data de Nascimento"
+												mode={"outlined"}
+												theme={tema}
+												value={beneficiario.data_nascimento}
+												style={{ fontSize: 18 }}
+												disabled
+												dense
+											/>
+										</View>
+										<View style={{ flex: 1, marginRight: 5 }}>
+											<TextInput
+												label="Idade"
+												mode={"outlined"}
+												theme={tema}
+												value={beneficiario.idade.toString()}
+												style={{ fontSize: 18 }}
+												disabled
+												dense
+											/>
+										</View>
+										<View style={{ flex: 1 }}>
+											<TextInput
+												label="Estado Civil"
+												mode={"outlined"}
+												theme={tema}
+												value={beneficiario.estado_civil}
+												dense
+												style={{ fontSize: 18 }}
+												onChangeText={(text) =>
+													setBeneficiario({
+														...beneficiario,
+														estado_civil: text,
+													})
+												}
+												render={() => (
+													<PickerModal
+														renderSelectView={(
+															disabled,
+															selected,
+															showModal
+														) => (
+															<TouchableOpacity
+																style={{
+																	flexDirection: "row",
+																	flex: 1,
+																	justifyContent: "flex-start",
+																	alignItems: "center",
+																	paddingLeft: 10,
+																}}
+																disabled={disabled}
+																onPress={showModal}
+															>
+																<View style={{ flex: 3 }}>
+																	<Text
+																		style={{
+																			fontSize: beneficiario ? 15 : 12,
+																		}}
+																	>
+																		{beneficiario.estado_civil.Name === ""
+																			? "SELECIONE"
+																			: beneficiario.estado_civil.Name}
+																	</Text>
+																</View>
+																<View
+																	style={{
+																		flex: 1,
+																		alignItems: "flex-end",
+																		paddingRight: 10,
+																	}}
+																>
+																	<Image
+																		source={images.seta}
+																		tintColor={"#031e3f"}
+																		style={{
+																			width: 10,
+																			height: 10,
+																			right: 0,
+																			tintColor: "#031e3f",
+																			transform: [{ rotate: "90deg" }],
+																		}}
+																	/>
+																</View>
+															</TouchableOpacity>
+														)}
+														modalAnimationType="fade"
+														selected={beneficiario.estado_civil}
+														selectPlaceholderText="SELECIONE O ESTADO CIVIL"
+														searchPlaceholderText="DIGITE O ESTADO CIVIL"
+														onSelected={(key) =>
+															setBeneficiario({
+																...beneficiario,
+																estado_civil: key,
+															})
+														}
+														onClosed={() => setBeneficiario(beneficiario)}
+														items={[
+															{
+																Name: "Solteiro(a)",
+																Value: "Solteiro(a)",
+															},
+															{ Name: "Casado(a)", Value: "Casado(a)" },
+															{
+																Name: "Desquitado(a)",
+																Value: "Desquitado(a)",
+															},
+															{ Name: "Viúvo(a)", Value: "Viúvo(a)" },
+															{
+																Name: "Divorciado(a)",
+																Value: "Divorciado(a)",
+															},
+															{
+																Name: "Separado(a) Judicialmente",
+																Value: "Separado(a) Judicialmente",
+															},
+															{
+																Name: "Amasiado(a)",
+																Value: "Amasiado(a)",
+															},
+															{ Name: "Outro", Value: "Outro" },
+														]}
+													/>
+												)}
+											/>
+										</View>
 									</View>
-								</View>
+									<View style={{ flexDirection: "row", marginBottom: 5 }}>
+										<View style={{ flex: 1, marginRight: 5 }}>
+											<TextInput
+												label="Sexo"
+												mode={"outlined"}
+												theme={tema}
+												value={beneficiario.sexo}
+												style={{ fontSize: 18 }}
+												disabled
+												dense
+											/>
+										</View>
+										<View style={{ flex: 1, marginRight: 5 }}>
+											<TextInput
+												label="Tipo de Dependente"
+												mode={"outlined"}
+												theme={tema}
+												value={beneficiario.tipo}
+												style={{ fontSize: 18 }}
+												disabled
+												dense
+											/>
+										</View>
+										<View style={{ flex: 1 }}>
+											<TextInput
+												label="CPF"
+												mode={"outlined"}
+												theme={tema}
+												value={beneficiario.cpf}
+												style={{ fontSize: 18 }}
+												disabled={beneficiario?.cpf === "" ? false : true}
+												maxLength={14}
+												dense
+												keyboardType={"number-pad"}
+												onChangeText={(text) =>
+													setBeneficiario({ ...beneficiario, cpf: text })
+												}
+												render={(props) => (
+													<TextInputMask
+														{...props}
+														type={"custom"}
+														options={{
+															mask: "999.999.999-99",
+														}}
+													/>
+												)}
+											/>
+										</View>
+									</View>
+									<View
+										style={{
+											flexDirection: "row",
+											justifyContent: "flex-start",
+											marginBottom: 5,
+										}}
+									>
+										<View style={{ flex: 1, marginRight: 5 }}>
+											<TextInput
+												label="Local de Cobrança"
+												mode={"outlined"}
+												theme={tema}
+												value={beneficiario.local_cobranca}
+												style={{ fontSize: 18 }}
+												dense
+												onChangeText={(text) =>
+													setBeneficiario({
+														...beneficiario,
+														local_cobranca: text,
+													})
+												}
+												render={() => (
+													<PickerModal
+														renderSelectView={(
+															disabled,
+															selected,
+															showModal
+														) => (
+															<TouchableOpacity
+																style={{
+																	flexDirection: "row",
+																	flex: 1,
+																	justifyContent: "flex-start",
+																	alignItems: "center",
+																	paddingLeft: 10,
+																}}
+																disabled={disabled}
+																onPress={showModal}
+															>
+																<View style={{ flex: 3 }}>
+																	<Text
+																		style={{
+																			fontSize: beneficiario ? 15 : 12,
+																		}}
+																	>
+																		{beneficiario.local_cobranca.Name === ""
+																			? "SELECIONE"
+																			: beneficiario.local_cobranca.Name}
+																	</Text>
+																</View>
+																<View
+																	style={{
+																		flex: 1,
+																		alignItems: "flex-end",
+																		paddingRight: 10,
+																	}}
+																>
+																	<Image
+																		source={images.seta}
+																		tintColor={"#031e3f"}
+																		style={{
+																			width: 10,
+																			height: 10,
+																			right: 0,
+																			tintColor: "#031e3f",
+																			transform: [{ rotate: "90deg" }],
+																		}}
+																	/>
+																</View>
+															</TouchableOpacity>
+														)}
+														modalAnimationType="fade"
+														selected={beneficiario.local_cobranca}
+														selectPlaceholderText="SELECIONE O LOCAL DE COBRANÇA"
+														searchPlaceholderText="DIGITE O LOCAL DE COBRANÇA"
+														onSelected={(key) =>
+															setBeneficiario({
+																...beneficiario,
+																local_cobranca: key,
+															})
+														}
+														onClosed={() => setBeneficiario(beneficiario)}
+														items={[
+															{ Name: "Folha", Value: "1-Folha" },
+															{ Name: "Boleto", Value: "2-Boleto" },
+															{
+																Name: "Conta Corrente",
+																Value: "3-Conta Corrente",
+															},
+														]}
+													/>
+												)}
+											/>
+										</View>
+										<View style={{ flex: 1 }}>
+											<TextInput
+												label="Valor Mensal do Plano"
+												mode={"outlined"}
+												theme={tema}
+												style={{
+													fontSize: 20,
+													fontWeight: "bold",
+													color: tema.colors.primary,
+												}}
+												dense
+												value={beneficiario.valor_mensalidade.toString()}
+												disabled
+												render={(props) => (
+													<TextInputMask
+														{...props}
+														type={"money"}
+														options={{
+															precision: 2,
+															separator: ",",
+															delimiter: ".",
+															unit: "R$ ",
+															suffixUnit: "",
+														}}
+													/>
+												)}
+											/>
+										</View>
+									</View>
+									<View
+										style={{
+											flexDirection: "row",
+											justifyContent: "flex-start",
+											marginBottom: 5,
+										}}
+									>
+										<View style={{ flex: 1, marginRight: 5 }}>
+											<TextInput
+												label="Data de Movimentação"
+												mode={"outlined"}
+												theme={tema}
+												dense
+												value={dataMovimentacao}
+												style={{ fontSize: 18 }}
+												disabled
+											/>
+										</View>
+										<View style={{ flex: 1 }}>
+											<TextInput
+												label="Data de Vigência do Plano"
+												mode={"outlined"}
+												theme={tema}
+												value={dataVigencia}
+												style={{ fontSize: 18 }}
+												maxLength={14}
+												dense
+												keyboardType={"number-pad"}
+												onChangeText={(text) => setDataVigencia(text)}
+												render={(props) => (
+													<TextInputMask
+														{...props}
+														type={"custom"}
+														options={{
+															mask: "99/99/9999",
+														}}
+													/>
+												)}
+											/>
+										</View>
+									</View>
+									<View style={{ height: 150 }} />
+								</ScrollView>
 							</ProgressStep>
 							<ProgressStep label="Arquivos" removeBtnRow>
 								<Text style={{ textAlign: "center", marginBottom: 20 }}>
@@ -1995,7 +2160,7 @@ function PlanosDeSaude(props) {
 											}}
 										>
 											<Text style={{ color: "#fff", fontSize: 20 }}>
-												TIRAR FOTO DO COMPROVANTE DE RESIDÊNCIA
+												TIRAR FOTO DO COMPROV. DE RESIDÊNCIA
 											</Text>
 										</TouchableOpacity>
 										<TouchableOpacity
@@ -2042,7 +2207,7 @@ function PlanosDeSaude(props) {
 														source={{ uri: cpf }}
 														style={{ width: "100%", height: 150 }}
 													/>
-													<Text>CPF</Text>
+													<Text style={{ fontSize: 13 }}>CPF</Text>
 												</TouchableOpacity>
 											)}
 										</View>
@@ -2068,7 +2233,7 @@ function PlanosDeSaude(props) {
 														source={{ uri: rg }}
 														style={{ width: "100%", height: 150 }}
 													/>
-													<Text>RG</Text>
+													<Text style={{ fontSize: 13 }}>RG</Text>
 												</TouchableOpacity>
 											)}
 										</View>
@@ -2094,7 +2259,7 @@ function PlanosDeSaude(props) {
 														source={{ uri: cartaoSUS }}
 														style={{ width: "100%", height: 150 }}
 													/>
-													<Text>CARTÃO SUS</Text>
+													<Text style={{ fontSize: 13 }}>CARTÃO SUS</Text>
 												</TouchableOpacity>
 											)}
 										</View>
@@ -2120,7 +2285,7 @@ function PlanosDeSaude(props) {
 														source={{ uri: comprovanteResidencia }}
 														style={{ width: "100%", height: 150 }}
 													/>
-													<Text>COMPROV. DE RES.</Text>
+													<Text style={{ fontSize: 13 }}>COMPROV. DE RES.</Text>
 												</TouchableOpacity>
 											)}
 										</View>
@@ -2146,7 +2311,7 @@ function PlanosDeSaude(props) {
 														source={{ uri: declaracaoSaude }}
 														style={{ width: "100%", height: 150 }}
 													/>
-													<Text>DECLARAÇÃO DE SAÚDE</Text>
+													<Text style={{ fontSize: 13 }}>DECLAR. DE SAÚDE</Text>
 												</TouchableOpacity>
 											)}
 										</View>
@@ -2162,11 +2327,11 @@ function PlanosDeSaude(props) {
 								>
 									<WebView
 										source={{ html: pdf }}
-										style={{ backgroundColor: "#f1f1f1" }}
+										style={{ backgroundColor: "#f1f1f1", flex: 2 }}
 									/>
 									<View style={{ flexDirection: "row" }}>
 										<View style={{ flex: 1 }}></View>
-										<View style={{ flex: 1 }}>
+										<View style={{ flex: 2 }}>
 											<TouchableOpacity
 												onPress={() => setModalAssinatura(true)}
 												style={{
@@ -2188,41 +2353,49 @@ function PlanosDeSaude(props) {
 								</View>
 							</ProgressStep>
 						</ProgressSteps>
-						{prevStep && (
-							<TouchableOpacity
-								onPress={goToPrevStep}
-								style={{
-									backgroundColor: "#031e3f",
-									padding: 20,
-									borderRadius: 6,
-									position: "absolute",
-									left: 50,
-									bottom: 40,
-								}}
-							>
-								<Text style={{ color: "#fff", fontSize: 20 }}>ANTERIOR</Text>
-							</TouchableOpacity>
+						{mostrarBotoes && (
+							<>
+								{prevStep && (
+									<TouchableOpacity
+										onPress={goToPrevStep}
+										style={{
+											backgroundColor: "#031e3f",
+											padding: 20,
+											borderRadius: 6,
+											position: "absolute",
+											left: 50,
+											bottom: 40,
+										}}
+									>
+										<Text style={{ color: "#fff", fontSize: 20 }}>
+											ANTERIOR
+										</Text>
+									</TouchableOpacity>
+								)}
+								<TouchableOpacity
+									disabled={!nextStep}
+									onPress={goToNextStep}
+									style={{
+										backgroundColor: nextStep
+											? activeStep === 3
+												? "#188038"
+												: "#031e3f"
+											: "#aaa",
+										padding: 20,
+										borderRadius: 6,
+										position: "absolute",
+										right: 50,
+										bottom: 40,
+									}}
+								>
+									<Text
+										style={{ color: nextStep ? "#fff" : "#000", fontSize: 20 }}
+									>
+										{textNext}
+									</Text>
+								</TouchableOpacity>
+							</>
 						)}
-						<TouchableOpacity
-							disabled={!nextStep}
-							onPress={goToNextStep}
-							style={{
-								backgroundColor: nextStep
-									? activeStep === 3
-										? "#188038"
-										: "#031e3f"
-									: "#aaa",
-								padding: 20,
-								borderRadius: 6,
-								position: "absolute",
-								right: 50,
-								bottom: 40,
-							}}
-						>
-							<Text style={{ color: nextStep ? "#fff" : "#000", fontSize: 20 }}>
-								{textNext}
-							</Text>
-						</TouchableOpacity>
 					</View>
 				</View>
 			</SafeAreaView>

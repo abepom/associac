@@ -18,6 +18,7 @@ import { useUsuario } from "../store/Usuario";
 import images from "../utils/images";
 import * as Updates from "expo-updates";
 import Constants from "expo-constants";
+import app from "../../app.json";
 
 function Login(props) {
 	const [usuario, setUsuario] = useUsuario();
@@ -209,6 +210,11 @@ function Login(props) {
 							</View>
 						</View>
 					</View>
+					<Text
+						style={{ color: "#fff", textAlign: "center", marginBottom: 10 }}
+					>
+						Versão: {app.expo.version.substring(0, 3)}
+					</Text>
 				</SafeAreaView>
 			</ImageBackground>
 			<Alert {...props} alerta={alerta} setAlerta={setAlerta} />
