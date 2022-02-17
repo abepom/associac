@@ -26,7 +26,7 @@ function Dependentes(props) {
 	const { navigation } = props;
 	const id = props.route?.params?.id ?? 1;
 	const [{ token }] = useUsuario();
-	const [matricula, setMatricula] = useState("003959");
+	const [matricula, setMatricula] = useState("");
 	const [alerta, setAlerta] = useState({});
 	const [carregando, setCarregando] = useState(false);
 	const [associado, setAssociado] = useState({});
@@ -550,14 +550,27 @@ function Dependentes(props) {
 																ASSOCIADO ABEPOM
 															</Text>
 														) : (
-															<Text
-																style={{
-																	fontSize: 16,
-																	color: tema.colors.vermelho,
-																}}
-															>
-																NÃO ASSOCIADO
-															</Text>
+															<>
+																{associado.tipo === "31" ? (
+																	<Text
+																		style={{
+																			fontSize: 16,
+																			color: tema.colors.verde,
+																		}}
+																	>
+																		ASSOCIADO SINPOFESC
+																	</Text>
+																) : (
+																	<Text
+																		style={{
+																			fontSize: 16,
+																			color: tema.colors.vermelho,
+																		}}
+																	>
+																		NÃO ASSOCIADO
+																	</Text>
+																)}
+															</>
 														)}
 													</View>
 													<View style={{ flex: 1 }}>
@@ -739,7 +752,35 @@ function Dependentes(props) {
 														);
 													}}
 												/>
-												<View style={{ height: 50 }}></View>
+												<View
+													style={{
+														height: 50,
+														justifyContent: "center",
+														alignItems: "center",
+													}}
+												>
+													{dependentes.length > 6 ? (
+														<View
+															style={{
+																flexDirection: "row",
+																justifyContent: "center",
+																alignItems: "center",
+															}}
+														>
+															<Image
+																source={images.seta}
+																style={{
+																	width: 30,
+																	height: 30,
+																	transform: [{ rotate: "90deg" }],
+																}}
+															/>
+															<Text style={{ fontSize: 18, marginLeft: 15 }}>
+																ARRASTE PARA CIMA PARA VER MAIS
+															</Text>
+														</View>
+													) : null}
+												</View>
 											</>
 										) : (
 											<>

@@ -19,6 +19,7 @@ import Alert from "../components/Alert";
 import Loading from "../components/Loading";
 
 function CadastrarDependente(props) {
+	const { navigation } = props;
 	const { associado } = props.route.params;
 	const [{ token }] = useUsuario();
 	const [nome, setNome] = useState("");
@@ -73,7 +74,7 @@ function CadastrarDependente(props) {
 		const { data } = await api({
 			url: "/associados/visualizarTermo",
 			method: "GET",
-			params: { id_local: 10 },
+			params: { id_local: associado.tipo === "31" ? 16 : 10 },
 			headers: { "x-access-token": token },
 		});
 
@@ -98,7 +99,7 @@ function CadastrarDependente(props) {
 		const { data } = await api({
 			url: "/associados/visualizarTermo",
 			method: "GET",
-			params: { id_local: 11 },
+			params: { id_local: associado.tipo === "31" ? 16 : 11 },
 			headers: { "x-access-token": token },
 		});
 
@@ -164,22 +165,35 @@ function CadastrarDependente(props) {
 				headers: { "x-access-token": token },
 			});
 
-			setAlerta({
-				visible: true,
-				title: data.title,
-				message: data.message.replace("$$", `\n`),
-				type: data.status ? "success" : "danger",
-				confirmText: "FECHAR",
-				showConfirm: true,
-				showCancel: false,
-			});
-
 			if (data.status) {
+				setAlerta({
+					visible: true,
+					title: data.title,
+					message: data.message.replace(/@@@@/g, `\n`),
+					type: "success",
+					confirmText: "FECHAR",
+					showConfirm: true,
+					showCancel: false,
+					confirmFunction: () => {
+						navigation.navigate("Dependentes", { id: new Date().toJSON() });
+					},
+				});
+
 				setNome("");
 				setCpf("");
 				setNascimento("");
 				setSexo({ Name: "MASCULINO", Value: "M" });
 				setTipo({ Name: "", Value: "", CobraMensalidade: false });
+			} else {
+				setAlerta({
+					visible: true,
+					title: data.title,
+					message: data.message.replace(/@@@@/g, `\n`),
+					type: "danger",
+					confirmText: "FECHAR",
+					showConfirm: true,
+					showCancel: false,
+				});
 			}
 		}
 
@@ -193,9 +207,7 @@ function CadastrarDependente(props) {
 					key={index}
 					style={{
 						textAlign: "justify",
-						marginHorizontal: 14,
-						marginVertical: 10,
-						fontSize: 16,
+						fontSize: 17,
 					}}
 				>
 					{defaultRenderer(node.children, parent)}
@@ -226,6 +238,7 @@ function CadastrarDependente(props) {
 							}
 							paragraphBreak={"\n"}
 							renderNode={renderNode}
+							style={{ paddingHorizontal: 20, marginTop: 20 }}
 						/>
 					</>
 				</View>
@@ -302,16 +315,30 @@ function CadastrarDependente(props) {
 								style={{ marginBottom: 10 }}
 							/>
 						</View>
-						{tipo.CobraMensalidade && (
+						{associado.tipo === "31" ? (
 							<View style={{ flex: 1, marginLeft: 5 }}>
 								<TextInput
-									label="TAXA MENSAL"
-									value={"R$ 20,00"}
+									label="TAXA DE ADESÃO"
+									value={"R$ 30,00"}
 									mode="outlined"
 									disabled={true}
 									style={{ marginBottom: 20 }}
 								/>
 							</View>
+						) : (
+							<>
+								{tipo.CobraMensalidade && (
+									<View style={{ flex: 1, marginLeft: 5 }}>
+										<TextInput
+											label="TAXA MENSAL"
+											value={"R$ 20,00"}
+											mode="outlined"
+											disabled={true}
+											style={{ marginBottom: 20 }}
+										/>
+									</View>
+								)}
+							</>
 						)}
 					</View>
 					{carregando ? (

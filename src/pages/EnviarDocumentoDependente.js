@@ -262,7 +262,6 @@ function EnviarDocumentoDependente(props) {
 			showConfirm: true,
 			showCancel: true,
 			confirmFunction: async () => {
-				console.log(dependente);
 				const { data } = await api({
 					url: "/associados/aprovarDependencia",
 					method: "POST",
@@ -270,7 +269,7 @@ function EnviarDocumentoDependente(props) {
 						cartao,
 						dependente,
 						origem: "Associac Mobile",
-						usuario: usuario.nome,
+						usuario: usuario.usuario,
 					},
 					headers: { "x-access-token": usuario.token },
 				});
