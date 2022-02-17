@@ -26,7 +26,14 @@ function Header(props) {
 							justifyContent: "center",
 							alignItems: "center",
 						}}
-						onPress={() => navigation.goBack()}
+						onPress={() =>
+							props.voltar
+								? navigation.navigate(
+										props.voltarPara.name,
+										props.voltarPara.params
+								  )
+								: navigation.goBack()
+						}
 					>
 						<Image
 							source={imagens.seta}

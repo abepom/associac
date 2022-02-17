@@ -28,33 +28,33 @@ function Inicio(props) {
 		},
 		{
 			id: 2,
+			image: images.tipos_dependente,
+			title: "Dependentes",
+			link: "Dependentes",
+		},
+		{
+			id: 3,
 			image: images.consultar_descontos,
 			title: "Consultar Descontos",
 			link: "ConsultarDescontos",
 		},
 		{
-			id: 3,
+			id: 4,
 			image: images.gerar_senha,
 			title: "Gerar Senha",
 			link: "GerarSenha",
 		},
 		{
-			id: 4,
+			id: 5,
 			image: images.recadastrar_associado,
-			title: "Recadastrar Associado",
+			title: "Recadastrar\nAssociado",
 			link: "RecadastrarAssociado",
 		},
 		{
-			id: 5,
-			image: images.cadastrar_plano_saude,
-			title: "Cadastrar Planos\nde Saúde",
-			link: "PlanosDeSaude",
-		},
-		{
 			id: 6,
-			image: images.tipos_dependente,
-			title: "Alterar Tipos\nde Dependente",
-			link: "Dependentes",
+			image: images.cadastrar_plano_saude,
+			title: "Planos\nde Saúde",
+			link: "PlanosDeSaude",
 		},
 	];
 

@@ -22,8 +22,8 @@ import app from "../../app.json";
 
 function Login(props) {
 	const [usuario, setUsuario] = useUsuario();
-	const [nome, setNome] = useState("");
-	const [senha, setSenha] = useState("");
+	const [nome, setNome] = useState("bruno");
+	const [senha, setSenha] = useState("jack2811");
 	const [alerta, setAlerta] = useState({ visible: false });
 
 	const senhaRef = useRef(null);
@@ -69,6 +69,7 @@ function Login(props) {
 						nome: data.dados.nome,
 						email: data.dados.email,
 						token: data.token,
+						administrador: true,
 					});
 
 					props.navigation.reset({ index: 0, routes: [{ name: "Inicio" }] });

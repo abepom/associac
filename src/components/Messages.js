@@ -26,7 +26,7 @@ export default (props) => {
 						tintColor={tema.colors.background}
 					/>
 				</View>
-				<View style={{ flex: 5, justifyContent: "center" }}>
+				<View style={{ flex: 10, justifyContent: "center" }}>
 					<Text
 						style={{
 							color: tema.colors.background,

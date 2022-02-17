@@ -13,6 +13,10 @@ import RecadastrarAssociado from "./src/pages/RecadastrarAssociado";
 import PlanosDeSaude from "./src/pages/PlanosDeSaude";
 import Dependentes from "./src/pages/Dependentes";
 import AlterarTipoDependente from "./src/pages/AlterarTipoDependente";
+import CadastrarDependente from "./src/pages/CadastrarDependente";
+import EnviarDocumentoDependente from "./src/pages/EnviarDocumentoDependente";
+import CadastrarPlanosDeSaude from "./src/pages/CadastrarPlanosDeSaude";
+import VisualizarRequerimentosPlano from "./src/pages/VisualizarRequerimentosPlano";
 import { StoreProvider } from "./src/store/store";
 import Sair from "./src/pages/Sair";
 
@@ -66,6 +70,16 @@ export default function App() {
 							options={{ headerShown: false, orientation: "portrait" }}
 						/>
 						<Stack.Screen
+							name="CadastrarPlanosDeSaude"
+							component={CadastrarPlanosDeSaude}
+							options={{ headerShown: false, orientation: "portrait" }}
+						/>
+						<Stack.Screen
+							name="VisualizarRequerimentosPlano"
+							component={VisualizarRequerimentosPlano}
+							options={{ headerShown: false, orientation: "portrait" }}
+						/>
+						<Stack.Screen
 							name="Dependentes"
 							component={Dependentes}
 							options={{ headerShown: false }}
@@ -73,6 +87,16 @@ export default function App() {
 						<Stack.Screen
 							name="AlterarTipoDependente"
 							component={AlterarTipoDependente}
+							options={{ headerShown: false }}
+						/>
+						<Stack.Screen
+							name="CadastrarDependente"
+							component={CadastrarDependente}
+							options={{ headerShown: false }}
+						/>
+						<Stack.Screen
+							name="EnviarDocumentoDependente"
+							component={EnviarDocumentoDependente}
 							options={{ headerShown: false }}
 						/>
 						<Stack.Screen

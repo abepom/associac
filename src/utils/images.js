@@ -18,7 +18,9 @@ import sucesso from "../../assets/img/success.png";
 import atencao from "../../assets/img/warning.png";
 import sair from "../../assets/img/sair.png";
 import lock from "../../assets/img/lock.png";
-
+import file from "../../assets/img/file.png";
+import trash from "../../assets/img/trash.png";
+import image from "../../assets/img/image.png";
 export default {
 	bg,
 	logo_abepom,
@@ -40,4 +42,7 @@ export default {
 	atencao,
 	sair,
 	lock,
+	file,
+	trash,
+	image,
 };
