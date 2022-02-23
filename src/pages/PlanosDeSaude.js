@@ -32,6 +32,7 @@ function PlanosDeSaude(props) {
 							</Text>
 						</TouchableOpacity>
 						<TouchableOpacity
+							onPress={() => navigation.navigate("MigrarPlanoDeSaude")}
 							style={{
 								backgroundColor: "#fff",
 								elevation: 1,

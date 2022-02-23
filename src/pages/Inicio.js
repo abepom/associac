@@ -1,217 +1,508 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
 	View,
 	Text,
 	SafeAreaView,
 	TouchableOpacity,
 	Image,
+	Keyboard,
 	FlatList,
-	ImageBackground,
-	Dimensions,
+	Modal,
+	Platform,
 } from "react-native";
 import images from "../utils/images";
 import app from "../../app.json";
-import { tema } from "../../assets/style/Style";
+import s, { tema } from "../../assets/style/Style";
 import { useUsuario } from "../store/Usuario";
-import * as ScreenOrientation from "expo-screen-orientation";
+import { Checkbox, IconButton, TextInput } from "react-native-paper";
+import { TextInputMask } from "react-native-masked-text";
+import Header from "../components/Header";
+import Alert from "../components/Alert";
+import Loading from "../components/Loading";
+import ModalLoading from "../components/ModalLoading";
+import Input from "../components/Input";
+import WebView from "react-native-webview";
+import MenuInicio from "../components/MenuInicio";
+import Dependente from "../components/Dependente";
+import compararValores from "../functions/compararValores";
 
 function Inicio(props) {
 	const { navigation } = props;
-	const [portrait, setPortrait] = useState(true);
-	const [usuario] = useUsuario();
-	const items = [
-		{
-			id: 1,
-			image: images.cadastrar_associado,
-			title: "Cadastrar Associado",
-			link: "CadastrarAssociado",
-		},
-		{
-			id: 2,
-			image: images.tipos_dependente,
-			title: "Dependentes",
-			link: "Dependentes",
-		},
-		{
-			id: 3,
-			image: images.consultar_descontos,
-			title: "Consultar Descontos",
-			link: "ConsultarDescontos",
-		},
-		{
-			id: 4,
-			image: images.gerar_senha,
-			title: "Gerar Senha",
-			link: "GerarSenha",
-		},
-		{
-			id: 5,
-			image: images.recadastrar_associado,
-			title: "Recadastrar\nAssociado",
-			link: "RecadastrarAssociado",
-		},
-		{
-			id: 6,
-			image: images.cadastrar_plano_saude,
-			title: "Planos\nde Saúde",
-			link: "PlanosDeSaude",
-		},
-	];
+	const [usuario, setUsuario] = useUsuario();
+	const [matricula, setMatricula] = useState("003959");
+	const [alerta, setAlerta] = useState({ visible: false });
+	const [carregando, setCarregando] = useState(false);
+	const [dependenteEscolhido, setDependenteEscolhido] = useState({});
+	const [motivoExclusao, setMotivoExclusao] = useState("");
+	const [modalCarregando, setModalCarregando] = useState(false);
+	const [modalTermoExclusao, setModalTermoEsclusao] = useState(false);
+	const [modalExcluirDependente, setModalExcluirDependente] = useState(false);
+	const [aceitoTermoExclusaoDependente, setAceitoTermoExclusaoDependente] =
+		useState(false);
+	const [termo, setTermo] = useState({});
 
-	useEffect(async () => {
-		let orientation = await ScreenOrientation.getOrientationAsync();
+	async function iniciarAtendimento() {
+		Keyboard.dismiss();
 
-		switch (parseInt(orientation)) {
-			case 0:
-			case 1:
-			case 2:
-				setPortrait(true);
-				break;
-			default:
-				setPortrait(false);
-				break;
+		if (matricula !== "" && matricula.length == 6) {
+			setCarregando(true);
+
+			try {
+				const { data } = await api({
+					url: "/associados/verificarMatricula",
+					method: "GET",
+					params: { cartao: matricula },
+					headers: { "x-access-token": usuario.token },
+				});
+
+				listarDependentes(data);
+			} catch (error) {
+				setUsuario({ ...usuario, associado_atendimento: null });
+				setAlerta({
+					visible: true,
+					title: "ATENÇÃO!",
+					message: "Ocorreu um erro ao verificar a matrícula.",
+					type: "danger",
+					confirmText: "FECHAR",
+					showConfirm: true,
+					showCancel: false,
+				});
+			}
+
+			setCarregando(false);
+		} else {
+			setUsuario({ ...usuario, associado_atendimento: null });
+			setAlerta({
+				visible: true,
+				title: "ATENÇÃO!",
+				message:
+					"Para prosseguir com o atendimento é necessário informar a matrícula corretamente.",
+				type: "danger",
+				showConfirm: true,
+				showCancel: false,
+				confirmText: "FECHAR",
+			});
+		}
+	}
+
+	async function listarDependentes(dados) {
+		const { data } = await api({
+			url: "/associados/listarDependentes",
+			method: "GET",
+			params: {
+				cartao: `${matricula}00001`,
+			},
+			headers: { "x-access-token": usuario.token },
+		});
+
+		setUsuario({
+			...usuario,
+			associado_atendimento: { ...dados, dependentes: data.dependentes },
+		});
+	}
+
+	async function visualizarTermoExclusaoDependente() {
+		setModalExcluirDependente(false);
+		setModalTermoEsclusao(true);
+
+		const { data } = await api({
+			url: "/associados/visualizarTermo",
+			method: "GET",
+			params: { id_local: 8 },
+			headers: { "x-access-token": usuario.token },
+		});
+
+		let t = data.termo;
+		t = t
+			.replace("@TITULAR", usuario.associado_atendimento.nome)
+			.replace(
+				"@DEPENDENTE",
+				dependenteEscolhido.nome !== ""
+					? `<b>${dependenteEscolhido.nome.toUpperCase()}</b>`
+					: ""
+			);
+
+		if (Platform.OS === "ios") {
+			t = t
+				.replace(/font-size: 12pt !important;/g, `font-size: 30pt !important;`)
+				.replace(
+					/h3 style="text-align: center;"><span style="font-family: Arial, Helvetica, sans-serif;"/g,
+					`h3 style="text-align: center;font-size: 40pt"><span style="font-family: Arial, Helvetica, sans-serif;"`
+				);
 		}
 
-		Dimensions.addEventListener("change", ({ window: { width, height } }) => {
-			if (width < height) {
-				// PORTRAIT
-				setPortrait(true);
-			} else {
-				// LANDSCAPE
-				setPortrait(false);
-			}
+		setTermo({
+			id: data.id_termo,
+			texto: t,
 		});
-	}, []);
+	}
+
+	const excluirDependente = async () => {
+		if (
+			dependenteEscolhido.nome !== "" &&
+			motivoExclusao !== "" &&
+			aceitoTermoExclusaoDependente
+		) {
+			setModalExcluirDependente(false);
+			setModalCarregando(true);
+
+			const { data } = await api({
+				url: "/associados/excluirDependente",
+				method: "POST",
+				data: {
+					cartao: usuario.associado_atendimento.cartao,
+					dep: dependenteEscolhido.cont,
+					cd_dep: dependenteEscolhido.cod_dep,
+					nome: dependenteEscolhido.nome,
+					tipo: dependenteEscolhido.pre_cadastro ? 2 : 1,
+					motivo: motivoExclusao,
+					origem: "Associac Mobile",
+				},
+				headers: { "x-access-token": usuario.token },
+			});
+
+			let dependentes = usuario.associado_atendimento.dependentes.filter(
+				(dep) => dep.cont !== dependenteEscolhido.cont
+			);
+
+			dependentes = dependentes
+				.sort(compararValores("nome", "asc"))
+				.sort(compararValores("pre_cadastro", "desc"));
+
+			setUsuario({
+				...usuario,
+				associado_atendimento: {
+					...usuario.associado_atendimento,
+					dependentes,
+				},
+			});
+
+			setModalCarregando(false);
+			setAlerta({
+				visible: true,
+				title: data.title,
+				message: data.message.replace(/@@/g, `\n`),
+				type: data.status ? "success" : "danger",
+				confirmText: "FECHAR",
+				showConfirm: true,
+				showCancel: false,
+			});
+
+			setDependenteEscolhido({});
+			setMotivoExclusao("");
+			setAceitoTermoExclusaoDependente(false);
+		} else {
+			setModalExcluirDependente(false);
+			setAlerta({
+				visible: true,
+				title: "ATENÇÃO!",
+				message:
+					"Para prosseguir é necessário selecionar o dependente, preencher o motivo e aceitar o Termo de Exclusão de Dependentes.",
+				type: "danger",
+				confirmText: "OK, PREENCHER!",
+				cancelText: "FECHAR",
+				showConfirm: true,
+				showCancel: true,
+				confirmFunction: () => {
+					setAlerta({ visible: false });
+					setModalExcluirDependente(true);
+				},
+			});
+		}
+	};
 
 	return (
 		<>
-			<SafeAreaView style={{ flex: 1 }}>
-				<ImageBackground
-					source={images.bg}
-					style={{
-						flex: 1,
-						backgroundColor: "#031e3f",
-						width: "100%",
-						height: "100%",
-					}}
-					resizeMode={"cover"}
-				>
+			<Header titulo={"Associac Mobile"} {...props} />
+			<ModalLoading visible={modalCarregando} />
+			<Modal visible={modalExcluirDependente} transparent>
+				<View style={[s.fl1, s.jcc, s.aic, s.bgcm]}>
 					<View
-						style={{
-							alignItems: "center",
-							justifyContent: "center",
-							marginTop: 40,
-							marginBottom: 20,
-						}}
+						style={[
+							s.jcc,
+							s.aic,
+							s.pd20,
+							s.m20,
+							s.br6,
+							s.bgcw,
+							{
+								width: "85%",
+							},
+						]}
 					>
-						<Image
-							source={images.logo_abepom}
-							style={{ width: 150, height: 150 }}
-						/>
-					</View>
-					<View style={{ flex: 6 }}>
-						<FlatList
-							style={{ margin: 15 }}
-							data={items}
-							extraData={portrait}
-							keyExtractor={(item) => item.id}
-							numColumns={portrait ? 2 : 3}
-							key={portrait ? 2 : 3}
-							renderItem={({ item }) => {
-								return (
-									<TouchableOpacity
-										onPress={() => navigation.navigate(item.link)}
-										style={{
-											backgroundColor: "#fff",
-											elevation: 1,
-											borderRadius: 6,
-											flexGrow: 1,
-											margin: 10,
-											width: portrait ? "47%" : 200,
-											height: portrait ? 210 : 180,
-											padding: portrait ? 10 : 15,
-											justifyContent: "center",
-											alignItems: "center",
-										}}
-									>
-										<Image
-											source={item.image}
-											style={{
-												width: "100%",
-												height: 100,
-												resizeMode: "contain",
-											}}
-										/>
-										<Text
-											style={{
-												fontSize: portrait ? 30 : 25,
-												fontWeight: "bold",
-												color: tema.colors.primary,
-												textAlign: "center",
-												marginVertical: 10,
-											}}
-										>
-											{item.title.toUpperCase()}
-										</Text>
-									</TouchableOpacity>
-								);
-							}}
-						/>
-					</View>
-					<View
-						style={{
-							flex: 1,
-							justifyContent: "center",
-							alignItems: "center",
-							bottom: 15,
-						}}
-					>
+						<Text style={[s.tac, s.mb10, s.fs20]}>
+							Você realmente deseja excluir o dependente{`\n`}
+							<Text style={s.bold}>{dependenteEscolhido.nome}</Text>?
+						</Text>
+						<View style={[s.row, s.mt10]}>
+							<Input
+								label={"MOTIVO"}
+								value={[motivoExclusao, setMotivoExclusao]}
+								maxLength={300}
+								returnKeyType={"done"}
+								style={s.fullw}
+							/>
+						</View>
+						<View style={[s.row, s.mt10, s.h35, s.jcc, s.aic]}>
+							<TouchableOpacity
+								onPress={() => visualizarTermoExclusaoDependente()}
+								style={[s.row, s.jcc, s.aic, s.h35, s.fullw]}
+							>
+								<Image
+									source={images.recadastrar_associado}
+									style={[s.w35, s.h35, s.tcp]}
+									tintColor={tema.colors.primary}
+								/>
+								<Text style={[s.fs18, s.bold, s.ml10, s.fcp]}>
+									CLIQUE AQUI E LEIA O TERMO DE EXCLUSÃO
+								</Text>
+							</TouchableOpacity>
+						</View>
+						<View style={[s.row, s.mt10]}>
+							<Checkbox
+								status={aceitoTermoExclusaoDependente ? "checked" : "unchecked"}
+								theme={tema}
+								onPress={() => {
+									Keyboard.dismiss();
+									setAceitoTermoExclusaoDependente(
+										!aceitoTermoExclusaoDependente
+									);
+								}}
+							/>
+							<TouchableOpacity
+								onPress={() => {
+									Keyboard.dismiss();
+									setAceitoTermoExclusaoDependente(
+										!aceitoTermoExclusaoDependente
+									);
+								}}
+							>
+								<Text style={[s.fs18, s.mt5]}>
+									Eu declaro que li e aceito o Termo de Exclusão de Dependentes
+								</Text>
+							</TouchableOpacity>
+						</View>
 						<TouchableOpacity
-							onPress={() => navigation.navigate("Sair")}
-							style={{
-								margin: 20,
-								padding: 20,
-								flexDirection: "row",
-								width: 200,
-								justifyContent: "center",
-								alignItems: "center",
-							}}
+							onPress={() => excluirDependente()}
+							style={[s.row, s.mt20, s.bgcp, s.br6, s.jcc, s.aic, s.pd20]}
 						>
 							<Image
-								source={images.sair}
-								style={{
-									width: 35,
-									height: 35,
-									tintColor: "#fff",
-									marginRight: 10,
-								}}
-								tintColor={"#fff"}
+								source={images.trash}
+								style={[s.w20, s.h20, s.tcw]}
+								tintColor={tema.colors.background}
 							/>
-							<Text style={{ fontSize: 30, color: "#fff", marginLeft: 10 }}>
-								SAIR
-							</Text>
+							<Text style={[s.fcw, s.fs20, s.ml10]}>EXCLUIR DEPENDENTE</Text>
 						</TouchableOpacity>
 					</View>
-					<View
-						style={{
-							bottom: 10,
-							flexDirection: "row",
-							justifyContent: "center",
-							alignItems: "center",
-						}}
+					<TouchableOpacity
+						onPress={() => setModalExcluirDependente(false)}
+						style={[s.row, s.bgcp, s.br50, s.pd15]}
 					>
-						<Text
-							style={{ color: "#fff", textAlign: "center", marginRight: 5 }}
-						>
-							Versão: {app.expo.version.substring(0, 3)}
-						</Text>
-						<Text style={{ color: "#fff", textAlign: "center", marginLeft: 5 }}>
-							Usuário:{" "}
-							<Text style={{ fontWeight: "bold" }}>{usuario.nome}</Text>
-						</Text>
+						<Image
+							source={images.fechar}
+							style={[s.w20, s.h20, s.tcw]}
+							tintColor={tema.colors.background}
+						/>
+					</TouchableOpacity>
+				</View>
+			</Modal>
+			<Modal animationType="fade" visible={modalTermoExclusao}>
+				<View style={[s.row, s.fl1, s.jcc, s.aic, s.bgcm]}>
+					<View style={[s.fl1, s.br6, s.m20]}>
+						<View style={[s.fl1, s.br6, s.bgcw]}>
+							<>
+								<WebView
+									source={{ html: termo.texto }}
+									style={[s.jcc, s.aic, s.fl1, s.mv6]}
+									textZoom={240}
+									containerStyle={s.fs25}
+									startInLoadingState={true}
+									renderLoading={() => (
+										<View style={[s.fl1, s.jcc, s.aic]}>
+											<Loading size={80} />
+										</View>
+									)}
+								/>
+							</>
+						</View>
+						<View style={[s.jcc, s.aic, s.m10]}>
+							<TouchableOpacity
+								onPress={() => {
+									setModalTermoEsclusao(false);
+									setModalExcluirDependente(true);
+								}}
+								style={[s.row, s.bgcp, s.br50, s.pd15, s.w50, s.h50]}
+							>
+								<Image
+									source={images.fechar}
+									style={[s.w20, s.h20, s.tcw]}
+									tintColor={tema.colors.background}
+								/>
+							</TouchableOpacity>
+						</View>
 					</View>
-				</ImageBackground>
+				</View>
+			</Modal>
+			<SafeAreaView style={s.fl1}>
+				<View style={[s.jcc, s.aic, s.mt20]}>
+					<View style={s.row}>
+						<View style={s.fl1} />
+						<View style={s.fl2}>
+							<TextInput
+								label="Matrícula"
+								mode={"outlined"}
+								value={matricula}
+								keyboardType={"numeric"}
+								maxLength={6}
+								theme={tema}
+								style={s.fs25}
+								placeholder={"Digite a matrícula"}
+								onChangeText={(text) => setMatricula(text)}
+								render={(props) => (
+									<TextInputMask
+										{...props}
+										type={"custom"}
+										options={{
+											mask: "999999",
+										}}
+									/>
+								)}
+							/>
+						</View>
+						<View style={s.fl1} />
+					</View>
+					<View style={[s.row, s.mt20]}>
+						<View style={s.fl1} />
+						<View style={s.fl2}>
+							<TouchableOpacity
+								onPress={() => iniciarAtendimento()}
+								style={[s.row, s.aic, s.jcc, s.bgcp, s.br6, s.h50]}
+							>
+								<IconButton
+									icon="arrow-right-drop-circle-outline"
+									color={"#fff"}
+									size={25}
+								/>
+								<Text style={[s.fcw, s.fs20]}>INICIAR ATENDIMENTO</Text>
+							</TouchableOpacity>
+						</View>
+						<View style={s.fl1} />
+					</View>
+				</View>
+				{carregando ? (
+					<Loading size={95} />
+				) : (
+					<>
+						{usuario?.associado_atendimento ? (
+							<>
+								<View
+									style={[
+										s.m20,
+										s.bgcw,
+										s.pd20,
+										s.br6,
+										s.el1,
+										{
+											borderWidth:
+												usuario?.associado_atendimento?.tipo === "01" ? 2 : 0,
+											borderColor:
+												usuario?.associado_atendimento?.tipo === "01"
+													? "#07A85C"
+													: "#fff",
+										},
+									]}
+								>
+									{usuario?.associado_atendimento?.status ? (
+										<>
+											<Text style={[s.fs20, s.bold]}>
+												{usuario?.associado_atendimento?.nome} (
+												{usuario?.associado_atendimento?.matricula})
+											</Text>
+											<Text style={[s.fs18]}>
+												SITUAÇÃO ATUAL:{" "}
+												<Text style={[s.bold, s.ml10]}>
+													{usuario?.associado_atendimento?.tipo === "01"
+														? "ASSOCIADO ABEPOM"
+														: usuario?.associado_atendimento?.tipo === "31"
+														? "ASSOCIADO SINPOFESC"
+														: "NÃO ASSOCIADO - COM DADOS PRÉ-PREENCHIDOS"}
+												</Text>
+											</Text>
+											{usuario?.associado_atendimento?.data_saida == 1 && (
+												<Text style={[s.fcr, s.fs15]}>
+													O ASSOCIADO DEVERÁ PAGAR JOIA
+												</Text>
+											)}
+										</>
+									) : (
+										<>
+											<Text style={[s.fs20, s.bold]}>
+												MILITAR SEM REGISTRO COM A ABEPOM
+											</Text>
+										</>
+									)}
+								</View>
+								<FlatList
+									data={usuario?.associado_atendimento?.dependentes}
+									keyExtractor={(item) => item.cont}
+									numColumns={1}
+									style={[s.fl1, s.mb20, s.mih170, s.mh20]}
+									renderItem={({ item }) => {
+										return (
+											<Dependente
+												item={item}
+												{...props}
+												setDependenteEscolhido={setDependenteEscolhido}
+												setModalExcluirDependente={setModalExcluirDependente}
+											/>
+										);
+									}}
+								/>
+								{usuario?.associado_atendimento?.dependentes?.length > 3 ? (
+									<View style={[s.row, s.jcc, s.aic, s.mb20]}>
+										<Image
+											source={images.seta}
+											style={[s.w20, s.h20, s.tr90, , s.tcp]}
+											tintColor={tema.colors.primary}
+										/>
+										<Text style={[s.fs15, s.ml10, s.fcp]}>
+											ARRASTE PARA VER MAIS DEPENDENTES
+										</Text>
+									</View>
+								) : null}
+								<MenuInicio
+									{...props}
+									associado={
+										usuario?.associado_atendimento?.tipo === "01"
+											? true
+											: usuario?.associado_atendimento?.status
+									}
+								/>
+							</>
+						) : null}
+					</>
+				)}
+
+				<View style={[s.bgcp, s.b0, s.psa, s.fullw, s.h60, s.jcc]}>
+					<TouchableOpacity
+						onPress={() => navigation.navigate("Sair")}
+						style={[s.row, s.r0, s.psa, s.h60, s.w60, s.jcc, s.aic, s.zit]}
+					>
+						<Image
+							source={images.sair}
+							style={[s.w35, s.h35, s.tcw, s.mr10]}
+							tintColor={"#fff"}
+						/>
+					</TouchableOpacity>
+					<Text style={[s.fcw, s.tac]}>
+						Versão: {app.expo.version.substring(0, 3)}
+					</Text>
+					<Text style={[s.fcw, s.tac]}>
+						Usuário: <Text style={s.bold}>{usuario.nome}</Text>
+					</Text>
+				</View>
 			</SafeAreaView>
+			<Alert {...props} alerta={alerta} setAlerta={setAlerta} />
 		</>
 	);
 }

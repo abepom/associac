@@ -4,6 +4,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import Inicio from "./src/pages/Inicio";
 import Login from "./src/pages/Login";
+import Associado from "./src/pages/Associado";
 import CadastrarAssociado from "./src/pages/CadastrarAssociado";
 import ConsultarDescontos from "./src/pages/ConsultarDescontos";
 import { StatusBar } from "expo-status-bar";
@@ -11,6 +12,7 @@ import Constants from "expo-constants";
 import GerarSenha from "./src/pages/GerarSenha";
 import RecadastrarAssociado from "./src/pages/RecadastrarAssociado";
 import PlanosDeSaude from "./src/pages/PlanosDeSaude";
+import MigrarPlanoDeSaude from "./src/pages/MigrarPlanoDeSaude";
 import Dependentes from "./src/pages/Dependentes";
 import AlterarTipoDependente from "./src/pages/AlterarTipoDependente";
 import CadastrarDependente from "./src/pages/CadastrarDependente";
@@ -45,6 +47,11 @@ export default function App() {
 							options={{ headerShown: false }}
 						/>
 						<Stack.Screen
+							name="Associado"
+							component={Associado}
+							options={{ headerShown: false }}
+						/>
+						<Stack.Screen
 							name="CadastrarAssociado"
 							component={CadastrarAssociado}
 							options={{ headerShown: false }}
@@ -72,6 +79,11 @@ export default function App() {
 						<Stack.Screen
 							name="CadastrarPlanosDeSaude"
 							component={CadastrarPlanosDeSaude}
+							options={{ headerShown: false, orientation: "portrait" }}
+						/>
+						<Stack.Screen
+							name="MigrarPlanoDeSaude"
+							component={MigrarPlanoDeSaude}
 							options={{ headerShown: false, orientation: "portrait" }}
 						/>
 						<Stack.Screen

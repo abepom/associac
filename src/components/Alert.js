@@ -2,7 +2,7 @@ import React from "react";
 import { Dimensions, Text, View } from "react-native";
 import AwesomeAlert from "react-native-awesome-alerts";
 import LottieView from "lottie-react-native";
-import { tema } from "../../assets/style/Style";
+import s, { tema } from "../../assets/style/Style";
 
 //https://lottiefiles.com/share/xd0c8rja
 //https://iconscout.com/lotties/success?price=free
@@ -22,6 +22,7 @@ function Alert(props) {
 		confirmFunction = () => hideAlert(),
 		closeOnTouch = false,
 		showIcon = true,
+		width = "90%",
 	} = alerta;
 
 	let icon = { caminho: "", largura: 250, altura: 250 };
@@ -73,13 +74,7 @@ function Alert(props) {
 				showProgress={false}
 				title={title}
 				message={
-					<View
-						style={{
-							alignItems: "center",
-							flex: 1,
-							width: Dimensions.get("screen").width - 230,
-						}}
-					>
+					<View style={[s.fl1, s.aic]}>
 						{showIcon && (
 							<LottieView
 								source={icon.caminho}
@@ -88,20 +83,12 @@ function Alert(props) {
 								style={{
 									width: icon.largura,
 									height: icon.altura,
+									width: Dimensions.get("screen").width - 230,
 								}}
 							/>
 						)}
-						<View style={{ flexGrow: 1, flexDirection: "row" }}>
-							<Text
-								style={{
-									flex: 1,
-									textAlign: "center",
-									marginBottom: 20,
-									fontSize: 18,
-								}}
-							>
-								{message}
-							</Text>
+						<View style={[s.row, s.flg1, { maxWidth: 650 }]}>
+							<Text style={[s.fl1, s.tac, s.mb20, s.fs18]}>{message}</Text>
 						</View>
 					</View>
 				}
@@ -111,36 +98,25 @@ function Alert(props) {
 				showConfirmButton={showConfirm}
 				cancelText={cancelText}
 				confirmText={confirmText}
-				onCancelPressed={() => {
-					hideAlert();
-				}}
+				onCancelPressed={() => hideAlert()}
 				onConfirmPressed={confirmFunction}
-				contentContainerStyle={{
-					width: "90%",
-				}}
-				overlayStyle={{
-					backgroundColor: "#03254EDD",
-				}}
-				titleStyle={{
-					width: "100%",
-					textAlign: "center",
-					borderBottomWidth: 1,
-					borderBottomColor: "#ccc",
-					paddingBottom: 20,
-					marginBottom: 20,
-					fontSize: 25,
-					fontWeight: "bold",
-				}}
-				messageStyle={{
-					alignContent: "center",
-					alignItems: "center",
-				}}
-				confirmButtonStyle={{
-					backgroundColor: confirmColor,
-				}}
-				confirmButtonTextStyle={{ fontSize: 20, margin: 10, color: "#fff" }}
+				contentContainerStyle={{ width }}
+				overlayStyle={s.bgcp + "DD"}
+				titleStyle={[
+					s.fullw,
+					s.tac,
+					s.bbw1,
+					s.bbcc,
+					s.pdb20,
+					s.mb20,
+					s.fs25,
+					s.bold,
+				]}
+				messageStyle={[s.aic, s.acc]}
+				confirmButtonStyle={{ backgroundColor: confirmColor }}
+				confirmButtonTextStyle={[s.fs20, s.m10, s.fcw]}
 				cancelButtonStyle={{ backgroundColor: tema.colors.backdrop }}
-				cancelButtonTextStyle={{ fontSize: 20, margin: 10, color: "#fff" }}
+				cancelButtonTextStyle={[s.fs20, s.m10, s.fcw]}
 			/>
 		</>
 	);

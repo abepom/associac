@@ -19,6 +19,7 @@ import images from "../utils/images";
 import * as Updates from "expo-updates";
 import Constants from "expo-constants";
 import app from "../../app.json";
+import s from "../../assets/style/Style";
 
 function Login(props) {
 	const [usuario, setUsuario] = useUsuario();
@@ -53,6 +54,7 @@ function Login(props) {
 				showIcon: false,
 				showCancel: false,
 				showConfirm: false,
+				width: "40%",
 			});
 
 			try {
@@ -113,63 +115,22 @@ function Login(props) {
 		<>
 			<ImageBackground
 				source={images.bg}
-				style={{
-					flex: 1,
-					backgroundColor: "#031e3f",
-					width: "100%",
-					height: "100%",
-				}}
+				style={[s.fl1, s.bgcib, s.fullw, s.fullh]}
 				resizeMode={"cover"}
 			>
-				<SafeAreaView
-					style={{
-						flex: 1,
-						position: "absolute",
-						top: 0,
-						bottom: 0,
-						left: 0,
-						right: 0,
-					}}
-				>
-					<View
-						style={{
-							flex: 1,
-							justifyContent: "center",
-							alignItems: "center",
-						}}
-					>
-						<View
-							style={{
-								flex: 1,
-								justifyContent: "flex-end",
-							}}
-						>
-							<Image
-								source={images.logo_abepom}
-								style={{ width: 200, height: 200 }}
-							/>
+				<SafeAreaView style={[s.fl1, s.psa, s.t0, s.b0, s.l0, s.r0]}>
+					<View style={[s.fl1, s.jcc, s.aic]}>
+						<View style={[s.fl1, s.jcfe]}>
+							<Image source={images.logo_abepom} style={[s.w200, s.h200]} />
 						</View>
-						<View
-							style={{
-								flex: 1,
-								width: "100%",
-								padding: 65,
-								alignItems: "center",
-								justifyContent: "center",
-							}}
-						>
-							<View
-								style={{
-									flex: 1,
-									width: "100%",
-								}}
-							>
+						<View style={[s.fl1, s.fullw, s.pd65, s.aic, s.jcc]}>
+							<View style={[s.fl1, s.fullw]}>
 								<TextInput
 									label="Usuário"
 									value={nome}
 									theme={tema}
 									onChangeText={setNome}
-									style={{ fontSize: 25 }}
+									style={s.fs25}
 									returnKeyType={"next"}
 									onSubmitEditing={() => senhaRef?.current?.focus()}
 								/>
@@ -181,39 +142,22 @@ function Login(props) {
 									value={senha}
 									theme={tema}
 									onChangeText={setSenha}
-									style={{ marginTop: 20, fontSize: 25 }}
+									style={[s.mt20, s.fs25]}
 								/>
-								<View style={{ flexDirection: "row" }}>
-									<View style={{ flex: 1 }}></View>
-									<View style={{ flex: 1 }}>
+								<View style={s.row}>
+									<View style={s.fl1}>
 										<TouchableOpacity
-											onPress={() => entrar()}
-											style={{
-												backgroundColor: tema.colors.background,
-												padding: 30,
-												marginTop: 20,
-												borderRadius: 6,
-											}}
+											onPress={entrar}
+											style={[s.bgcw, s.pd15, s.mt20, s.br6]}
 										>
-											<Text
-												style={{
-													color: tema.colors.primary,
-													fontSize: 22,
-													textAlign: "center",
-												}}
-											>
-												ENTRAR
-											</Text>
+											<Text style={[s.fcp, s.fs25, s.tac]}>ENTRAR</Text>
 										</TouchableOpacity>
 									</View>
-									<View style={{ flex: 1 }}></View>
 								</View>
 							</View>
 						</View>
 					</View>
-					<Text
-						style={{ color: "#fff", textAlign: "center", marginBottom: 10 }}
-					>
+					<Text style={[s.fcw, s.tac, s.mb10]}>
 						Versão: {app.expo.version.substring(0, 3)}
 					</Text>
 				</SafeAreaView>

@@ -25,7 +25,7 @@ import WebView from "react-native-webview";
 function Dependentes(props) {
 	const { navigation } = props;
 	const id = props.route?.params?.id ?? 1;
-	const [{ token }] = useUsuario();
+	const [{ token, associado_atendimento }] = useUsuario();
 	const [matricula, setMatricula] = useState("");
 	const [alerta, setAlerta] = useState({});
 	const [carregando, setCarregando] = useState(false);
@@ -41,59 +41,47 @@ function Dependentes(props) {
 	const [dependenteEscolhido, setDependenteEscolhido] = useState({});
 
 	const verificarMatricula = async () => {
-		if (matricula !== "") {
-			setCarregando(true);
+		setCarregando(true);
 
-			try {
-				const { data } = await api({
-					url: "/associados/verificarMatricula",
-					method: "GET",
-					params: { cartao: matricula },
-					headers: { "x-access-token": token },
-				});
+		try {
+			const { data } = await api({
+				url: "/associados/verificarMatricula",
+				method: "GET",
+				params: { cartao: associado_atendimento.matricula },
+				headers: { "x-access-token": token },
+			});
 
-				setAssociado(data);
+			setAssociado(data);
 
-				if (data.status) {
-					listarDependentes();
-				} else {
-					setDependentes([]);
-					setMostrarDados(false);
-
-					setAlerta({
-						visible: true,
-						title: "ATENÇÃO!",
-						message: data.message,
-						type: "danger",
-						confirmText: "FECHAR",
-						showConfirm: true,
-						showCancel: false,
-					});
-				}
-
-				setCarregando(false);
-				Keyboard.dismiss();
-			} catch (error) {
-				setCarregando(false);
+			if (data.status) {
+				listarDependentes();
+			} else {
 				setDependentes([]);
 				setMostrarDados(false);
-				Keyboard.dismiss();
 
 				setAlerta({
 					visible: true,
 					title: "ATENÇÃO!",
-					message: "Ocorreu um erro ao listar os dependentes.",
+					message: data.message,
 					type: "danger",
 					confirmText: "FECHAR",
 					showConfirm: true,
 					showCancel: false,
 				});
 			}
-		} else {
+
+			setCarregando(false);
+			Keyboard.dismiss();
+		} catch (error) {
+			setCarregando(false);
+			setDependentes([]);
+			setMostrarDados(false);
+			Keyboard.dismiss();
+
 			setAlerta({
 				visible: true,
 				title: "ATENÇÃO!",
-				message: "Para prosseguir é obrigatório informar a matrícula.",
+				message: "Ocorreu um erro ao listar os dependentes.",
 				type: "danger",
 				confirmText: "FECHAR",
 				showConfirm: true,
@@ -174,7 +162,7 @@ function Dependentes(props) {
 			url: "/associados/listarDependentes",
 			method: "GET",
 			params: {
-				cartao: `${matricula}00001`,
+				cartao: `${associado_atendimento.matricula}00001`,
 			},
 			headers: { "x-access-token": token },
 		});
@@ -220,10 +208,8 @@ function Dependentes(props) {
 	}
 
 	useEffect(() => {
-		if (id !== 1) {
-			listarDependentes();
-		}
-	}, [id]);
+		verificarMatricula();
+	}, []);
 
 	return (
 		<>
@@ -452,68 +438,6 @@ function Dependentes(props) {
 			</Modal>
 			<SafeAreaView style={{ flex: 1, zIndex: 100 }}>
 				<View style={{ flex: 1, margin: 20 }}>
-					<Text
-						style={{
-							textAlign: "center",
-							marginTop: 10,
-							marginBottom: 20,
-							fontSize: 17,
-						}}
-					>
-						Busque os dependentes de uma matrícula para seleção.
-					</Text>
-					<View style={{ flexDirection: "row" }}>
-						<View style={{ flex: 1 }}></View>
-						<View style={{ flex: 1, marginHorizontal: 5 }}>
-							<TextInput
-								label="Matrícula"
-								value={matricula}
-								mode="outlined"
-								theme={tema}
-								keyboardType={"numeric"}
-								maxLength={6}
-								onChangeText={(text) => setMatricula(text)}
-								render={(props) => (
-									<TextInputMask
-										{...props}
-										type={"custom"}
-										options={{
-											mask: "999999",
-										}}
-									/>
-								)}
-							/>
-						</View>
-						<View style={{ flex: 1 }}>
-							<TouchableOpacity
-								onPress={() => verificarMatricula()}
-								style={[
-									styles.linha,
-									{
-										justifyContent: "center",
-										alignContent: "center",
-										alignItems: "center",
-										height: 55,
-										backgroundColor: tema.colors.primary,
-										marginTop: 8,
-										borderRadius: 6,
-									},
-								]}
-							>
-								<Image
-									source={images.buscar}
-									style={{
-										tintColor: "#fff",
-										width: 20,
-										height: 20,
-										marginRight: 10,
-									}}
-								/>
-								<Text style={{ color: "#fff", fontSize: 20 }}>BUSCAR</Text>
-							</TouchableOpacity>
-						</View>
-						<View style={{ flex: 1 }}></View>
-					</View>
 					<View style={{ flex: 1, marginTop: 50 }}>
 						{carregando ? (
 							<View style={[styles.centralizado, { flex: 1 }]}>

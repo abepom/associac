@@ -21,7 +21,7 @@ function Sair(props) {
 
 	return (
 		<>
-			<Header titulo="Sair" voltar {...props} />
+			<Header titulo="Sair" voltar voltarPara={"Inicio"} {...props} />
 			<View style={[styles.centralizado, styles.background, { flex: 1 }]}>
 				<Image
 					source={imagens.logo_abepom}

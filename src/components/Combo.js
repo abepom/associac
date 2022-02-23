@@ -3,7 +3,7 @@ import { Image, Text, View } from "react-native";
 import { TouchableOpacity } from "react-native";
 import { TextInput } from "react-native-paper";
 import PickerModal from "react-native-picker-modal-view";
-import { tema } from "../../assets/style/Style";
+import s, { tema } from "../../assets/style/Style";
 import images from "../utils/images";
 
 export default (props) => {
@@ -18,46 +18,24 @@ export default (props) => {
 			value={escolhido.Value}
 			mode="outlined"
 			onChangeText={(texto) => setEscolhido(texto)}
-			style={{ width: "100%", ...style }}
+			style={[s.fullw, { ...style }]}
 			theme={tema}
 			render={(props) => (
 				<PickerModal
 					renderSelectView={(disabled, selected, showModal) => (
 						<TouchableOpacity
-							style={{
-								flexDirection: "row",
-								flex: 1,
-								paddingLeft: 10,
-							}}
+							style={[s.row, s.fl1, s.pdl10]}
 							disabled={disabled}
 							onPress={showModal}
 						>
-							<View
-								style={{
-									width: "94%",
-									justifyContent: "center",
-								}}
-							>
-								<Text>{escolhido.Name ?? escolhido.Name}</Text>
+							<View style={[s.fl2, s.jcc]}>
+								<Text style={s.fs18}>{escolhido.Name ?? escolhido.Name}</Text>
 							</View>
-							<View
-								style={{
-									width: "6%",
-									alignItems: "flex-end",
-									justifyContent: "center",
-									paddingRight: 10,
-								}}
-							>
+							<View style={[s.fl1, s.aife, s.jcc, s.pdr10]}>
 								<Image
 									source={images.seta}
 									tintColor={tema.colors.primary}
-									style={{
-										width: 20,
-										height: 20,
-										right: 0,
-										tintColor: tema.colors.primary,
-										transform: [{ rotate: "90deg" }],
-									}}
+									style={[s.w20, s.h20, s.r0, s.tcp, s.tr90]}
 								/>
 							</View>
 						</TouchableOpacity>

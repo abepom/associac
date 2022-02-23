@@ -12,16 +12,17 @@ import { TextInput } from "react-native-paper";
 import { TextInputMask } from "react-native-masked-text";
 import api from "../../services/api";
 import { useUsuario } from "../store/Usuario";
-import { tema } from "../../assets/style/Style";
+import s, { tema } from "../../assets/style/Style";
 import Combo from "../components/Combo";
 import HTMLView from "react-native-htmlview";
 import Alert from "../components/Alert";
 import Loading from "../components/Loading";
+import compararValores from "../functions/compararValores";
 
 function CadastrarDependente(props) {
 	const { navigation } = props;
-	const { associado } = props.route.params;
-	const [{ token }] = useUsuario();
+	const [usuario, setUsuario] = useUsuario();
+	const { token, associado_atendimento } = usuario;
 	const [nome, setNome] = useState("");
 	const [cpf, setCpf] = useState("");
 	const [nascimento, setNascimento] = useState("");
@@ -74,7 +75,7 @@ function CadastrarDependente(props) {
 		const { data } = await api({
 			url: "/associados/visualizarTermo",
 			method: "GET",
-			params: { id_local: associado.tipo === "31" ? 16 : 10 },
+			params: { id_local: associado_atendimento.tipo === "31" ? 16 : 10 },
 			headers: { "x-access-token": token },
 		});
 
@@ -99,13 +100,13 @@ function CadastrarDependente(props) {
 		const { data } = await api({
 			url: "/associados/visualizarTermo",
 			method: "GET",
-			params: { id_local: associado.tipo === "31" ? 16 : 11 },
+			params: { id_local: associado_atendimento.tipo === "31" ? 16 : 11 },
 			headers: { "x-access-token": token },
 		});
 
 		let termo = data.termo;
 		termo = termo
-			.replace("@TITULAR", associado.nome)
+			.replace("@TITULAR", associado_atendimento.nome)
 			.replace(
 				"@DEPENDENTE",
 				nome !== "" ? `<b>${nome.toUpperCase()}</b>` : ""
@@ -151,7 +152,7 @@ function CadastrarDependente(props) {
 				url: "/associados/cadastrarDependente",
 				method: "POST",
 				data: {
-					cartao: associado.cartao,
+					cartao: associado_atendimento.cartao,
 					nome,
 					cpf,
 					nascimento,
@@ -166,6 +167,45 @@ function CadastrarDependente(props) {
 			});
 
 			if (data.status) {
+				let dependente = {
+					caminho_imagem: "",
+					cartao: "",
+					cartao_enviado: 0,
+					cartao_recebido: 0,
+					cartao_solicitado: 0,
+					celular: "",
+					cod_dep: tipo.Value,
+					cont: data.cont,
+					cpf,
+					data_nascimento: nascimento,
+					email: "",
+					facebook: "",
+					instagram: "",
+					nome,
+					nome_plano: "",
+					possui_plano: 0,
+					pre_cadastro: 1,
+					sexo: sexo.Value,
+					telefone: "",
+					tipo: tipo.Name,
+				};
+
+				let dependentes = [...associado_atendimento.dependentes, dependente];
+				dependentes = dependentes
+					.sort(compararValores("nome", "asc"))
+					.sort(compararValores("pre_cadastro", "desc"));
+
+				setUsuario({
+					...usuario,
+					associado_atendimento: { ...associado_atendimento, dependentes },
+				});
+
+				setNome("");
+				setCpf("");
+				setNascimento("");
+				setSexo({ Name: "MASCULINO", Value: "M" });
+				setTipo({ Name: "", Value: "", CobraMensalidade: false });
+
 				setAlerta({
 					visible: true,
 					title: data.title,
@@ -174,16 +214,8 @@ function CadastrarDependente(props) {
 					confirmText: "FECHAR",
 					showConfirm: true,
 					showCancel: false,
-					confirmFunction: () => {
-						navigation.navigate("Dependentes", { id: new Date().toJSON() });
-					},
+					confirmFunction: () => navigation.navigate("Inicio"),
 				});
-
-				setNome("");
-				setCpf("");
-				setNascimento("");
-				setSexo({ Name: "MASCULINO", Value: "M" });
-				setTipo({ Name: "", Value: "", CobraMensalidade: false });
 			} else {
 				setAlerta({
 					visible: true,
@@ -222,13 +254,10 @@ function CadastrarDependente(props) {
 				titulo="Cadastrar Dependente"
 				{...props}
 				voltar={true}
-				voltarPara={{
-					name: "Dependentes",
-					params: { id: new Date().toJSON() },
-				}}
+				voltarPara={{ name: "Inicio" }}
 			/>
-			<SafeAreaView style={{ flex: 1, zIndex: 100 }}>
-				<View style={{ alignItems: "center", margin: 10 }}>
+			<SafeAreaView style={s.fl1}>
+				<View style={[s.aic, s.m10]}>
 					<>
 						<HTMLView
 							value={
@@ -238,7 +267,7 @@ function CadastrarDependente(props) {
 							}
 							paragraphBreak={"\n"}
 							renderNode={renderNode}
-							style={{ paddingHorizontal: 20, marginTop: 20 }}
+							style={[s.mt20, s.pdh20]}
 						/>
 					</>
 				</View>
@@ -315,7 +344,7 @@ function CadastrarDependente(props) {
 								style={{ marginBottom: 10 }}
 							/>
 						</View>
-						{associado.tipo === "31" ? (
+						{associado_atendimento.tipo === "31" ? (
 							<View style={{ flex: 1, marginLeft: 5 }}>
 								<TextInput
 									label="TAXA DE ADESÃO"

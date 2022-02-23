@@ -8,39 +8,61 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
-import { TextInputMask } from "react-native-masked-text";
-import { TextInput } from "react-native-paper";
-import PickerModal from "react-native-picker-modal-view";
-import { tema } from "../../assets/style/Style";
+import s, { tema } from "../../assets/style/Style";
 import api from "../../services/api";
 import Alert from "../components/Alert";
 import Header from "../components/Header";
-import images from "../utils/images";
 import * as ImagePicker from "expo-image-picker";
 import * as Camera from "expo-camera";
 import Loading from "../components/Loading";
 import { useUsuario } from "../store/Usuario";
+import Input from "../components/Input";
+import Combo from "../components/Combo";
+import InputMask from "../components/InputMask";
+import Messages from "../components/Messages";
+import images from "../utils/images";
+import compararValores from "../functions/compararValores";
 
 function AlterarTipoDependente(props) {
 	const { navigation } = props;
 	const data_atual = new Date();
-	const [{ token }] = useUsuario();
-	const [matricula, setMatricula] = useState(props?.route?.params?.matricula ?? "");
-	const [dependente, setDependente] = useState({
-		...props?.route?.params?.dependente ?? null,
-		novo_tipo: { Name: "", Value: "" },
-		telefone: "",
-	});
+	const [usuario, setUsuario] = useUsuario();
+	const { token, associado_atendimento } = usuario;
+	const dependente = props?.route?.params?.dependente;
 	const [tipos, setTipos] = useState([]);
 	const [mostrarTaxa, setMostrarTaxa] = useState(false);
 	const [solicitarAtestado, setSolicitarAtestado] = useState(false);
 	const [alerta, setAlerta] = useState({});
 	const [atestado, setAtestado] = useState("");
+	const [cont, setCont] = useState(dependente.cont ?? "");
+	const [codDep, setCodDep] = useState(dependente.cod_dep ?? "");
+	const [nome, setNome] = useState(dependente.nome ?? "");
+	const [sexo, setSexo] = useState(
+		dependente.sexo
+			? dependente.sexo == "M"
+				? { Name: "MASCULINO", Value: "M" }
+				: { Name: "FEMININO", Value: "F" }
+			: { Name: "MASCULINO", Value: "M" }
+	);
+	const [nascimento, setNascimento] = useState(
+		dependente.data_nascimento ?? ""
+	);
+	const [tipo, setTipo] = useState(
+		dependente.tipo && dependente.cod_dep
+			? { Name: dependente.tipo, Value: dependente.cod_dep }
+			: { Name: "", Value: "" }
+	);
+	const [cpf, setCpf] = useState(dependente.cpf ?? "");
+	const [instagram, setInstagram] = useState(dependente.instagram ?? "");
+	const [facebook, setFacebook] = useState(dependente.facebook ?? "");
+	const [telefone, setTelefone] = useState(dependente.telefone ?? "");
+	const [celular, setCelular] = useState(dependente.celular ?? "");
+	const [email, setEmail] = useState(dependente.email ?? "");
 
 	const listarTipos = async () => {
-		let ano_aniversario = parseInt(dependente.data_nascimento.substring(6, 10));
+		let ano_aniversario = parseInt(nascimento.substring(6, 10));
 
-		switch (dependente.cod_dep) {
+		switch (tipo.Value) {
 			case "01":
 				if (!isNaN(ano_aniversario)) {
 					if (parseInt(data_atual.getFullYear()) - ano_aniversario >= 18) {
@@ -52,24 +74,13 @@ function AlterarTipoDependente(props) {
 							},
 						]);
 					} else {
-						setTipos([
-							{
-								Name: dependente.tipo.toUpperCase(),
-								Value: dependente.cod_dep,
-							},
-						]);
+						setTipos(tipo);
 					}
 				} else {
-					setTipos([
-						{
-							Name: dependente.tipo.toUpperCase(),
-							Value: dependente.cod_dep,
-						},
-					]);
+					setTipos(tipo);
 				}
 
 				break;
-
 			case "09":
 				if (!isNaN(ano_aniversario)) {
 					if (parseInt(data_atual.getFullYear()) - ano_aniversario >= 18) {
@@ -81,20 +92,10 @@ function AlterarTipoDependente(props) {
 							},
 						]);
 					} else {
-						setTipos([
-							{
-								Name: dependente.tipo.toUpperCase(),
-								Value: dependente.cod_dep,
-							},
-						]);
+						setTipos(tipo);
 					}
 				} else {
-					setTipos([
-						{
-							Name: dependente.tipo.toUpperCase(),
-							Value: dependente.cod_dep,
-						},
-					]);
+					setTipos(tipo);
 				}
 				break;
 			case "20":
@@ -102,20 +103,10 @@ function AlterarTipoDependente(props) {
 					if (parseInt(data_atual.getFullYear()) - ano_aniversario >= 24) {
 						setTipos([{ Name: "FILHOS MAIORES", Value: "31" }]);
 					} else {
-						setTipos([
-							{
-								Name: dependente.tipo.toUpperCase(),
-								Value: dependente.cod_dep,
-							},
-						]);
+						setTipos(tipo);
 					}
 				} else {
-					setTipos([
-						{
-							Name: dependente.tipo.toUpperCase(),
-							Value: dependente.cod_dep,
-						},
-					]);
+					setTipos(tipo);
 				}
 				break;
 			case "23":
@@ -144,8 +135,8 @@ function AlterarTipoDependente(props) {
 			case "08":
 				setTipos([
 					{
-						Name: dependente.tipo.toUpperCase(),
-						Value: dependente.cod_dep,
+						Name: tipo.Name.toUpperCase(),
+						Value: tipo.Value,
 					},
 					{
 						Name: "CONJUGE",
@@ -156,8 +147,8 @@ function AlterarTipoDependente(props) {
 			case "02":
 				setTipos([
 					{
-						Name: dependente.tipo.toUpperCase(),
-						Value: dependente.cod_dep,
+						Name: tipo.Name.toUpperCase(),
+						Value: tipo.Value,
 					},
 					{
 						Name: "COMPANHEIRO(A)",
@@ -168,8 +159,8 @@ function AlterarTipoDependente(props) {
 			default:
 				setTipos([
 					{
-						Name: dependente.tipo.toUpperCase(),
-						Value: dependente.cod_dep,
+						Name: tipo.Name.toUpperCase(),
+						Value: tipo.Value,
 					},
 				]);
 				break;
@@ -218,11 +209,11 @@ function AlterarTipoDependente(props) {
 			return;
 		} else {
 			let data_valida = new Date(
-				dependente.data_nascimento.substring(6, 10) +
+				nascimento.substring(6, 10) +
 					"-" +
-					dependente.data_nascimento.substring(3, 5) +
+					nascimento.substring(3, 5) +
 					"-" +
-					dependente.data_nascimento.substring(0, 2)
+					nascimento.substring(0, 2)
 			);
 
 			if (isNaN(data_valida.getTime()) || data_valida.getFullYear() <= 1910) {
@@ -238,7 +229,7 @@ function AlterarTipoDependente(props) {
 				return;
 			}
 
-			if (dependente?.novo_tipo?.Name === "") {
+			if (tipo?.Name === "") {
 				setAlerta({
 					visible: true,
 					title: "ATENÇÃO!",
@@ -264,7 +255,21 @@ function AlterarTipoDependente(props) {
 			const { data, status } = await api({
 				url: "/associados/alterarTipoDependente",
 				method: "POST",
-				data: { dependente, matricula },
+				data: {
+					dependente: {
+						cont,
+						novo_tipo: tipo,
+						sexo,
+						data_nascimento: nascimento,
+						cpf,
+						instagram,
+						facebook,
+						telefone,
+						celular,
+						email,
+					},
+					matricula: associado_atendimento.matricula,
+				},
 				headers: { "x-access-token": token },
 			});
 
@@ -285,15 +290,60 @@ function AlterarTipoDependente(props) {
 					);
 				}, 5000);
 			} else {
-				setAlerta({
-					visible: true,
-					title: data.title,
-					message: data.message,
-					type: data.status ? "success" : "danger",
-					showCancel: false,
-					showConfirm: true,
-					confirmText: "FECHAR",
-				});
+				if (data.status) {
+					let dependente = associado_atendimento.dependentes.find(
+						(dep) => dep.cont === cont
+					);
+
+					dependente = {
+						...dependente,
+						celular,
+						cod_dep: tipo.Value,
+						cpf,
+						data_nascimento: nascimento,
+						email,
+						facebook,
+						instagram,
+						sexo: sexo.Value,
+						telefone,
+						tipo: tipo.Name,
+					};
+
+					let dependentes = associado_atendimento.dependentes.filter(
+						(dep) => dep.cont !== cont
+					);
+
+					dependentes = [...dependentes, dependente];
+					dependentes = dependentes
+						.sort(compararValores("nome", "asc"))
+						.sort(compararValores("pre_cadastro", "desc"));
+
+					setUsuario({
+						...usuario,
+						associado_atendimento: { ...associado_atendimento, dependentes },
+					});
+
+					setAlerta({
+						visible: true,
+						title: data.title,
+						message: data.message,
+						type: "success",
+						showCancel: false,
+						showConfirm: true,
+						confirmText: "FECHAR",
+						confirmFunction: () => navigation.navigate("Inicio"),
+					});
+				} else {
+					setAlerta({
+						visible: true,
+						title: data.title,
+						message: data.message,
+						type: "danger",
+						showCancel: false,
+						showConfirm: true,
+						confirmText: "FECHAR",
+					});
+				}
 			}
 		}
 	};
@@ -332,13 +382,15 @@ function AlterarTipoDependente(props) {
 				let extensao = uri.split(".")[uri.split(".").length - 1];
 
 				const formulario = new FormData();
-				formulario.append("matricula", `${matricula}`);
-				formulario.append("dependente", `${dependente.cont}`);
+				formulario.append("matricula", `${associado_atendimento.matricula}`);
+				formulario.append("dependente", `${cont}`);
 				formulario.append("tipo", "AF");
 				formulario.append("file", {
 					uri,
 					type: `image/${extensao}`,
-					name: `${matricula}_${new Date().toJSON()}.${extensao}`,
+					name: `${
+						associado_atendimento.matricula
+					}_${new Date().toJSON()}.${extensao}`,
 				});
 
 				const { data } = await api.post("/enviarDocumentoTitular", formulario, {
@@ -361,377 +413,156 @@ function AlterarTipoDependente(props) {
 		listarTipos();
 	}, []);
 
+	useEffect(() => {
+		alterarTipo(tipo.Value);
+	}, [tipo]);
+
 	return (
 		<>
 			<Header titulo="Alterar Tipo de Dependente" {...props} />
-			<SafeAreaView style={{ flex: 1, zIndex: 100 }}>
-				<ScrollView style={{ flex: 1, margin: 20 }}>
-					<Text
-						style={{
-							textAlign: "center",
-							marginTop: 10,
-							marginBottom: 20,
-							fontSize: 17,
-						}}
-					>
+			<SafeAreaView style={s.fl1}>
+				<ScrollView style={[s.fl1, s.m20]}>
+					<Text style={[s.tac, s.mt10, s.mb20, s.fs18]}>
 						Altere o tipo de dependência do dependente abaixo.
 					</Text>
-					<View style={{ flexDirection: "row", marginBottom: 15 }}>
-						<View style={{ flex: 1 }}>
-							<TextInput
-								label="Nome"
-								mode={"outlined"}
-								theme={tema}
-								value={dependente.nome}
-								maxLength={40}
-								style={{ fontSize: 18 }}
+					<View style={[s.row, s.mb10]}>
+						<View style={s.fl1}>
+							<Input
+								label={"Nome"}
+								value={[nome, setNome]}
+								disabled={true}
 								returnKeyType={"next"}
-								disabled
+								maxLength={40}
 							/>
 						</View>
 					</View>
-					<View style={{ flexDirection: "row", marginBottom: 15 }}>
-						<View style={{ flex: 1, marginRight: 5 }}>
-							<TextInput
-								label="Sexo"
-								mode={"outlined"}
-								theme={tema}
-								style={{ fontSize: 18 }}
-								value={dependente.sexo}
-								onChangeText={(text) =>
-									setDependente({ ...dependente, sexo: text })
-								}
-								render={() => (
-									<PickerModal
-										renderSelectView={(disabled, selected, showModal) => (
-											<TouchableOpacity
-												style={{
-													flexDirection: "row",
-													flex: 1,
-													justifyContent: "flex-start",
-													alignItems: "center",
-													paddingLeft: 10,
-												}}
-												disabled={disabled}
-												onPress={showModal}
-											>
-												<View style={{ flex: 3 }}>
-													<Text style={{ fontSize: dependente.sexo ? 15 : 12 }}>
-														{dependente.sexo
-															? dependente.sexo === "F"
-																? "FEMININO"
-																: "MASCULINO"
-															: "SELECIONE"}
-													</Text>
-												</View>
-												<View
-													style={{
-														flex: 1,
-														alignItems: "flex-end",
-														paddingRight: 10,
-													}}
-												>
-													<Image
-														source={images.seta}
-														tintColor={"#031e3f"}
-														style={{
-															width: 10,
-															height: 10,
-															right: 0,
-															tintColor: "#031e3f",
-															transform: [{ rotate: "90deg" }],
-														}}
-													/>
-												</View>
-											</TouchableOpacity>
-										)}
-										modalAnimationType="fade"
-										selected={
-											dependente.sexo == "M"
-												? { Name: "MASCULINO", Value: "M" }
-												: { Name: "FEMININO", Value: "F" }
-										}
-										selectPlaceholderText="SELECIONE O SEXO"
-										searchPlaceholderText="DIGITE O SEXO"
-										onSelected={(key) =>
-											setDependente({ ...dependente, sexo: key.Value })
-										}
-										onClosed={() =>
-											setDependente({ ...dependente, sexo: dependente.sexo })
-										}
-										items={[
-											{ Name: "MASCULINO", Value: "M" },
-											{ Name: "FEMININO", Value: "F" },
-										]}
-									/>
-								)}
+					<View style={[s.row, s.mb10]}>
+						<View style={[s.fl1, s.mr10]}>
+							<Combo
+								label={"Sexo"}
+								pronome={"o"}
+								lista={[
+									{ Name: "MASCULINO", Value: "M" },
+									{ Name: "FEMININO", Value: "F" },
+								]}
+								item={[sexo, setSexo]}
 							/>
 						</View>
-						<View style={{ flex: 1, marginRight: 5 }}>
-							<TextInput
-								label="Nascimento"
-								mode={"outlined"}
-								theme={tema}
-								value={dependente.data_nascimento}
+						<View style={[s.fl1, s.mr10]}>
+							<InputMask
+								label={"Nascimento"}
+								value={[nascimento, setNascimento]}
 								keyboardType={"numeric"}
-								style={{ fontSize: 18 }}
+								mask="99/99/9999"
 								maxLength={10}
-								render={(props) => (
-									<TextInputMask
-										{...props}
-										type={"custom"}
-										options={{
-											mask: "99/99/9999",
-										}}
-									/>
-								)}
 							/>
 						</View>
-						<View style={{ flex: 2 }}>
-							<TextInput
-								label="Tipo de Dependência"
-								mode={"outlined"}
-								theme={tema}
-								style={{ fontSize: 18 }}
-								value={dependente.novo_tipo}
-								onChangeText={(text) =>
-									setDependente({ ...dependente, novo_tipo: text })
-								}
-								render={() => (
-									<PickerModal
-										renderSelectView={(disabled, selected, showModal) => (
-											<TouchableOpacity
-												style={{
-													flexDirection: "row",
-													flex: 1,
-													justifyContent: "flex-start",
-													alignItems: "center",
-													paddingLeft: 10,
-												}}
-												disabled={disabled}
-												onPress={showModal}
-											>
-												<View style={{ flex: 3 }}>
-													<Text
-														style={{ fontSize: dependente.novo_tipo ? 15 : 12 }}
-													>
-														{dependente.novo_tipo?.Name !== ""
-															? dependente.novo_tipo.Name
-															: "SELECIONE"}
-													</Text>
-												</View>
-												<View
-													style={{
-														flex: 1,
-														alignItems: "flex-end",
-														paddingRight: 10,
-													}}
-												>
-													<Image
-														source={images.seta}
-														tintColor={"#031e3f"}
-														style={{
-															width: 10,
-															height: 10,
-															right: 0,
-															tintColor: "#031e3f",
-															transform: [{ rotate: "90deg" }],
-														}}
-													/>
-												</View>
-											</TouchableOpacity>
-										)}
-										modalAnimationType="fade"
-										selected={dependente.novo_tipo}
-										selectPlaceholderText="SELECIONE O TIPO"
-										searchPlaceholderText="DIGITE O TIPO"
-										onSelected={(key) => {
-											alterarTipo(key.Value);
-											setDependente({ ...dependente, novo_tipo: key });
-										}}
-										onClosed={() =>
-											setDependente({
-												...dependente,
-												novo_tipo: dependente.novo_tipo,
-											})
-										}
-										items={tipos}
-									/>
-								)}
+						<View style={s.fl2}>
+							<Combo
+								label={"Tipo de Dependência"}
+								pronome={"o"}
+								lista={tipos}
+								item={[tipo, setTipo]}
 							/>
 						</View>
 					</View>
-					<View style={{ flexDirection: "row", marginBottom: 15 }}>
-						<View style={{ flex: 1, marginRight: 5 }}>
-							<TextInput
-								label="CPF"
-								mode={"outlined"}
-								theme={tema}
-								value={dependente.cpf}
+					<View style={[s.row, s.mb10]}>
+						<View style={[s.fl1, s.mr10]}>
+							<InputMask
+								label={"CPF"}
+								value={[cpf, setCpf]}
+								keyboardType={"numeric"}
+								mask="999.999.999-99"
 								maxLength={14}
-								style={{ fontSize: 18 }}
-								keyboardType={"number-pad"}
-								onChangeText={(text) =>
-									setDependente({ ...dependente, cpf: text })
-								}
-								render={(props) => (
-									<TextInputMask
-										{...props}
-										type={"custom"}
-										options={{
-											mask: "999.999.999-99",
-										}}
-									/>
-								)}
 							/>
 						</View>
-						<View style={{ flex: 1, marginRight: 5 }}>
-							<TextInput
-								label="Instagram"
-								mode={"outlined"}
-								theme={tema}
-								value={dependente.instagram}
+						<View style={[s.fl1, s.mr10]}>
+							<Input
+								label={"Instagram"}
+								value={[instagram, setInstagram]}
 								maxLength={100}
-								style={{ fontSize: 18 }}
-								onChangeText={(text) =>
-									setDependente({ ...dependente, instagram: text })
-								}
 							/>
 						</View>
-						<View style={{ flex: 1, marginRight: 5 }}>
-							<TextInput
-								label="Facebook"
-								mode={"outlined"}
-								theme={tema}
-								value={dependente.facebook}
+						<View style={s.fl1}>
+							<Input
+								label={"Facebook"}
+								value={[facebook, setFacebook]}
 								maxLength={100}
-								style={{ fontSize: 18 }}
-								onChangeText={(text) =>
-									setDependente({ ...dependente, facebook: text })
-								}
 							/>
 						</View>
 					</View>
-					<View style={{ flexDirection: "row", marginBottom: 15 }}>
-						<View style={{ flex: 1, marginRight: 5 }}>
-							<TextInput
-								label="Telefone"
-								mode={"outlined"}
-								theme={tema}
-								value={dependente.telefone}
+					<View style={[s.row, s.mb10]}>
+						<View style={[s.fl1, s.mr10]}>
+							<InputMask
+								label={"Telefone"}
+								value={[telefone, setTelefone]}
+								keyboardType={"numeric"}
+								mask="(99) 9999-9999"
 								maxLength={14}
-								style={{ fontSize: 18 }}
-								keyboardType={"number-pad"}
-								onChangeText={(text) =>
-									setDependente({ ...dependente, telefone: text })
-								}
-								render={(props) => (
-									<TextInputMask
-										{...props}
-										type={"custom"}
-										options={{
-											mask: "(99) 9999-9999",
-										}}
-									/>
-								)}
 							/>
 						</View>
-						<View style={{ flex: 1, marginRight: 5 }}>
-							<TextInput
-								label="Celular"
-								mode={"outlined"}
-								theme={tema}
-								value={dependente.celular}
+						<View style={s.fl1}>
+							<InputMask
+								label={"Celular"}
+								value={[celular, setCelular]}
+								keyboardType={"numeric"}
+								mask="(99) 9 9999-9999"
 								maxLength={16}
-								style={{ fontSize: 18 }}
-								keyboardType={"number-pad"}
-								onChangeText={(text) =>
-									setDependente({ ...dependente, celular: text })
-								}
-								render={(props) => (
-									<TextInputMask
-										{...props}
-										type={"custom"}
-										options={{
-											mask: "(99) 9 9999-9999",
-										}}
-									/>
-								)}
-							/>
-						</View>
-						<View style={{ flex: 1, marginRight: 5 }}>
-							<TextInput
-								label="E-mail"
-								mode={"outlined"}
-								theme={tema}
-								value={dependente.email}
-								style={{ fontSize: 18 }}
-								onChangeText={(text) =>
-									setDependente({ ...dependente, email: text })
-								}
 							/>
 						</View>
 					</View>
-					{dependente.cod_dep !== "23" && mostrarTaxa && (
-						<View
-							style={{
-								flexDirection: "row",
-								justifyContent: "center",
-								alignItems: "center",
-								marginVertical: 20,
-							}}
-						>
-							<Text style={{ fontSize: 18, textTransform: "uppercase" }}>
-								Lembre o associado sobre o pagamento da taxa suplementar de
-								dependente.
-							</Text>
+					<View style={[s.fl1, s.mb20]}>
+						<View style={s.fl1}>
+							<Input
+								label={"E-mail"}
+								value={[email, setEmail]}
+								maxLength={100}
+							/>
 						</View>
+					</View>
+					{codDep !== "23" && mostrarTaxa && (
+						<Messages
+							titulo="ATENÇÃO!"
+							subtitulo="LEMBRE O ASSOCIADO SOBRE O PAGAMENTO DA TAXA SUPLEMENTAR DE
+								DEPENDENTE."
+							cor={tema.colors.info}
+							imagem={images.info}
+							style={{ marginBottom: 20 }}
+						/>
 					)}
 					{solicitarAtestado && (
-						<View
-							style={{
-								justifyContent: "center",
-								alignItems: "center",
-								marginVertical: 25,
-							}}
-						>
+						<View style={[s.jcc, s.aic, s.mv20]}>
 							<TouchableOpacity
 								onPress={() => enviarAtestado()}
-								style={{
-									backgroundColor: tema.colors.primary,
-									padding: 20,
-									borderRadius: 6,
-								}}
+								style={[s.bgcp, s.pd20, s.br6]}
 							>
-								<Text style={{ color: "#fff", fontSize: 18 }}>
+								<Text style={[s.fcw, s.fs20]}>
 									ENVIAR ATESTADO DE FREQUÊNCIA
 								</Text>
 							</TouchableOpacity>
 							{atestado !== "" && (
 								<Image
 									source={{ uri: atestado }}
-									style={{ width: 250, height: 250, marginVertical: 20 }}
+									style={[s.w250, s.h250, s.mv20]}
 								/>
 							)}
 						</View>
 					)}
-					<View style={{ justifyContent: "center", alignItems: "center" }}>
+					<View style={[s.jcc, s.aic]}>
 						<TouchableOpacity
-							onPress={() =>
-								dependente?.novo_tipo?.Name !== "" ? salvarAlteracoes() : null
-							}
-							style={{
-								backgroundColor:
-									dependente?.novo_tipo?.Name === ""
-										? tema.colors.backdrop
-										: tema.colors.primary,
-								padding: 20,
-								borderRadius: 6,
-							}}
+							onPress={() => (tipo?.Name !== "" ? salvarAlteracoes() : null)}
+							style={[
+								s.pd20,
+								s.br6,
+								{
+									backgroundColor:
+										tipo?.Name === ""
+											? tema.colors.backdrop
+											: tema.colors.primary,
+								},
+							]}
 						>
-							<Text style={{ color: "#fff", fontSize: 20 }}>
-								SALVAR ALTERAÇÕES
-							</Text>
+							<Text style={[s.fcw, s.fs20]}>SALVAR ALTERAÇÕES</Text>
 						</TouchableOpacity>
 					</View>
 				</ScrollView>

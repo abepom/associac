@@ -21,6 +21,8 @@ import lock from "../../assets/img/lock.png";
 import file from "../../assets/img/file.png";
 import trash from "../../assets/img/trash.png";
 import image from "../../assets/img/image.png";
+import info from "../../assets/img/info.png";
+
 export default {
 	bg,
 	logo_abepom,
@@ -45,4 +47,5 @@ export default {
 	file,
 	trash,
 	image,
+	info,
 };
