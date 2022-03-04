@@ -10,6 +10,8 @@ export default (props) => {
 		mode = "outlined",
 		mask = "999999",
 		keyboardType = "numeric",
+		returnKeyType = "default",
+		onSubmitEditing = () => {},
 		maxLength = 250,
 	} = props;
 	const [valor, setValor] = value;
@@ -19,11 +21,13 @@ export default (props) => {
 			label={label}
 			value={valor}
 			keyboardType={keyboardType}
+			returnKeyType={returnKeyType}
 			mode={mode}
 			theme={tema}
 			maxLength={maxLength}
 			style={s.fs18}
 			onChangeText={(text) => setValor(text)}
+			onSubmitEditing={onSubmitEditing}
 			render={(props) => (
 				<TextInputMask {...props} type={"custom"} options={{ mask }} />
 			)}

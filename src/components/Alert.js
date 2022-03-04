@@ -87,7 +87,7 @@ function Alert(props) {
 								}}
 							/>
 						)}
-						<View style={[s.row, s.flg1, { maxWidth: 650 }]}>
+						<View style={[s.row, s.flg1]}>
 							<Text style={[s.fl1, s.tac, s.mb20, s.fs18]}>{message}</Text>
 						</View>
 					</View>

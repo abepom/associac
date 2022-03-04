@@ -9,7 +9,7 @@ import {
 	Modal,
 	Keyboard,
 } from "react-native";
-import { TextInput, IconButton, Button } from "react-native-paper";
+import { TextInput, Button } from "react-native-paper";
 import { TextInputMask } from "react-native-masked-text";
 import PickerModal from "react-native-picker-modal-view";
 import { ProgressSteps, ProgressStep } from "react-native-progress-steps";
@@ -18,7 +18,7 @@ import api from "../../services/api";
 import isDate from "../functions/isDate";
 import formatDate from "../functions/formatDate";
 import Header from "../components/Header";
-import { tema } from "../../assets/style/Style";
+import s, { tema } from "../../assets/style/Style";
 import Alert from "../components/Alert";
 import Loading from "../components/Loading";
 import { useUsuario } from "../store/Usuario";
@@ -26,35 +26,16 @@ import Signature from "react-native-signature-canvas";
 import calculateAge from "../functions/calculateAge";
 import WebView from "react-native-webview";
 import * as Print from "expo-print";
-
-const ASSOCIADO_INITIAL = {
-	matricula: "",
-	sexo: { Name: "", Value: "" },
-	cidade: { Name: "", Value: "" },
-	orgao: { Name: "", Value: "" },
-	funcao: { Name: "", Value: "" },
-	local_trabalho: { Name: "", Value: "" },
-	banco: { Name: "", Value: "" },
-	forma_desconto: { Name: "", Value: "" },
-	valor_mensalidade: 0,
-	paga_joia: 0,
-	possui_plano: false,
-	idade: 0,
-	estado_civil: { Name: "", Value: "" },
-	tipo: "TITULAR",
-	codigo_tipo: "00",
-	local_cobranca: { Name: "", Value: "" },
-	valor_plano: 0,
-};
+import Combo from "../components/Combo";
 
 const PLANO_INITIAL = { Name: "", Value: "", valor_faixas: [], nome_plano: "" };
 
 function MigrarPlanoDeSaude(props) {
 	let d = new Date();
 	const { navigation } = props;
-	const [{ token }] = useUsuario();
-	const [matricula, setMatricula] = useState("003959");
-	const [associado, setAssociado] = useState(ASSOCIADO_INITIAL);
+	const [usuario, setUsuario] = useUsuario();
+	const { token, associado_atendimento } = usuario;
+	console.log(associado_atendimento);
 	const [planos, setPlanos] = useState([]);
 	const [plano, setPlano] = useState(PLANO_INITIAL);
 	const [mostrarDadosAssociado, setMostrarDadosAssociado] = useState(false);
@@ -89,6 +70,9 @@ function MigrarPlanoDeSaude(props) {
 	const [assinaturaAssociado, setAssinaturaAssociado] = useState("");
 	const [assinaturaBeneficiario, setAssinaturaBeneficiario] = useState("");
 	const [mostrarBotoes, setMostrarBotoes] = useState(true);
+
+	const [estadoCivil, setEstadoCivil] = useState({ Name: "", Value: "" });
+	const [localCobranca, setLocalCobranca] = useState({ Name: "", Value: "" });
 
 	const refAssociado = useRef();
 	const refBeneficiario = useRef();
@@ -126,6 +110,27 @@ function MigrarPlanoDeSaude(props) {
 		}
 	};
 
+	const verificarIdade = () => {
+		let nascimento = formatDate(associado_atendimento.nascimento, "AMD");
+		if (isDate(new Date(nascimento))) {
+			setUsuario({
+				...usuario,
+				associado_atendimento: {
+					...associado_atendimento,
+					idade: calculateAge(nascimento),
+				},
+			});
+		}
+	};
+
+	const verificarPlano = () => {
+		let plano_selecionado = planos.find(
+			(p) => p.Value === associado_atendimento.codigo_plano
+		);
+
+		selecionarPlano(plano_selecionado, associado_atendimento);
+	};
+
 	const listarTermos = async () => {
 		try {
 			const { data } = await api({
@@ -141,17 +146,16 @@ function MigrarPlanoDeSaude(props) {
 	};
 
 	const verificarMatricula = async () => {
-		if (matricula.length == 6) {
-			if (!isNaN(matricula)) {
+		if (associado_atendimento.matricula.length == 6) {
+			if (!isNaN(associado_atendimento.matricula)) {
 				setCarregando(true);
-				setAssociado(ASSOCIADO_INITIAL);
 				setPlano(PLANO_INITIAL);
 
 				try {
 					const { data } = await api({
 						url: "/associados/verificarMatricula",
 						method: "GET",
-						params: { cartao: matricula },
+						params: { cartao: associado_atendimento.matricula },
 						headers: { "x-access-token": token },
 					});
 
@@ -179,38 +183,7 @@ function MigrarPlanoDeSaude(props) {
 						);
 
 						selecionarPlano(plano_selecionado, assoc);
-						setMostrarDadosAssociado(true);
-
-						if (data.tipo === "01") {
-							setNextStep(true);
-						} else {
-							setNextStep(false);
-						}
-
-						if (!data.possui_plano) {
-							setAlerta({
-								visible: true,
-								title: "ATENÇÃO!",
-								message:
-									"O titular não possui nenhum plano ativo. Para efetuar a migração é necessário possuir um plano.",
-								type: "danger",
-								confirmText: "FECHAR",
-								showConfirm: true,
-								showCancel: false,
-								confirmFunction: () => {
-									navigation.navigate("MigrarPlanoDeSaude", {
-										id: new Date().toJSON(),
-									});
-								},
-							});
-
-							setNextStep(false);
-							setMostrarDadosAssociado(false);
-						} else {
-							setMostrarDadosAssociado(true);
-						}
 					} else {
-						setAssociado({ ...ASSOCIADO_INITIAL, matricula });
 						setNextStep(false);
 
 						setAlerta({
@@ -227,7 +200,6 @@ function MigrarPlanoDeSaude(props) {
 					setCarregando(false);
 					Keyboard.dismiss();
 				} catch (error) {
-					setAssociado(ASSOCIADO_INITIAL);
 					setCarregando(false);
 					setMostrarDadosAssociado(false);
 					setNextStep(false);
@@ -244,7 +216,6 @@ function MigrarPlanoDeSaude(props) {
 					});
 				}
 			} else {
-				setAssociado(ASSOCIADO_INITIAL);
 				setCarregando(false);
 				setMostrarDadosAssociado(false);
 				setNextStep(false);
@@ -260,7 +231,6 @@ function MigrarPlanoDeSaude(props) {
 				});
 			}
 		} else {
-			setAssociado(ASSOCIADO_INITIAL);
 			setCarregando(false);
 			setMostrarDadosAssociado(false);
 			setNextStep(false);
@@ -277,7 +247,7 @@ function MigrarPlanoDeSaude(props) {
 		}
 	};
 
-	const selecionarPlano = (key, associado) => {
+	const selecionarPlano = (key, associado = associado_atendimento) => {
 		let id = associado.idade;
 		let index = 1;
 
@@ -397,9 +367,9 @@ function MigrarPlanoDeSaude(props) {
 
 		let { valor } = key.valor_plano.find((item) => item.faixa == index);
 
-		setAssociado({
-			...associado,
-			valor_plano: valor,
+		setUsuario({
+			...usuario,
+			associado_atendimento: { ...associado, valor_plano: valor },
 		});
 
 		if (associado?.nome !== "") {
@@ -451,23 +421,23 @@ function MigrarPlanoDeSaude(props) {
 				<div style="display: flex; flex: 1; flex-direction: column">
 					<div style="display: flex; flex-direction: row; flex: 1; justify-content: center; align-items: center">
 						<div style="display: flex; flex: 5;">
-							Nome: ${associado.nome}
+							Nome: ${associado_atendimento.nome}
 						</div>
 						<div style="display: flex; flex: 2">
-							Matrícula: ${associado.matricula}
+							Matrícula: ${associado_atendimento.matricula}
 						</div>
 					</div>
 					<div style="display: flex; flex-direction: row; flex: 1; justify-content: center; align-items: center">
 						<div style="display: flex; flex: 5;">
-							E-mail: ${associado.email}
+							E-mail: ${associado_atendimento.email}
 						</div>
 					</div>
 				</div>
         <div style="display: flex; flex: 1; flex-direction: column; margin-top: 20px;">
-							Data para migração: ${associado.nome} (Sempre dia 1º de cada mês, sujeita a análise da operadora)
+							Data para migração: ${associado_atendimento.nome} (Sempre dia 1º de cada mês, sujeita a análise da operadora)
 				</div>
         <div style="display: flex; flex: 1; flex-direction: column; margin-top: 10px;">
-							Nome do Beneficiário Titular: ${associado.nome}<br />
+							Nome do Beneficiário Titular: ${associado_atendimento.nome}<br />
               **A migração dos dependentes é compulsória.
 				</div>
 				<div style="display: flex; flex: 1;">
@@ -476,7 +446,7 @@ function MigrarPlanoDeSaude(props) {
 					</div>
 				</div>
         <div style="display: flex; flex: 1; flex-direction: column; margin-top: 10px;">
-							Plano Atual: ${associado.nome_plano}
+							Plano Atual: ${associado_atendimento.nome_plano}
 				</div>
         <div style="display: flex; flex: 1; flex-direction: column; margin-top: 10px;">
 							Migrando para: ${plano.codigo_plano} - ${plano.nome_plano}
@@ -498,7 +468,7 @@ function MigrarPlanoDeSaude(props) {
 								<br />
 								<hr style="width: 80%" />
 								<br />
-								${associado.nome}<br />
+								${associado_atendimento.nome}<br />
 								Assinatura do Associado
 							</center>
 						</div>
@@ -510,13 +480,13 @@ function MigrarPlanoDeSaude(props) {
 		try {
 			const { uri } = await Print.printToFileAsync({ html });
 			const formulario = new FormData();
-			formulario.append("matricula", `${associado.matricula}`);
-			formulario.append("dependente", `${associado?.codigo_tipo}`);
+			formulario.append("matricula", `${associado_atendimento.matricula}`);
+			formulario.append("dependente", `${associado_atendimento?.codigo_tipo}`);
 			formulario.append("plano", `${plano?.Value}`);
 			formulario.append("file", {
 				uri,
 				type: `application/pdf`,
-				name: `REQUERIMENTO_INCLUSAO_PLANO_${associado.matricula}.pdf`,
+				name: `REQUERIMENTO_INCLUSAO_PLANO_${associado_atendimento.matricula}.pdf`,
 			});
 
 			const { data } = await api.post(
@@ -534,17 +504,17 @@ function MigrarPlanoDeSaude(props) {
 				let erros = 0;
 				let msg = "Para prosseguir é necessário: \n\n";
 
-				if (plano?.Name === "" || associado?.nome === "") {
+				if (plano?.Name === "" || associado_atendimento?.nome === "") {
 					erros++;
 					msg = "Selecionar o beneficiário e o plano.\n";
 				}
 
-				if (associado?.local_cobranca?.Name == "") {
+				if (localCobranca?.Name == "") {
 					erros++;
 					msg += "Selecionar o local de cobrança.\n";
 				}
 
-				if (associado?.estado_civil?.Name == "") {
+				if (estadoCivil?.Name == "") {
 					erros++;
 					msg += "Selecionar o estado civil do beneficiário.\n";
 				}
@@ -566,7 +536,7 @@ function MigrarPlanoDeSaude(props) {
 							method: "POST",
 							data: {
 								plano,
-								associado,
+								associado_atendimento,
 								dataVigencia,
 							},
 							headers: { "x-access-token": token },
@@ -584,7 +554,6 @@ function MigrarPlanoDeSaude(props) {
 
 						if (retorno.data.status) {
 							setActiveStep(0);
-							setAssociado(ASSOCIADO_INITIAL);
 							setPrevStep(false);
 							setTextNext("PRÓXIMO");
 							setMostrarDadosAssociado(false);
@@ -634,44 +603,20 @@ function MigrarPlanoDeSaude(props) {
 
 		switch (activeStep) {
 			case 0:
-				if (associado.matricula?.length < 6 || isNaN(associado.matricula)) {
-					setAlerta({
-						visible: true,
-						title: "ATENÇÃO!",
-						message: "A matrícula encontra-se incorreta.",
-						showCancel: false,
-						showConfirm: true,
-						confirmText: "FECHAR",
-						type: "danger",
-					});
-
-					setPrevStep(false);
-				} else {
-					setPrevStep(true);
-
-					if (associado?.nome !== "" && plano?.Name !== "") {
-						setNextStep(true);
-					} else {
-						setNextStep(false);
-					}
-					setActiveStep(1);
-				}
-				break;
-			case 1:
 				erros = 0;
 				msgErro = "";
 
-				if (plano?.Name === "" || associado?.nome === "") {
+				if (plano?.Name === "" || associado_atendimento?.nome === "") {
 					erros++;
 					msgErro = "Selecionar o beneficiário e o plano.\n";
 				}
 
-				if (associado?.local_cobranca?.Name == "") {
+				if (localCobranca?.Name == "") {
 					erros++;
 					msgErro += "Selecionar o local de cobrança.\n";
 				}
 
-				if (associado?.estado_civil?.Name == "") {
+				if (estadoCivil?.Name == "") {
 					erros++;
 					msgErro += "Selecionar o estado civil do beneficiário.\n";
 				}
@@ -698,7 +643,7 @@ function MigrarPlanoDeSaude(props) {
 				}
 
 				break;
-			case 2:
+			case 1:
 				incluirNoPlano(false);
 				break;
 			default:
@@ -734,13 +679,13 @@ function MigrarPlanoDeSaude(props) {
 
 	const handleClear = () => {
 		refAssociado.current.clearSignature();
-		if (associado?.codigo_tipo !== "00") {
+		if (associado_atendimento?.codigo_tipo !== "00") {
 			refBeneficiario.current.clearSignature();
 		}
 	};
 
 	const handleConfirm = async () => {
-		if (associado?.codigo_tipo !== "00") {
+		if (associado_atendimento?.codigo_tipo !== "00") {
 			if (assinaturaAssociado !== "" && assinaturaBeneficiario !== "") {
 				handleOK();
 			}
@@ -773,6 +718,8 @@ function MigrarPlanoDeSaude(props) {
 
 		listarPlanos();
 		listarTermos();
+		verificarIdade();
+		verificarPlano();
 
 		return () => {
 			Keyboard.removeListener("keyboardDidShow", _keyboardDidShow);
@@ -857,7 +804,7 @@ function MigrarPlanoDeSaude(props) {
 					</Text>
 					<Text>Assinatura de</Text>
 					<Text style={{ fontWeight: "bold" }}>
-						{associado?.nome?.toUpperCase()}
+						{associado_atendimento?.nome?.toUpperCase()}
 					</Text>
 					<Signature
 						ref={refAssociado}
@@ -892,14 +839,14 @@ function MigrarPlanoDeSaude(props) {
 						.m-signature-pad--footer{ display: none;}
 						`}
 					/>
-					{associado?.codigo_tipo !== "00" && (
+					{associado_atendimento?.codigo_tipo !== "00" && (
 						<>
 							<Text style={{ fontSize: 20, marginBottom: 10 }}>
 								Recolha a assinatura do beneficiário na área destacada abaixo:{" "}
 							</Text>
 							<Text>Assinatura de</Text>
 							<Text style={{ fontWeight: "bold" }}>
-								{associado?.nome?.toUpperCase()}
+								{associado_atendimento?.nome?.toUpperCase()}
 							</Text>
 							<Signature
 								ref={refBeneficiario}
@@ -973,19 +920,12 @@ function MigrarPlanoDeSaude(props) {
 					</View>
 				</View>
 			</Modal>
-			<SafeAreaView style={{ flex: 1, zIndex: 100 }}>
-				<View style={{ flex: 1, margin: 20 }}>
-					<Text
-						style={{
-							textAlign: "center",
-							marginTop: 10,
-							marginBottom: 20,
-							fontSize: 18,
-						}}
-					>
+			<SafeAreaView style={s.fl1}>
+				<View style={[s.fl1, s.m20]}>
+					<Text style={[s.tac, s.mt10, s.fs18]}>
 						Preencha os campos abaixo para efetuar a migração do plano de saúde.
 					</Text>
-					<View style={{ flex: 1 }}>
+					<View style={s.fl1}>
 						<ProgressSteps
 							activeStep={activeStep}
 							activeStepIconBorderColor="#031e3f"
@@ -996,135 +936,25 @@ function MigrarPlanoDeSaude(props) {
 							marginBottom={100}
 							style={{ zIndex: 12 }}
 						>
-							<ProgressStep label="Matrícula" removeBtnRow>
-								<View style={{ flexDirection: "row" }}>
-									<View style={{ flex: 1 }}></View>
-									<View style={{ flex: 2 }}>
-										<TextInput
-											label="Matrícula"
-											mode={"outlined"}
-											value={matricula}
-											keyboardType={"numeric"}
-											maxLength={6}
-											theme={tema}
-											style={{ fontSize: 25 }}
-											placeholder={"Digite a matrícula"}
-											onChangeText={(text) => setMatricula(text)}
-											render={(props) => (
-												<TextInputMask
-													{...props}
-													type={"custom"}
-													options={{
-														mask: "999999",
-													}}
-												/>
-											)}
-										/>
-									</View>
-									<View style={{ flex: 1 }}></View>
-								</View>
-								<View style={{ flexDirection: "row", marginTop: 20 }}>
-									<View style={{ flex: 1 }}></View>
-									<View style={{ flex: 2 }}>
-										<TouchableOpacity
-											onPress={() => verificarMatricula()}
-											style={{
-												flexDirection: "row",
-												alignItems: "center",
-												justifyContent: "center",
-												backgroundColor: "#031e3f",
-												borderRadius: 6,
-												height: 50,
-											}}
-										>
-											<IconButton icon="magnify" color={"#fff"} size={20} />
-											<Text style={{ color: "#fff", fontSize: 17 }}>
-												VERIFICAR MATRÍCULA
-											</Text>
-										</TouchableOpacity>
-									</View>
-									<View style={{ flex: 1 }}></View>
-								</View>
-								{carregando ? (
-									<View
-										style={{
-											justifyContent: "center",
-											alignItems: "center",
-											marginTop: 40,
-										}}
-									>
-										<Loading size={110} />
-									</View>
-								) : (
-									<>
-										{mostrarDadosAssociado && (
-											<View
-												style={{
-													flex: 1,
-													margin: 20,
-													backgroundColor: "#fff",
-													borderWidth: associado.status
-														? associado.tipo === "01"
-															? 2
-															: 0
-														: 0,
-													borderColor: associado.status
-														? associado.tipo === "01"
-															? "#07A85C"
-															: "#fff"
-														: "#fff",
-													padding: 20,
-													borderRadius: 6,
-													elevation: 1,
-												}}
-											>
-												{associado.status ? (
-													<>
-														<Text style={{ fontSize: 20, fontWeight: "bold" }}>
-															{associado.nome} ({associado.matricula})
-														</Text>
-														<Text style={{ fontSize: 18 }}>
-															SITUAÇÃO ATUAL:{" "}
-															<Text style={{ fontWeight: "bold" }}>
-																{associado.tipo !== "01"
-																	? "NÃO ASSOCIADO"
-																	: "ASSOCIADO ABEPOM"}
-															</Text>
-														</Text>
-													</>
-												) : (
-													<>
-														<Text style={{ fontSize: 20, fontWeight: "bold" }}>
-															MILITAR SEM REGISTRO COM A ABEPOM
-														</Text>
-													</>
-												)}
-											</View>
-										)}
-									</>
-								)}
-							</ProgressStep>
 							<ProgressStep label="Geral" removeBtnRow>
-								<View style={{ flexDirection: "row", marginBottom: 5 }}>
-									<View style={{ flex: 4, marginRight: 5 }}>
+								<View style={[s.row, s.mb5]}>
+									<View style={[s.fl4, s.mr5]}>
 										<TextInput
 											label="Nome"
 											mode={"outlined"}
 											theme={tema}
-											value={associado.nome}
-											style={{ fontSize: 18 }}
+											value={associado_atendimento.nome}
+											style={s.fs18}
 											disabled
-											dense
 										/>
 									</View>
-									<View style={{ flex: 2 }}>
+									<View style={s.fl2}>
 										<TextInput
 											label="Data de Nascimento"
 											mode={"outlined"}
 											theme={tema}
-											dense
-											value={associado.nascimento}
-											style={{ fontSize: 18 }}
+											value={associado_atendimento.nascimento}
+											style={s.fs18}
 											disabled
 											render={(props) => (
 												<TextInputMask
@@ -1138,160 +968,130 @@ function MigrarPlanoDeSaude(props) {
 										/>
 									</View>
 								</View>
-								<View style={{ flexDirection: "row", marginBottom: 5 }}>
-									<View style={{ flex: 3, marginRight: 5 }}>
+								<View style={[s.row, s.mb5]}>
+									<View style={[s.fl3, s.mr5]}>
 										<TextInput
 											label="Endereço"
 											mode={"outlined"}
 											theme={tema}
-											value={associado.endereco}
-											style={{ fontSize: 18 }}
+											value={associado_atendimento.endereco}
+											style={s.fs18}
 											disabled
-											dense
 										/>
 									</View>
-									<View style={{ flex: 1, marginRight: 5 }}>
+									<View style={[s.fl1, s.mr5]}>
 										<TextInput
 											label="Número"
 											mode={"outlined"}
 											theme={tema}
-											value={associado.numero}
-											style={{ fontSize: 18 }}
+											value={associado_atendimento.numero}
+											style={s.fs18}
 											disabled
-											dense
 										/>
 									</View>
-									<View style={{ flex: 2 }}>
+									<View style={s.fl2}>
 										<TextInput
 											label="Complemento"
 											mode={"outlined"}
 											theme={tema}
-											value={associado.complemento}
-											style={{ fontSize: 18 }}
+											value={associado_atendimento.complemento}
+											style={s.fs18}
 											disabled
-											dense
 										/>
 									</View>
 								</View>
-								<View style={{ flexDirection: "row", marginBottom: 5 }}>
-									<View style={{ flex: 4, marginRight: 5 }}>
+								<View style={[s.row, s.mb5]}>
+									<View style={[s.fl4, s.mr5]}>
 										<TextInput
 											label="Cidade"
 											mode={"outlined"}
 											theme={tema}
-											value={associado.cidade.Name + " / SC"}
-											style={{ fontSize: 18 }}
+											value={associado_atendimento.cidade.Name + " / SC"}
+											style={s.fs18}
 											disabled
-											dense
 										/>
 									</View>
-									<View style={{ flex: 1 }}>
+									<View style={s.fl1}>
 										<TextInput
 											label="CEP"
 											mode={"outlined"}
 											theme={tema}
-											value={associado.cep}
-											style={{ fontSize: 18 }}
+											value={associado_atendimento.cep}
+											style={s.fs18}
 											disabled
-											dense
 										/>
 									</View>
 								</View>
-								<View style={{ flexDirection: "row", marginBottom: 5 }}>
-									<View style={{ flex: 1, marginRight: 5 }}>
+								<View style={[s.row, s.mb5]}>
+									<View style={[s.fl1, s.mr5]}>
 										<TextInput
 											label="Telefone Comercial"
 											mode={"outlined"}
 											theme={tema}
-											value={associado.telefone_comercial}
-											style={{ fontSize: 18 }}
+											value={associado_atendimento.telefone_comercial}
+											style={s.fs18}
 											disabled
-											dense
 										/>
 									</View>
-									<View style={{ flex: 1, marginRight: 5 }}>
+									<View style={[s.fl1, s.mr5]}>
 										<TextInput
 											label="Telefone Residencial"
 											mode={"outlined"}
 											theme={tema}
-											value={associado.telefone_residencial}
-											style={{ fontSize: 18 }}
+											value={associado_atendimento.telefone_residencial}
+											style={s.fs18}
 											disabled
-											dense
 										/>
 									</View>
-									<View style={{ flex: 1 }}>
+									<View style={s.fl1}>
 										<TextInput
 											label="Celular"
 											mode={"outlined"}
 											theme={tema}
-											value={associado.celular}
-											style={{ fontSize: 18 }}
+											value={associado_atendimento.celular}
+											style={s.fs18}
 											disabled
-											dense
 										/>
 									</View>
 								</View>
-								<View style={{ flexDirection: "row", marginBottom: 5 }}>
-									<View style={{ flex: 1 }}>
+								<View style={[s.row, s.mb5]}>
+									<View style={s.fl1}>
 										<TextInput
 											label="E-mail"
 											mode={"outlined"}
 											theme={tema}
-											value={associado.email}
-											style={{ fontSize: 18 }}
+											value={associado_atendimento.email}
+											style={s.fs18}
 											disabled
-											dense
 										/>
 									</View>
 								</View>
-								<View
-									style={{
-										flexDirection: "row",
-										justifyContent: "flex-end",
-									}}
-								>
-									<Text
-										style={{
-											fontSize: 18,
-											color: tema.colors.vermelho,
-										}}
-									>
-										Ultima atualização em {associado.data_recadastro}
+								<View style={[s.row, s.jcfe]}>
+									<Text style={[s.fs18, s.fcr]}>
+										Última atualização em{" "}
+										{associado_atendimento.data_recadastro}
 									</Text>
 								</View>
 								<ScrollView>
-									{associado.possui_plano && (
-										<View
-											style={{
-												backgroundColor: tema.colors.amarelo,
-												padding: 10,
-												borderRadius: 6,
-												marginVertical: 15,
-											}}
-										>
-											<Text style={{ textAlign: "justify" }}>
+									{associado_atendimento.possui_plano && (
+										<View style={[s.bgca, s.pd10, s.br6, s.mv20]}>
+											<Text style={s.taj}>
 												O beneficiário escolhido já possui o plano de saúde
 												ativo:{" "}
-												<Text style={{ fontWeight: "bold" }}>
-													{associado?.nome_plano?.toString()}
+												<Text style={s.bold}>
+													{associado_atendimento?.nome_plano?.toString()}
 												</Text>
 												.
 											</Text>
 										</View>
 									)}
-									<View
-										style={{
-											flexDirection: "row",
-											marginBottom: 5,
-										}}
-									>
-										<View style={{ flex: 1 }}>
+									<View style={[s.row, s.mb5]}>
+										<View style={s.fl1}>
 											<TextInput
 												label="Plano"
 												mode={"outlined"}
 												theme={tema}
-												style={{ fontSize: 18 }}
+												style={s.fs18}
 												value={plano}
 												onChangeText={(text) => setPlano(text)}
 												dense
@@ -1350,7 +1150,7 @@ function MigrarPlanoDeSaude(props) {
 														selectPlaceholderText="SELECIONE O PLANO"
 														searchPlaceholderText="DIGITE O PLANO"
 														onSelected={(key) =>
-															selecionarPlano(key, associado)
+															selecionarPlano(key, associado_atendimento)
 														}
 														onClosed={() => setPlano(plano)}
 														items={planos}
@@ -1365,8 +1165,8 @@ function MigrarPlanoDeSaude(props) {
 												label="Data de Nascimento"
 												mode={"outlined"}
 												theme={tema}
-												value={associado.nascimento}
-												style={{ fontSize: 18 }}
+												value={associado_atendimento.nascimento}
+												style={s.fs18}
 												disabled
 												dense
 											/>
@@ -1376,114 +1176,42 @@ function MigrarPlanoDeSaude(props) {
 												label="Idade"
 												mode={"outlined"}
 												theme={tema}
-												value={associado.idade.toString()}
-												style={{ fontSize: 18 }}
+												value={associado_atendimento.idade}
+												style={s.fs18}
 												disabled
 												dense
 											/>
 										</View>
-										<View style={{ flex: 1 }}>
-											<TextInput
-												label="Estado Civil"
-												mode={"outlined"}
-												theme={tema}
-												value={associado.estado_civil}
-												dense
-												style={{ fontSize: 18 }}
-												onChangeText={(text) =>
-													setAssociado({
-														...associado,
-														estado_civil: text,
-													})
-												}
-												render={() => (
-													<PickerModal
-														renderSelectView={(
-															disabled,
-															selected,
-															showModal
-														) => (
-															<TouchableOpacity
-																style={{
-																	flexDirection: "row",
-																	flex: 1,
-																	justifyContent: "flex-start",
-																	alignItems: "center",
-																	paddingLeft: 10,
-																}}
-																disabled={disabled}
-																onPress={showModal}
-															>
-																<View style={{ flex: 3 }}>
-																	<Text
-																		style={{
-																			fontSize: associado ? 15 : 12,
-																		}}
-																	>
-																		{associado.estado_civil.Name === ""
-																			? "SELECIONE"
-																			: associado.estado_civil.Name}
-																	</Text>
-																</View>
-																<View
-																	style={{
-																		flex: 1,
-																		alignItems: "flex-end",
-																		paddingRight: 10,
-																	}}
-																>
-																	<Image
-																		source={images.seta}
-																		tintColor={"#031e3f"}
-																		style={{
-																			width: 10,
-																			height: 10,
-																			right: 0,
-																			tintColor: "#031e3f",
-																			transform: [{ rotate: "90deg" }],
-																		}}
-																	/>
-																</View>
-															</TouchableOpacity>
-														)}
-														modalAnimationType="fade"
-														selected={associado.estado_civil}
-														selectPlaceholderText="SELECIONE O ESTADO CIVIL"
-														searchPlaceholderText="DIGITE O ESTADO CIVIL"
-														onSelected={(key) =>
-															setAssociado({
-																...associado,
-																estado_civil: key,
-															})
-														}
-														onClosed={() => setAssociado(associado)}
-														items={[
-															{
-																Name: "Solteiro(a)",
-																Value: "Solteiro(a)",
-															},
-															{ Name: "Casado(a)", Value: "Casado(a)" },
-															{
-																Name: "Desquitado(a)",
-																Value: "Desquitado(a)",
-															},
-															{ Name: "Viúvo(a)", Value: "Viúvo(a)" },
-															{
-																Name: "Divorciado(a)",
-																Value: "Divorciado(a)",
-															},
-															{
-																Name: "Separado(a) Judicialmente",
-																Value: "Separado(a) Judicialmente",
-															},
-															{
-																Name: "Amasiado(a)",
-																Value: "Amasiado(a)",
-															},
-															{ Name: "Outro", Value: "Outro" },
-														]}
-													/>
-												)}
+										<View style={s.fl1}>
+											<Combo
+												label={"Estado Civil"}
+												pronome={"o"}
+												lista={[
+													{
+														Name: "Solteiro(a)",
+														Value: "Solteiro(a)",
+													},
+													{ Name: "Casado(a)", Value: "Casado(a)" },
+													{
+														Name: "Desquitado(a)",
+														Value: "Desquitado(a)",
+													},
+													{ Name: "Viúvo(a)", Value: "Viúvo(a)" },
+													{
+														Name: "Divorciado(a)",
+														Value: "Divorciado(a)",
+													},
+													{
+														Name: "Separado(a) Judicialmente",
+														Value: "Separado(a) Judicialmente",
+													},
+													{
+														Name: "Amasiado(a)",
+														Value: "Amasiado(a)",
+													},
+													{ Name: "Outro", Value: "Outro" },
+												]}
+												item={[estadoCivil, setEstadoCivil]}
 											/>
 										</View>
 									</View>
@@ -1493,8 +1221,8 @@ function MigrarPlanoDeSaude(props) {
 												label="Sexo"
 												mode={"outlined"}
 												theme={tema}
-												value={associado.sexo.Name}
-												style={{ fontSize: 18 }}
+												value={associado_atendimento.sexo.Name}
+												style={s.fs18}
 												disabled
 												dense
 											/>
@@ -1504,25 +1232,28 @@ function MigrarPlanoDeSaude(props) {
 												label="Tipo de Dependente"
 												mode={"outlined"}
 												theme={tema}
-												value={associado.tipo}
-												style={{ fontSize: 18 }}
+												value={associado_atendimento.tipo}
+												style={s.fs18}
 												disabled
 												dense
 											/>
 										</View>
-										<View style={{ flex: 1 }}>
+										<View style={s.fl1}>
 											<TextInput
 												label="CPF"
 												mode={"outlined"}
 												theme={tema}
-												value={associado.cpf}
-												style={{ fontSize: 18 }}
-												disabled={associado?.cpf === "" ? false : true}
+												value={associado_atendimento.cpf}
+												style={s.fs18}
+												disabled={
+													associado_atendimento?.cpf === "" ? false : true
+												}
 												maxLength={14}
 												dense
 												keyboardType={"number-pad"}
-												onChangeText={(text) =>
-													setAssociado({ ...associado, cpf: text })
+												onChangeText={
+													(text) => console.log(text)
+													//setAssociado({ ...associado_atendimento, cpf: text })
 												}
 												render={(props) => (
 													<TextInputMask
@@ -1544,93 +1275,21 @@ function MigrarPlanoDeSaude(props) {
 										}}
 									>
 										<View style={{ flex: 1, marginRight: 5 }}>
-											<TextInput
-												label="Local de Cobrança"
-												mode={"outlined"}
-												theme={tema}
-												value={associado.local_cobranca}
-												style={{ fontSize: 18 }}
-												dense
-												onChangeText={(text) =>
-													setAssociado({
-														...associado,
-														local_cobranca: text,
-													})
-												}
-												render={() => (
-													<PickerModal
-														renderSelectView={(
-															disabled,
-															selected,
-															showModal
-														) => (
-															<TouchableOpacity
-																style={{
-																	flexDirection: "row",
-																	flex: 1,
-																	justifyContent: "flex-start",
-																	alignItems: "center",
-																	paddingLeft: 10,
-																}}
-																disabled={disabled}
-																onPress={showModal}
-															>
-																<View style={{ flex: 3 }}>
-																	<Text
-																		style={{
-																			fontSize: associado ? 15 : 12,
-																		}}
-																	>
-																		{associado.local_cobranca.Name === ""
-																			? "SELECIONE"
-																			: associado.local_cobranca.Name}
-																	</Text>
-																</View>
-																<View
-																	style={{
-																		flex: 1,
-																		alignItems: "flex-end",
-																		paddingRight: 10,
-																	}}
-																>
-																	<Image
-																		source={images.seta}
-																		tintColor={"#031e3f"}
-																		style={{
-																			width: 10,
-																			height: 10,
-																			right: 0,
-																			tintColor: "#031e3f",
-																			transform: [{ rotate: "90deg" }],
-																		}}
-																	/>
-																</View>
-															</TouchableOpacity>
-														)}
-														modalAnimationType="fade"
-														selected={associado.local_cobranca}
-														selectPlaceholderText="SELECIONE O LOCAL DE COBRANÇA"
-														searchPlaceholderText="DIGITE O LOCAL DE COBRANÇA"
-														onSelected={(key) =>
-															setAssociado({
-																...associado,
-																local_cobranca: key,
-															})
-														}
-														onClosed={() => setAssociado(associado)}
-														items={[
-															{ Name: "Folha", Value: "1-Folha" },
-															{ Name: "Boleto", Value: "2-Boleto" },
-															{
-																Name: "Conta Corrente",
-																Value: "3-Conta Corrente",
-															},
-														]}
-													/>
-												)}
+											<Combo
+												label={"Local de Cobrança"}
+												pronome={"o"}
+												lista={[
+													{ Name: "Folha", Value: "1-Folha" },
+													{ Name: "Boleto", Value: "2-Boleto" },
+													{
+														Name: "Conta Corrente",
+														Value: "3-Conta Corrente",
+													},
+												]}
+												item={[localCobranca, setLocalCobranca]}
 											/>
 										</View>
-										<View style={{ flex: 1 }}>
+										<View style={s.fl1}>
 											<TextInput
 												label="Valor Mensal do Plano"
 												mode={"outlined"}
@@ -1641,7 +1300,7 @@ function MigrarPlanoDeSaude(props) {
 													color: tema.colors.primary,
 												}}
 												dense
-												value={associado.valor_plano.toString()}
+												value={associado_atendimento.valor_plano}
 												disabled
 												render={(props) => (
 													<TextInputMask
@@ -1673,17 +1332,17 @@ function MigrarPlanoDeSaude(props) {
 												theme={tema}
 												dense
 												value={dataMovimentacao}
-												style={{ fontSize: 18 }}
+												style={s.fs18}
 												disabled
 											/>
 										</View>
-										<View style={{ flex: 1 }}>
+										<View style={s.fl1}>
 											<TextInput
 												label="Data de Vigência do Plano"
 												mode={"outlined"}
 												theme={tema}
 												value={dataVigencia}
-												style={{ fontSize: 18 }}
+												style={s.fs18}
 												maxLength={14}
 												dense
 												keyboardType={"number-pad"}
@@ -1715,7 +1374,7 @@ function MigrarPlanoDeSaude(props) {
 										style={{ backgroundColor: "#f1f1f1", flex: 2 }}
 									/>
 									<View style={{ flexDirection: "row" }}>
-										<View style={{ flex: 1 }}></View>
+										<View style={s.fl1}></View>
 										<View style={{ flex: 2 }}>
 											<TouchableOpacity
 												onPress={() => setModalAssinatura(true)}
@@ -1733,7 +1392,7 @@ function MigrarPlanoDeSaude(props) {
 												</Text>
 											</TouchableOpacity>
 										</View>
-										<View style={{ flex: 1 }}></View>
+										<View style={s.fl1}></View>
 									</View>
 								</View>
 							</ProgressStep>

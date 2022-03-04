@@ -22,7 +22,12 @@ import file from "../../assets/img/file.png";
 import trash from "../../assets/img/trash.png";
 import image from "../../assets/img/image.png";
 import info from "../../assets/img/info.png";
-
+import visualizar_requerimentos from "../../assets/img/visualizar_requerimentos.png";
+import migrar_planos from "../../assets/img/migrar_planos.png";
+import alterar_dados from "../../assets/img/alterar_dados.png";
+import assinatura from "../../assets/img/assinatura.png";
+import cancelar_plano from "../../assets/img/cancelar_plano.png";
+import imagem_padrao from "../../assets/img/imagem_padrao.png";
 export default {
 	bg,
 	logo_abepom,
@@ -48,4 +53,10 @@ export default {
 	trash,
 	image,
 	info,
+	visualizar_requerimentos,
+	migrar_planos,
+	alterar_dados,
+	assinatura,
+	cancelar_plano,
+	imagem_padrao,
 };

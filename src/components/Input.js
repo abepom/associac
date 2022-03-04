@@ -12,6 +12,7 @@ export default (props) => {
 		textContentType = "none",
 		returnKeyType = "done",
 		disabled = false,
+		onSubmitEditing = () => {},
 		style,
 	} = props;
 	const [valor, setValor] = value;
@@ -29,6 +30,7 @@ export default (props) => {
 			style={[s.fs18, { ...style }]}
 			returnKeyType={returnKeyType}
 			onChangeText={(text) => setValor(text)}
+			onSubmitEditing={onSubmitEditing}
 		/>
 	);
 };

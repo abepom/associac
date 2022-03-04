@@ -29,7 +29,7 @@ import compararValores from "../functions/compararValores";
 function Inicio(props) {
 	const { navigation } = props;
 	const [usuario, setUsuario] = useUsuario();
-	const [matricula, setMatricula] = useState("003959");
+	const [matricula, setMatricula] = useState("000006");
 	const [alerta, setAlerta] = useState({ visible: false });
 	const [carregando, setCarregando] = useState(false);
 	const [dependenteEscolhido, setDependenteEscolhido] = useState({});
@@ -371,7 +371,7 @@ function Inicio(props) {
 						</View>
 						<View style={s.fl1} />
 					</View>
-					<View style={[s.row, s.mt20]}>
+					<View style={[s.row, s.mt10]}>
 						<View style={s.fl1} />
 						<View style={s.fl2}>
 							<TouchableOpacity
@@ -397,7 +397,8 @@ function Inicio(props) {
 							<>
 								<View
 									style={[
-										s.m20,
+										s.mh20,
+										s.mv10,
 										s.bgcw,
 										s.pd20,
 										s.br6,
@@ -446,7 +447,7 @@ function Inicio(props) {
 									data={usuario?.associado_atendimento?.dependentes}
 									keyExtractor={(item) => item.cont}
 									numColumns={1}
-									style={[s.fl1, s.mb20, s.mih170, s.mh20]}
+									style={[s.fl1, s.mb20, s.mih200, s.mxh340, s.mh20]}
 									renderItem={({ item }) => {
 										return (
 											<Dependente
@@ -472,11 +473,7 @@ function Inicio(props) {
 								) : null}
 								<MenuInicio
 									{...props}
-									associado={
-										usuario?.associado_atendimento?.tipo === "01"
-											? true
-											: usuario?.associado_atendimento?.status
-									}
+									associado={usuario?.associado_atendimento}
 								/>
 							</>
 						) : null}

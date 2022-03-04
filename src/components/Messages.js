@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, Image } from "react-native";
-import styles, { tema } from "../../assets/style/Style";
+import s, { tema } from "../../assets/style/Style";
 import imagens from "../utils/images";
 
 export default (props) => {
@@ -8,39 +8,41 @@ export default (props) => {
 		<>
 			<View
 				style={[
-					styles.blocoScroll,
-					styles.linha,
 					props.style,
+					s.fl1,
+					s.h100,
+					s.bgcw,
+					s.mv6,
+					s.br6,
+					s.el1,
+					s.row,
+					s.fullh,
+					s.jcc,
+					s.pd20,
 					{
-						height: "100%",
 						backgroundColor: !!props.cor ? props.cor : tema.colors.verde,
-						justifyContent: "center",
-						padding: 20,
 					},
 				]}
 			>
-				<View style={{ flex: 1, justifyContent: "center" }}>
+				<View style={[s.fl1, s.jcc]}>
 					<Image
 						source={!!props.imagem ? props.imagem : imagens.sucesso}
-						style={{ width: 40, height: 40, tintColor: tema.colors.background }}
+						style={[s.w40, s.h40, s.tcw]}
 						tintColor={tema.colors.background}
 					/>
 				</View>
-				<View style={{ flex: 10, justifyContent: "center" }}>
-					<Text
-						style={{
-							color: tema.colors.background,
-							fontWeight: "bold",
-						}}
-					>
-						{props.titulo.toUpperCase()}
-					</Text>
+				<View style={[s.fl10, s.jcc]}>
+					<Text style={[s.bold, s.fcw]}>{props.titulo.toUpperCase()}</Text>
 					{props.subtitulo ? (
 						<Text
-							style={{
-								color: tema.colors.background,
-								fontSize: props.tamanhoSubtitulo ? props.tamanhoSubtitulo : 10,
-							}}
+							style={[
+								s.fcw,
+								{
+									fontSize: props.tamanhoSubtitulo
+										? props.tamanhoSubtitulo
+										: 10,
+								},
+							]}
 						>
 							{props.subtitulo}
 						</Text>

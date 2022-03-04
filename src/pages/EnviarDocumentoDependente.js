@@ -12,7 +12,7 @@ import {
 import Header from "../components/Header";
 import Loading from "../components/Loading";
 import api from "../../services/api";
-import styles, { tema } from "../../assets/style/Style";
+import s, { tema } from "../../assets/style/Style";
 import images from "../utils/images";
 import * as ImagePicker from "expo-image-picker";
 import * as Camera from "expo-camera";
@@ -311,52 +311,22 @@ function EnviarDocumentoDependente(props) {
 				collapsable
 				visible={modalArquivo}
 			>
-				<View
-					style={{
-						flex: 1,
-						backgroundColor: "#000A",
-						justifyContent: "center",
-						alignItems: "center",
-					}}
-				>
-					<View
-						style={{
-							padding: 20,
-							backgroundColor: "#fff",
-							margin: 10,
-							width: "100%",
-							height: "100%",
-						}}
-					>
+				<View style={[s.fl1, s.bgcm, s.jcc, s.aic]}>
+					<View style={[s.pd20, s.bgcw, s.m10, s.fullh, s.fullw]}>
 						{modalCarregando ? (
 							<Loading size={90} />
 						) : (
 							<>
 								{arquivo?.extensao?.toLowerCase() === "pdf" ? (
-									<PdfReader
-										source={{
-											uri: arquivo.caminho,
-										}}
-									/>
+									<PdfReader source={{ uri: arquivo.caminho }} />
 								) : (
 									<WebView
-										source={{
-											uri: arquivo.caminho,
-										}}
-										style={{
-											marginVertical: 10,
-											backgroundColor: "#fff",
-										}}
+										source={{ uri: arquivo.caminho }}
+										style={[s.mv10, s.bgcw]}
 										textZoom={250}
 										startInLoadingState={true}
 										renderLoading={() => (
-											<View
-												style={{
-													flex: 1,
-													justifyContent: "center",
-													alignItems: "center",
-												}}
-											>
+											<View style={[s.fl1, s.jcc, s.aic]}>
 												<Loading size={80} />
 											</View>
 										)}
@@ -364,20 +334,17 @@ function EnviarDocumentoDependente(props) {
 								)}
 							</>
 						)}
-						<View style={styles.centralizado}>
+						<View style={[s.jcc, s.aic]}>
 							<TouchableOpacity
 								style={[
-									styles.linha,
-									styles.centralizado,
-									{
-										backgroundColor: tema.colors.vermelho,
-										width: "40%",
-										alignItems: "center",
-										justifyContent: "center",
-										padding: 10,
-										borderRadius: 6,
-										top: 10,
-									},
+									s.row,
+									s.jcc,
+									s.aic,
+									s.bgcr,
+									s.w40p,
+									s.pd10,
+									s.br6,
+									s.t10,
 								]}
 								onPress={() => {
 									setModalArquivo(false);
@@ -385,32 +352,25 @@ function EnviarDocumentoDependente(props) {
 							>
 								<Image
 									source={images.fechar}
-									style={{
-										width: 10,
-										height: 10,
-										tintColor: "#fff",
-										right: 10,
-									}}
-									tintColor={"#fff"}
+									style={[s.w10, s.h10, s.tcw, s.r10]}
+									tintColor={tema.colors.background}
 								/>
-								<Text style={{ color: "#fff" }}>FECHAR</Text>
+								<Text style={s.fcw}>FECHAR</Text>
 							</TouchableOpacity>
 						</View>
 					</View>
 				</View>
 			</Modal>
-			<View style={{ flex: 1, backgroundColor: "#f1f1f1" }}>
-				<View style={{ flex: 6, alignItems: "center", marginTop: 10 }}>
+			<View style={[s.fl1, s.bgcg]}>
+				<View style={[s.fl6, s.aic, s.mt10]}>
 					{carregando ? (
-						<View style={[styles.centralizado, { flex: 1 }]}>
+						<View style={[s.jcc, s.aic, s.fl1]}>
 							<Loading size={80} />
 						</View>
 					) : (
 						<>
-							<Text style={{ fontWeight: "bold", fontSize: 25, marginTop: 20 }}>
-								{nome.toUpperCase()}
-							</Text>
-							<Text style={{ textAlign: "center", padding: 10, fontSize: 16 }}>
+							<Text style={[s.bold, s.fs25, s.mt20]}>{nome.toUpperCase()}</Text>
+							<Text style={[s.tac, s.pd10, s.fs15]}>
 								Para a aprovação da dependência cadastrada será necessário
 								enviar os documentos listados abaixo.
 							</Text>
@@ -420,7 +380,7 @@ function EnviarDocumentoDependente(props) {
 										refreshing={refreshing}
 										onRefresh={onRefresh}
 										progressBackgroundColor={tema.colors.background}
-										tintColor={"#fff"}
+										tintColor={tema.colors.background}
 										colors={[
 											tema.colors.verde,
 											tema.colors.vermelho,
@@ -428,12 +388,7 @@ function EnviarDocumentoDependente(props) {
 										]}
 									/>
 								}
-								style={{
-									width: "90%",
-									flex: 2,
-									marginTop: 10,
-									marginBottom: 15,
-								}}
+								style={[s.w90p, s.fl2, s.mt10, s.mb20]}
 							>
 								{documentos.length > 0 ? (
 									<>
@@ -446,36 +401,26 @@ function EnviarDocumentoDependente(props) {
 												<View
 													key={index}
 													style={[
-														styles.blocoScroll,
-														styles.centralizado,
-														styles.linha,
-														{ height: "auto" },
+														s.jcc,
+														s.aic,
+														s.fl1,
+														s.h100,
+														s.bgcw,
+														s.mv6,
+														s.br6,
+														s.el5,
+														s.row,
+														s.hauto,
 													]}
 												>
-													<View
-														style={{
-															flex: 3,
-															padding: 20,
-														}}
-													>
+													<View style={[s.fl3, s.pd20]}>
 														<Text>{doc.nome}</Text>
 														{doc.status_analise === "E" ? (
-															<Text
-																style={{
-																	fontSize: 10,
-																	marginTop: 10,
-																}}
-															>
+															<Text style={[s.fs10, s.mt10]}>
 																ARQUIVO ENVIADO - {doc.data_envio}
 															</Text>
 														) : doc.status_analise === "A" ? (
-															<Text
-																style={{
-																	fontSize: 10,
-																	color: "green",
-																	marginTop: 10,
-																}}
-															>
+															<Text style={[s.fs10, s.fcg, s.mt10]}>
 																ARQUIVO APROVADO - {doc.data_analise}
 															</Text>
 														) : doc.status_analise === "N" ? (
@@ -492,57 +437,31 @@ function EnviarDocumentoDependente(props) {
 																	});
 																}}
 															>
-																<Text
-																	style={{
-																		fontSize: 10,
-																		marginTop: 10,
-																		color: "red",
-																	}}
-																>
+																<Text style={[s.fs10, s.mt10, s.fcr]}>
 																	ARQUIVO REPROVADO - {doc.data_analise} :{" "}
 																	{doc.motivo_analise}
 																</Text>
-																<Text
-																	style={{
-																		fontSize: 11,
-																		marginTop: 5,
-																	}}
-																>
-																	VER MAIS
-																</Text>
+																<Text style={[s.fs11, s.mt5]}>VER MAIS</Text>
 															</TouchableOpacity>
 														) : (
-															<Text
-																style={{
-																	fontSize: 10,
-																	marginTop: 10,
-																}}
-															>
+															<Text style={[s.fs10, s.mt10]}>
 																AGUARDANDO O ENVIO
 															</Text>
 														)}
 													</View>
 													{!!doc.caminho_arquivo ? (
 														<>
-															<View
-																style={{
-																	flexDirection: "column",
-																	flex: 1,
-																}}
-															>
+															<View style={[s.col, s.fl1]}>
 																<TouchableOpacity
-																	onPress={() => {
-																		abrirArquivo(doc);
-																	}}
+																	onPress={() => abrirArquivo(doc)}
 																	style={[
-																		styles.centralizado,
-																		styles.linha,
-																		{
-																			flex: 1,
-																			backgroundColor: tema.colors.verde,
-																			height: "100%",
-																			borderTopRightRadius: 6,
-																		},
+																		s.jcc,
+																		s.aic,
+																		s.row,
+																		s.fl1,
+																		s.bgcg,
+																		s.fullh,
+																		s.btrr6,
 																	]}
 																>
 																	<Image
@@ -551,12 +470,8 @@ function EnviarDocumentoDependente(props) {
 																				? images.file
 																				: images.image
 																		}
-																		style={{
-																			width: 25,
-																			height: 25,
-																			tintColor: "#fff",
-																		}}
-																		tintColor={"#fff"}
+																		style={[s.w25, s.h25, s.tcw]}
+																		tintColor={tema.colors.background}
 																	/>
 																</TouchableOpacity>
 																{doc.status_analise != "S" ? (
@@ -569,23 +484,18 @@ function EnviarDocumentoDependente(props) {
 																			)
 																		}
 																		style={[
-																			styles.centralizado,
-																			styles.linha,
-																			{
-																				flex: 1,
-																				backgroundColor: tema.colors.primary,
-																				height: "100%",
-																				borderBottomRightRadius: 6,
-																			},
+																			s.jcc,
+																			s.aic,
+																			s.row,
+																			s.fl1,
+																			s.bgcp,
+																			s.fullh,
+																			s.bbrr6,
 																		]}
 																	>
 																		<Image
 																			source={images.trash}
-																			style={{
-																				width: 25,
-																				height: 25,
-																				tintColor: tema.colors.background,
-																			}}
+																			style={[s.w25, s.h25, s.tcw]}
 																			tintColor={tema.colors.background}
 																		/>
 																	</TouchableOpacity>
@@ -623,33 +533,21 @@ function EnviarDocumentoDependente(props) {
 																	);
 																}}
 																style={[
-																	styles.centralizado,
-																	{
-																		flex: 1,
-																		backgroundColor: tema.colors.primary,
-																		height: "100%",
-																		borderTopRightRadius: 6,
-																		borderBottomRightRadius: 6,
-																	},
+																	s.jcc,
+																	s.aic,
+																	s.fl1,
+																	s.bgcp,
+																	s.fullh,
+																	s.btrr6,
+																	s.bbrr6,
 																]}
 															>
 																<Image
 																	source={images.buscar}
-																	style={{
-																		width: 25,
-																		height: 25,
-																		tintColor: "#fff",
-																		marginBottom: 10,
-																	}}
-																	tintColor={"#fff"}
+																	style={[s.w25, s.h25, s.tcw, s.mb10]}
+																	tintColor={tema.colors.background}
 																/>
-																<Text
-																	style={{
-																		textAlign: "center",
-																		color: "#fff",
-																		fontSize: 12,
-																	}}
-																>
+																<Text style={[s.tac, s.fcw, s.fs12]}>
 																	ENVIAR{`\n`}ARQUIVO
 																</Text>
 															</TouchableOpacity>

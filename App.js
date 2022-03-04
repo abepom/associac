@@ -4,21 +4,19 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import Inicio from "./src/pages/Inicio";
 import Login from "./src/pages/Login";
-import Associado from "./src/pages/Associado";
 import CadastrarAssociado from "./src/pages/CadastrarAssociado";
 import ConsultarDescontos from "./src/pages/ConsultarDescontos";
 import { StatusBar } from "expo-status-bar";
 import Constants from "expo-constants";
 import GerarSenha from "./src/pages/GerarSenha";
 import RecadastrarAssociado from "./src/pages/RecadastrarAssociado";
-import PlanosDeSaude from "./src/pages/PlanosDeSaude";
-import MigrarPlanoDeSaude from "./src/pages/MigrarPlanoDeSaude";
+import CancelarPlanoDeSaude from "./src/pages/CancelarPlanoDeSaude";
 import Dependentes from "./src/pages/Dependentes";
-import AlterarTipoDependente from "./src/pages/AlterarTipoDependente";
+import AlterarDependente from "./src/pages/AlterarDependente";
 import CadastrarDependente from "./src/pages/CadastrarDependente";
 import EnviarDocumentoDependente from "./src/pages/EnviarDocumentoDependente";
 import CadastrarPlanosDeSaude from "./src/pages/CadastrarPlanosDeSaude";
-import VisualizarRequerimentosPlano from "./src/pages/VisualizarRequerimentosPlano";
+import VisualizarRequerimentos from "./src/pages/VisualizarRequerimentos";
 import { StoreProvider } from "./src/store/store";
 import Sair from "./src/pages/Sair";
 
@@ -47,11 +45,6 @@ export default function App() {
 							options={{ headerShown: false }}
 						/>
 						<Stack.Screen
-							name="Associado"
-							component={Associado}
-							options={{ headerShown: false }}
-						/>
-						<Stack.Screen
 							name="CadastrarAssociado"
 							component={CadastrarAssociado}
 							options={{ headerShown: false }}
@@ -72,23 +65,18 @@ export default function App() {
 							options={{ headerShown: false, orientation: "portrait" }}
 						/>
 						<Stack.Screen
-							name="PlanosDeSaude"
-							component={PlanosDeSaude}
-							options={{ headerShown: false, orientation: "portrait" }}
-						/>
-						<Stack.Screen
 							name="CadastrarPlanosDeSaude"
 							component={CadastrarPlanosDeSaude}
 							options={{ headerShown: false, orientation: "portrait" }}
 						/>
 						<Stack.Screen
-							name="MigrarPlanoDeSaude"
-							component={MigrarPlanoDeSaude}
+							name="CancelarPlanoDeSaude"
+							component={CancelarPlanoDeSaude}
 							options={{ headerShown: false, orientation: "portrait" }}
 						/>
 						<Stack.Screen
-							name="VisualizarRequerimentosPlano"
-							component={VisualizarRequerimentosPlano}
+							name="VisualizarRequerimentos"
+							component={VisualizarRequerimentos}
 							options={{ headerShown: false, orientation: "portrait" }}
 						/>
 						<Stack.Screen
@@ -97,8 +85,8 @@ export default function App() {
 							options={{ headerShown: false }}
 						/>
 						<Stack.Screen
-							name="AlterarTipoDependente"
-							component={AlterarTipoDependente}
+							name="AlterarDependente"
+							component={AlterarDependente}
 							options={{ headerShown: false }}
 						/>
 						<Stack.Screen

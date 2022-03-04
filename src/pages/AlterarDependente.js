@@ -419,11 +419,11 @@ function AlterarTipoDependente(props) {
 
 	return (
 		<>
-			<Header titulo="Alterar Tipo de Dependente" {...props} />
+			<Header titulo="Alterar Dados de Dependente" {...props} />
 			<SafeAreaView style={s.fl1}>
 				<ScrollView style={[s.fl1, s.m20]}>
 					<Text style={[s.tac, s.mt10, s.mb20, s.fs18]}>
-						Altere o tipo de dependência do dependente abaixo.
+						Altere os dados do dependente abaixo.
 					</Text>
 					<View style={[s.row, s.mb10]}>
 						<View style={s.fl1}>
@@ -552,6 +552,9 @@ function AlterarTipoDependente(props) {
 						<TouchableOpacity
 							onPress={() => (tipo?.Name !== "" ? salvarAlteracoes() : null)}
 							style={[
+								s.row,
+								s.jcc,
+								s.aic,
 								s.pd20,
 								s.br6,
 								{
@@ -562,7 +565,12 @@ function AlterarTipoDependente(props) {
 								},
 							]}
 						>
-							<Text style={[s.fcw, s.fs20]}>SALVAR ALTERAÇÕES</Text>
+							<Image
+								source={images.sucesso}
+								style={[s.w20, s.h20, s.tcw]}
+								tintColor={tema.colors.background}
+							/>
+							<Text style={[s.fcw, s.fs20, s.ml10]}>SALVAR ALTERAÇÕES</Text>
 						</TouchableOpacity>
 					</View>
 				</ScrollView>

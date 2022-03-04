@@ -30,20 +30,6 @@ import WebView from "react-native-webview";
 import * as Print from "expo-print";
 import * as ScreenOrientation from "expo-screen-orientation";
 
-const ASSOCIADO_INITIAL = {
-	matricula: "",
-	sexo: { Name: "", Value: "" },
-	cidade: { Name: "", Value: "" },
-	orgao: { Name: "", Value: "" },
-	funcao: { Name: "", Value: "" },
-	local_trabalho: { Name: "", Value: "" },
-	banco: { Name: "", Value: "" },
-	forma_desconto: { Name: "", Value: "" },
-	valor_mensalidade: 0,
-	paga_joia: 0,
-	possui_plano: false,
-};
-
 const BENEFICIARIO_INITIAL = {
 	Name: "",
 	Value: "",
@@ -64,9 +50,9 @@ const PLANO_INITIAL = { Name: "", Value: "", valor_faixas: [], nome_plano: "" };
 function CadastrarPlanosDeSaude(props) {
 	let d = new Date();
 	const { navigation } = props;
-	const [{ token }] = useUsuario();
-	const [matricula, setMatricula] = useState("");
-	const [associado, setAssociado] = useState(ASSOCIADO_INITIAL);
+	const [usuario, setUsuario] = useUsuario();
+	const { token, associado_atendimento } = usuario;
+	const [associado, setAssociado] = useState();
 	const [dependentes, setDependentes] = useState([]);
 	const [beneficiario, setBeneficiario] = useState(BENEFICIARIO_INITIAL);
 	const [planos, setPlanos] = useState([]);
@@ -76,11 +62,12 @@ function CadastrarPlanosDeSaude(props) {
 	const [nextStep, setNextStep] = useState(false);
 	const [prevStep, setPrevStep] = useState(false);
 	const [textNext, setTextNext] = useState("PRÓXIMO");
-	const [cpf, setCpf] = useState("");
-	const [rg, setRg] = useState("");
-	const [cartaoSUS, setCartaoSUS] = useState("");
-	const [comprovanteResidencia, setComprovanteResidencia] = useState("");
-	const [declaracaoSaude, setDeclaracaoSaude] = useState("");
+	const [imagemCpf, setImagemCpf] = useState("");
+	const [imagemRg, setImagemRg] = useState("");
+	const [imagemCartaoSUS, setImagemCartaoSUS] = useState("");
+	const [imagemComprovanteResidencia, setImagemComprovanteResidencia] =
+		useState("");
+	const [imagemDeclaracaoSaude, setImagemDeclaracaoSaude] = useState("");
 	const [alerta, setAlerta] = useState({});
 	const [carregando, setCarregando] = useState(false);
 	const [modal, setModal] = useState(false);
@@ -108,6 +95,11 @@ function CadastrarPlanosDeSaude(props) {
 	const [assinaturaAssociado, setAssinaturaAssociado] = useState("");
 	const [assinaturaBeneficiario, setAssinaturaBeneficiario] = useState("");
 	const [mostrarBotoes, setMostrarBotoes] = useState(true);
+
+	const [nome, setNome] = useState(associado_atendimento?.nome ?? "");
+	const [nascimento, setNascimento] = useState(
+		associado_atendimento?.nascimento ?? ""
+	);
 
 	const refAssociado = useRef();
 	const refBeneficiario = useRef();
@@ -163,11 +155,10 @@ function CadastrarPlanosDeSaude(props) {
 		let dataFormat = "";
 		let age = 0;
 
-		if (matricula.length == 6) {
-			if (!isNaN(matricula)) {
+		if (associado_atendimento.matricula.length == 6) {
+			if (!isNaN(associado_atendimento.matricula)) {
 				setCarregando(true);
 				setBeneficiario(BENEFICIARIO_INITIAL);
-				setAssociado(ASSOCIADO_INITIAL);
 				setDependentes([]);
 				setPlano(PLANO_INITIAL);
 
@@ -175,7 +166,7 @@ function CadastrarPlanosDeSaude(props) {
 					const { data } = await api({
 						url: "/associados/verificarMatricula",
 						method: "GET",
-						params: { cartao: matricula },
+						params: { cartao: associado_atendimento.matricula },
 						headers: { "x-access-token": token },
 					});
 
@@ -219,7 +210,7 @@ function CadastrarPlanosDeSaude(props) {
 							url: "/associados/listarDependentes",
 							method: "GET",
 							params: {
-								cartao: `${matricula}00001`,
+								cartao: `${associado_atendimento.matricula}00001`,
 							},
 							headers: { "x-access-token": token },
 						});
@@ -282,7 +273,6 @@ function CadastrarPlanosDeSaude(props) {
 							setMostrarDadosAssociado(true);
 						}
 					} else {
-						setAssociado({ ...ASSOCIADO_INITIAL, matricula });
 						setNextStep(false);
 
 						setAlerta({
@@ -299,7 +289,6 @@ function CadastrarPlanosDeSaude(props) {
 					setCarregando(false);
 					Keyboard.dismiss();
 				} catch (error) {
-					setAssociado(ASSOCIADO_INITIAL);
 					setDependentes([]);
 					setCarregando(false);
 					setMostrarDadosAssociado(false);
@@ -317,7 +306,6 @@ function CadastrarPlanosDeSaude(props) {
 					});
 				}
 			} else {
-				setAssociado(ASSOCIADO_INITIAL);
 				setDependentes([]);
 				setCarregando(false);
 				setMostrarDadosAssociado(false);
@@ -334,7 +322,6 @@ function CadastrarPlanosDeSaude(props) {
 				});
 			}
 		} else {
-			setAssociado(ASSOCIADO_INITIAL);
 			setDependentes([]);
 			setCarregando(false);
 			setMostrarDadosAssociado(false);
@@ -541,10 +528,10 @@ function CadastrarPlanosDeSaude(props) {
 				<div style="display: flex; flex: 1; flex-direction: column">
 					<div style="display: flex; flex-direction: row; flex: 1; justify-content: center; align-items: center">
 						<div style="display: flex; flex: 5;">
-							Nome: ${associado.nome}
+							Nome: ${associado_atendimento.nome}
 						</div>
 						<div style="display: flex; flex: 2">
-							Matrícula: ${associado.matricula}
+							Matrícula: ${associado_atendimento.matricula}
 						</div>
 					</div>
 					<div style="display: flex; flex-direction: row; flex: 1; justify-content: center; align-items: center">
@@ -597,7 +584,7 @@ function CadastrarPlanosDeSaude(props) {
 								<br />
 								<hr style="width: 80%" />
 								<br />
-								${associado.nome}<br />
+								${nome}<br />
 								Assinatura do Associado
 							</center>
 						</div>`
@@ -607,7 +594,7 @@ function CadastrarPlanosDeSaude(props) {
 										<br />
 										<hr style="width: 80%" />
 										<br />
-										${associado.nome}<br />
+										${nome}<br />
 										Assinatura do Associado
 									</center>
 								</div>
@@ -645,7 +632,7 @@ function CadastrarPlanosDeSaude(props) {
 								<br />
 								<hr style="width: 80%" />
 								<br />
-								${associado.nome}<br />
+								${nome}<br />
 								Assinatura do Associado
 							</center>
 						</div>`
@@ -655,7 +642,7 @@ function CadastrarPlanosDeSaude(props) {
 									<br />
 									<hr style="width: 80%" />
 									<br />
-									${associado.nome}<br />
+									${nome}<br />
 									Assinatura do Associado
 								</center>
 							</div>
@@ -678,13 +665,13 @@ function CadastrarPlanosDeSaude(props) {
 		try {
 			const { uri } = await Print.printToFileAsync({ html });
 			const formulario = new FormData();
-			formulario.append("matricula", `${associado.matricula}`);
+			formulario.append("matricula", `${associado_atendimento.matricula}`);
 			formulario.append("dependente", `${beneficiario?.Value}`);
 			formulario.append("plano", `${plano?.Value}`);
 			formulario.append("file", {
 				uri,
 				type: `application/pdf`,
-				name: `REQUERIMENTO_INCLUSAO_PLANO_${associado.matricula}.pdf`,
+				name: `REQUERIMENTO_INCLUSAO_PLANO_${associado_atendimento.matricula}.pdf`,
 			});
 
 			const { data } = await api.post(
@@ -760,16 +747,14 @@ function CadastrarPlanosDeSaude(props) {
 
 						if (retorno.data.status) {
 							setActiveStep(0);
-							setAssociado(ASSOCIADO_INITIAL);
 							setPrevStep(false);
 							setTextNext("PRÓXIMO");
 							setMostrarDadosAssociado(false);
-							setCpf("1");
-							setRg("1");
-							setCartaoSUS("1");
-							setComprovanteResidencia("1");
-							setDeclaracaoSaude("1");
-							setMatricula("");
+							setImagemCpf("1");
+							setImagemRg("1");
+							setImagemCartaoSUS("1");
+							setImagemComprovanteResidencia("1");
+							setImagemDeclaracaoSaude("1");
 							setBeneficiario(BENEFICIARIO_INITIAL);
 							setPlano(PLANO_INITIAL);
 							setDependentes([]);
@@ -847,13 +832,15 @@ function CadastrarPlanosDeSaude(props) {
 				let extensao = uri.split(".")[uri.split(".").length - 1];
 
 				const formulario = new FormData();
-				formulario.append("matricula", `${associado.matricula}`);
+				formulario.append("matricula", `${associado_atendimento.matricula}`);
 				formulario.append("dependente", `${beneficiario?.Value}`);
 				formulario.append("tipo", tipo);
 				formulario.append("file", {
 					uri,
 					type: `image/${extensao}`,
-					name: `${associado.matricula}_${new Date().toJSON()}.${extensao}`,
+					name: `${
+						associado_atendimento.matricula
+					}_${new Date().toJSON()}.${extensao}`,
 				});
 
 				const { data } = await api.post("/enviarDocumentoTitular", formulario, {
@@ -866,19 +853,19 @@ function CadastrarPlanosDeSaude(props) {
 				if (data.status) {
 					switch (tipo) {
 						case "CPF":
-							setCpf(data.link);
+							setImagemCpf(data.link);
 							break;
 						case "RG":
-							setRg(data.link);
+							setImagemRg(data.link);
 							break;
 						case "SUS":
-							setCartaoSUS(data.link);
+							setImagemCartaoSUS(data.link);
 							break;
 						case "CR":
-							setComprovanteResidencia(data.link);
+							setImagemComprovanteResidencia(data.link);
 							break;
 						case "DS":
-							setDeclaracaoSaude(data.link);
+							setImagemDeclaracaoSaude(data.link);
 							break;
 						default:
 							break;
@@ -914,7 +901,10 @@ function CadastrarPlanosDeSaude(props) {
 
 		switch (activeStep) {
 			case 0:
-				if (associado.matricula?.length < 6 || isNaN(associado.matricula)) {
+				if (
+					associado_atendimento.matricula?.length < 6 ||
+					isNaN(associado_atendimento.matricula)
+				) {
 					setAlerta({
 						visible: true,
 						title: "ATENÇÃO!",
@@ -981,28 +971,28 @@ function CadastrarPlanosDeSaude(props) {
 				erros = 0;
 				msgErro = "";
 
-				if (cpf === "") {
+				if (imagemCpf === "") {
 					erros++;
 					msgErro += "É obrigatório enviar a imagem do CPF.\n";
 				}
 
-				if (rg === "") {
+				if (imagemRg === "") {
 					erros++;
 					msgErro += "É obrigatório enviar a imagem do RG.\n";
 				}
 
-				if (cartaoSUS === "") {
+				if (imagemCartaoSUS === "") {
 					erros++;
 					msgErro += "É obrigatório enviar a imagem do CARTÃO SUS.\n";
 				}
 
-				if (comprovanteResidencia === "") {
+				if (imagemComprovanteResidencia === "") {
 					erros++;
 					msgErro +=
 						"É obrigatório enviar a imagem do COMPROVANTE DE RESIDÊNCIA.\n";
 				}
 
-				if (declaracaoSaude === "") {
+				if (imagemDeclaracaoSaude === "") {
 					erros++;
 					msgErro += "É obrigatório enviar a imagem da DECLARAÇÃO DE SAÚDE.\n";
 				}
@@ -1338,114 +1328,6 @@ function CadastrarPlanosDeSaude(props) {
 							marginBottom={100}
 							style={{ zIndex: 12 }}
 						>
-							<ProgressStep label="Matrícula" removeBtnRow>
-								<View style={{ flexDirection: "row" }}>
-									<View style={{ flex: 1 }}></View>
-									<View style={{ flex: 2 }}>
-										<TextInput
-											label="Matrícula"
-											mode={"outlined"}
-											value={matricula}
-											keyboardType={"numeric"}
-											maxLength={6}
-											theme={tema}
-											style={{ fontSize: 25 }}
-											placeholder={"Digite a matrícula"}
-											onChangeText={(text) => setMatricula(text)}
-											render={(props) => (
-												<TextInputMask
-													{...props}
-													type={"custom"}
-													options={{
-														mask: "999999",
-													}}
-												/>
-											)}
-										/>
-									</View>
-									<View style={{ flex: 1 }}></View>
-								</View>
-								<View style={{ flexDirection: "row", marginTop: 20 }}>
-									<View style={{ flex: 1 }}></View>
-									<View style={{ flex: 2 }}>
-										<TouchableOpacity
-											onPress={() => verificarMatricula()}
-											style={{
-												flexDirection: "row",
-												alignItems: "center",
-												justifyContent: "center",
-												backgroundColor: "#031e3f",
-												borderRadius: 6,
-												height: 50,
-											}}
-										>
-											<IconButton icon="magnify" color={"#fff"} size={20} />
-											<Text style={{ color: "#fff", fontSize: 17 }}>
-												VERIFICAR MATRÍCULA
-											</Text>
-										</TouchableOpacity>
-									</View>
-									<View style={{ flex: 1 }}></View>
-								</View>
-								{carregando ? (
-									<View
-										style={{
-											justifyContent: "center",
-											alignItems: "center",
-											marginTop: 40,
-										}}
-									>
-										<Loading size={110} />
-									</View>
-								) : (
-									<>
-										{mostrarDadosAssociado && (
-											<View
-												style={{
-													flex: 1,
-													margin: 20,
-													backgroundColor: "#fff",
-													borderWidth: associado.status
-														? associado.tipo === "01"
-															? 2
-															: 0
-														: 0,
-													borderColor: associado.status
-														? associado.tipo === "01"
-															? "#07A85C"
-															: "#fff"
-														: "#fff",
-													padding: 20,
-													borderRadius: 6,
-													elevation: 1,
-												}}
-											>
-												{associado.status ? (
-													<>
-														<Text style={{ fontSize: 20, fontWeight: "bold" }}>
-															{associado.nome} ({associado.matricula})
-														</Text>
-														<Text style={{ fontSize: 18 }}>
-															SITUAÇÃO ATUAL:{" "}
-															<Text style={{ fontWeight: "bold" }}>
-																{associado.tipo !== "01"
-																	? "NÃO ASSOCIADO"
-																	: "ASSOCIADO ABEPOM"}
-															</Text>
-														</Text>
-													</>
-												) : (
-													<>
-														<Text style={{ fontSize: 20, fontWeight: "bold" }}>
-															MILITAR SEM REGISTRO COM A ABEPOM
-														</Text>
-													</>
-												)}
-											</View>
-										)}
-									</>
-								)}
-							</ProgressStep>
 							<ProgressStep label="Geral" removeBtnRow>
 								<View style={{ flexDirection: "row", marginBottom: 5 }}>
 									<View style={{ flex: 4, marginRight: 5 }}>
@@ -1453,7 +1335,7 @@ function CadastrarPlanosDeSaude(props) {
 											label="Nome"
 											mode={"outlined"}
 											theme={tema}
-											value={associado.nome}
+											value={nome}
 											style={{ fontSize: 18 }}
 											disabled
 											dense
@@ -1465,7 +1347,7 @@ function CadastrarPlanosDeSaude(props) {
 											mode={"outlined"}
 											theme={tema}
 											dense
-											value={associado.nascimento}
+											value={nascimento}
 											style={{ fontSize: 18 }}
 											disabled
 											render={(props) => (
@@ -2222,11 +2104,11 @@ function CadastrarPlanosDeSaude(props) {
 												marginHorizontal: 5,
 											}}
 										>
-											{cpf !== "" && (
+											{imagemCpf !== "" && (
 												<TouchableOpacity
 													onPress={() => {
 														setModal(true);
-														setImagemAmpliada(cpf);
+														setImagemAmpliada(imagemCpf);
 													}}
 													style={{
 														width: "100%",
@@ -2235,7 +2117,7 @@ function CadastrarPlanosDeSaude(props) {
 													}}
 												>
 													<Image
-														source={{ uri: cpf }}
+														source={{ uri: imagemCpf }}
 														style={{ width: "100%", height: 150 }}
 													/>
 													<Text style={{ fontSize: 13 }}>CPF</Text>
@@ -2248,11 +2130,11 @@ function CadastrarPlanosDeSaude(props) {
 												marginHorizontal: 5,
 											}}
 										>
-											{rg !== "" && (
+											{imagemRg !== "" && (
 												<TouchableOpacity
 													onPress={() => {
 														setModal(true);
-														setImagemAmpliada(rg);
+														setImagemAmpliada(imagemRg);
 													}}
 													style={{
 														width: "100%",
@@ -2261,7 +2143,7 @@ function CadastrarPlanosDeSaude(props) {
 													}}
 												>
 													<Image
-														source={{ uri: rg }}
+														source={{ uri: imagemRg }}
 														style={{ width: "100%", height: 150 }}
 													/>
 													<Text style={{ fontSize: 13 }}>RG</Text>
@@ -2274,11 +2156,11 @@ function CadastrarPlanosDeSaude(props) {
 												marginHorizontal: 5,
 											}}
 										>
-											{cartaoSUS !== "" && (
+											{imagemCartaoSUS !== "" && (
 												<TouchableOpacity
 													onPress={() => {
 														setModal(true);
-														setImagemAmpliada(cartaoSUS);
+														setImagemAmpliada(imagemCartaoSUS);
 													}}
 													style={{
 														width: "100%",
@@ -2287,7 +2169,7 @@ function CadastrarPlanosDeSaude(props) {
 													}}
 												>
 													<Image
-														source={{ uri: cartaoSUS }}
+														source={{ uri: imagemCartaoSUS }}
 														style={{ width: "100%", height: 150 }}
 													/>
 													<Text style={{ fontSize: 13 }}>CARTÃO SUS</Text>
@@ -2300,11 +2182,11 @@ function CadastrarPlanosDeSaude(props) {
 												marginHorizontal: 5,
 											}}
 										>
-											{comprovanteResidencia !== "" && (
+											{imagemComprovanteResidencia !== "" && (
 												<TouchableOpacity
 													onPress={() => {
 														setModal(true);
-														setImagemAmpliada(comprovanteResidencia);
+														setImagemAmpliada(imagemComprovanteResidencia);
 													}}
 													style={{
 														width: "100%",
@@ -2313,7 +2195,7 @@ function CadastrarPlanosDeSaude(props) {
 													}}
 												>
 													<Image
-														source={{ uri: comprovanteResidencia }}
+														source={{ uri: imagemComprovanteResidencia }}
 														style={{ width: "100%", height: 150 }}
 													/>
 													<Text style={{ fontSize: 13 }}>COMPROV. DE RES.</Text>

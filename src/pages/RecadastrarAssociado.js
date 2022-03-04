@@ -23,6 +23,7 @@ import InputMask from "../components/InputMask";
 import Combo from "../components/Combo";
 import Input from "../components/Input";
 import ModalLoading from "../components/ModalLoading";
+import images from "../utils/images";
 
 function RecadastrarAssociado(props) {
 	const { navigation } = props;
@@ -827,7 +828,7 @@ function RecadastrarAssociado(props) {
 												maxLength={10}
 											/>
 										</View>
-										<View style={[s.fl2, s.mr10]}>
+										<View style={[s.fl1, s.mr10]}>
 											<TouchableOpacity
 												onPress={() => buscarCep()}
 												style={[
@@ -837,7 +838,7 @@ function RecadastrarAssociado(props) {
 													s.jcc,
 													s.bgcp,
 													s.br6,
-													s.pdh10,
+													s.pdh20,
 													s.mt8,
 												]}
 											>
@@ -907,7 +908,7 @@ function RecadastrarAssociado(props) {
 									</View>
 									<View style={[s.fl1, s.row]}>
 										<View style={s.fl1} />
-										<View style={s.fl2}>
+										<View style={s.fl4}>
 											{btnRecadastrar ? (
 												<View style={s.row}>
 													<TouchableOpacity
@@ -920,17 +921,36 @@ function RecadastrarAssociado(props) {
 															s.pd15,
 															s.br6,
 															s.mr10,
+															s.row,
 														]}
 													>
-														<Text style={[s.fcw, s.fs18]}>
+														<Image
+															source={images.recadastrar_associado}
+															style={[s.w35, s.h35, s.tcw]}
+															tintColor={tema.colors.background}
+														/>
+														<Text style={[s.fcw, s.fs18, s.ml10]}>
 															RECADASTRAR ASSOCIADO
 														</Text>
 													</TouchableOpacity>
 													<TouchableOpacity
 														onPress={() => abrirModal()}
-														style={[s.bgcp, s.jcc, s.acc, s.aic, s.pd15, s.br6]}
+														style={[
+															s.bgcp,
+															s.jcc,
+															s.acc,
+															s.aic,
+															s.pd15,
+															s.br6,
+															s.row,
+														]}
 													>
-														<Text style={[s.fcw, s.fs18]}>
+														<Image
+															source={images.assinatura}
+															style={[s.w35, s.h35, s.tcw]}
+															tintColor={tema.colors.background}
+														/>
+														<Text style={[s.fcw, s.fs18, s.ml10]}>
 															RECOLHER ASSINATURA
 														</Text>
 													</TouchableOpacity>
@@ -938,9 +958,22 @@ function RecadastrarAssociado(props) {
 											) : (
 												<TouchableOpacity
 													onPress={() => abrirModal()}
-													style={[s.bgcp, s.jcc, s.acc, s.aic, s.pd15, s.br6]}
+													style={[
+														s.bgcp,
+														s.jcc,
+														s.acc,
+														s.aic,
+														s.pd15,
+														s.br6,
+														s.row,
+													]}
 												>
-													<Text style={[s.fcw, s.fs18]}>
+													<Image
+														source={images.assinatura}
+														style={[s.w35, s.h35, s.tcw]}
+														tintColor={tema.colors.background}
+													/>
+													<Text style={[s.fcw, s.fs18, s.ml10]}>
 														RECOLHER ASSINATURA
 													</Text>
 												</TouchableOpacity>

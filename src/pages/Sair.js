@@ -6,9 +6,9 @@ import {
 	Image,
 	AsyncStorage,
 } from "react-native";
-import styles, { tema } from "../../assets/style/Style";
+import s, { tema } from "../../assets/style/Style";
 import Header from "../components/Header";
-import imagens from "../utils/images";
+import images from "../utils/images";
 
 function Sair(props) {
 	const { navigation } = props;
@@ -21,74 +21,43 @@ function Sair(props) {
 
 	return (
 		<>
-			<Header titulo="Sair" voltar voltarPara={"Inicio"} {...props} />
-			<View style={[styles.centralizado, styles.background, { flex: 1 }]}>
+			<Header
+				titulo="Sair"
+				voltar={false}
+				voltarPara={{ name: "Inicio", params: {} }}
+				{...props}
+			/>
+			<View style={[s.jcc, s.aic, s.bgcw, s.fl1]}>
 				<Image
-					source={imagens.logo_abepom}
-					style={{
-						width: 200,
-						height: 200,
-						marginBottom: 30,
-						tintColor: tema.colors.primary,
-					}}
+					source={images.logo_abepom}
+					style={[s.w200, s.h200, s.mb20, s.tcp]}
 					tintColor={tema.colors.primary}
 				/>
-				<Text style={{ fontSize: 20 }}>
+				<Text style={s.fs25}>
 					Você realmente deseja DESLOGAR do aplicativo?
 				</Text>
-				<View style={styles.linha}>
+				<View style={s.row}>
 					<TouchableOpacity
-						style={[
-							styles.centralizado,
-							styles.linha,
-							{
-								flex: 1,
-								margin: 20,
-								backgroundColor: tema.colors.vermelho,
-								borderRadius: 6,
-							},
-						]}
-						onPress={() => {
-							sair();
-						}}
+						style={[s.jcc, s.aic, s.row, s.fl1, s.m20, s.bgcr, s.br6]}
+						onPress={() => sair()}
 					>
 						<Image
-							source={imagens.sucesso}
-							style={{ width: 18, height: 18, tintColor: "#fff" }}
-							tintColor="#fff"
+							source={images.sucesso}
+							style={[s.w20, s.h20, s.tcw]}
+							tintColor={tema.colors.background}
 						/>
-						<Text style={{ color: "#FFF", fontSize: 20, padding: 10 }}>
-							SIM, SAIR!
-						</Text>
+						<Text style={[s.fcw, s.fs20, s.pd10]}>SIM, SAIR!</Text>
 					</TouchableOpacity>
 					<TouchableOpacity
-						style={[
-							styles.centralizado,
-							styles.linha,
-							{
-								flex: 1,
-								margin: 20,
-								backgroundColor: tema.colors.primary,
-								borderRadius: 6,
-							},
-						]}
-						onPress={() => {
-							navigation.navigate("Inicio");
-						}}
+						style={[s.jcc, s.aic, s.row, s.fl1, s.m20, s.bgcp, s.br6]}
+						onPress={() => navigation.navigate("Inicio")}
 					>
 						<Image
-							source={imagens.seta_direita}
-							style={{
-								width: 18,
-								height: 18,
-								transform: [{ rotateY: "180deg" }],
-								tintColor: "#fff",
-							}}
-							tintColor="#fff"
+							source={images.seta}
+							style={[s.w20, s.h20, s.tr180, s.tcw]}
+							tintColor={tema.colors.background}
 						/>
-						<Text style={{ color: "#FFF", fontSize: 20, padding: 10 }}>
-							NÃO, VOLTAR
-						</Text>
+						<Text style={[s.fcw, s.fs20, s.pd10]}>NÃO, VOLTAR</Text>
 					</TouchableOpacity>
 				</View>
 			</View>

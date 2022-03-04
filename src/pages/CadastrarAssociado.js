@@ -10,9 +10,7 @@ import {
 } from "react-native";
 import { TextInput, Switch, IconButton } from "react-native-paper";
 import { TextInputMask, MaskService } from "react-native-masked-text";
-import PickerModal from "react-native-picker-modal-view";
 import { ProgressSteps, ProgressStep } from "react-native-progress-steps";
-import images from "../utils/images";
 import api from "../../services/api";
 import isDate from "../functions/isDate";
 import removerAcentos from "../functions/removerAcentos";
@@ -20,48 +18,100 @@ import formatDate from "../functions/formatDate";
 import * as ImagePicker from "expo-image-picker";
 import * as Camera from "expo-camera";
 import Header from "../components/Header";
-import styles, { tema } from "../../assets/style/Style";
+import s, { tema } from "../../assets/style/Style";
 import Alert from "../components/Alert";
 import Loading from "../components/Loading";
 import { useUsuario } from "../store/Usuario";
-
-const ASSOCIADO_INITIAL = {
-	matricula: "",
-	sexo: { Name: "", Value: "" },
-	cidade: { Name: "", Value: "" },
-	orgao: { Name: "", Value: "" },
-	funcao: { Name: "", Value: "" },
-	local_trabalho: { Name: "", Value: "" },
-	banco: { Name: "", Value: "" },
-	forma_desconto: { Name: "", Value: "" },
-	valor_mensalidade: 0,
-	paga_joia: 0,
-};
+import Combo from "../components/Combo";
+import images from "../utils/images";
+import ModalLoading from "../components/ModalLoading";
 
 function CadastrarAssociado(props) {
-	const { navigation } = props;
-	const [{ usuario, nome, token }] = useUsuario();
-	const [matricula, setMatricula] = useState("");
-	const [associado, setAssociado] = useState(ASSOCIADO_INITIAL);
+	const [usuario, setUsuario] = useUsuario();
+	const { token, associado_atendimento } = usuario;
 	const [cidades, setCidades] = useState([]);
 	const [orgaos, setOrgaos] = useState([]);
 	const [lotacoes, setLotacoes] = useState([]);
 	const [funcoes, setFuncoes] = useState([]);
 	const [bancos, setBancos] = useState([]);
 	const [formas, setFormas] = useState([]);
-	const [mostrarDadosAssociado, setMostrarDadosAssociado] = useState(false);
-	const [btnRecadastrar, setBtnRecadastrar] = useState(false);
 	const [activeStep, setActiveStep] = useState(0);
-	const [nextStep, setNextStep] = useState(false);
+	const [nextStep, setNextStep] = useState(true);
 	const [prevStep, setPrevStep] = useState(false);
 	const [textNext, setTextNext] = useState("PRÓXIMO");
-	const [cpf, setCpf] = useState("1");
-	const [rg, setRg] = useState("1");
-	const [contraCheque, setContraCheque] = useState("1");
-	const [comprovanteResidencia, setComprovanteResidencia] = useState("1");
+	const [imagemCpf, setImagemCpf] = useState("");
+	const [imagemRg, setImagemRg] = useState("");
+	const [imagemContraCheque, setImagemContraCheque] = useState("");
+	const [imagemComprovanteResidencia, setImagemComprovanteResidencia] =
+		useState("");
+	const [imagemAmpliada, setImagemAmpliada] = useState("");
+	const [modal, setModal] = useState(false);
 	const [modalJoia, setModalJoia] = useState(false);
+	const [modalCarregando, setModalCarregando] = useState(false);
 	const [alerta, setAlerta] = useState({});
 	const [carregando, setCarregando] = useState(false);
+
+	const [nome, setNome] = useState(associado_atendimento?.nome ?? "");
+	const [nascimento, setNascimento] = useState(
+		associado_atendimento?.nascimento ?? ""
+	);
+	const [sexo, setSexo] = useState(
+		associado_atendimento?.sexo ?? { Name: "MASCULINO", Value: "M" }
+	);
+	const [cpf, setCpf] = useState(associado_atendimento?.cpf ?? "");
+	const [rg, setRg] = useState(associado_atendimento?.rg ?? "");
+	const [telefoneComercial, setTelefoneComercial] = useState(
+		associado_atendimento?.telefone_comercial ?? ""
+	);
+	const [telefoneResidencial, setTelefoneResidencial] = useState(
+		associado_atendimento?.telefone_residencial ?? ""
+	);
+	const [celular, setCelular] = useState(associado_atendimento?.celular ?? "");
+	const [email, setEmail] = useState(associado_atendimento?.email ?? "");
+	const [digito, setDigito] = useState(associado_atendimento?.digito ?? "");
+	const [cep, setCep] = useState(associado_atendimento?.cep ?? "");
+	const [endereco, setEndereco] = useState(
+		associado_atendimento?.endereco ?? ""
+	);
+	const [numero, setNumero] = useState(associado_atendimento?.numero ?? "");
+	const [complemento, setComplemento] = useState(
+		associado_atendimento?.complemento ?? ""
+	);
+	const [bairro, setBairro] = useState(associado_atendimento?.bairro ?? "");
+	const [cidade, setCidade] = useState(
+		associado_atendimento?.cidade ?? { Name: "", Value: "" }
+	);
+	const [orgao, setOrgao] = useState(
+		associado_atendimento?.orgao ?? { Name: "", Value: "" }
+	);
+	const [localTrabalho, setLocalTrabalho] = useState(
+		associado_atendimento?.local_trabalho ?? { Name: "", Value: "" }
+	);
+	const [funcao, setFuncao] = useState(
+		associado_atendimento?.funcao ?? { Name: "", Value: "" }
+	);
+	const [mesano, setMesano] = useState(associado_atendimento?.mesano ?? "");
+	const [identificador, setIdentificador] = useState(
+		associado_atendimento?.identificador ?? ""
+	);
+	const [formaDesconto, setFormaDesconto] = useState(
+		associado_atendimento?.forma_desconto ?? { Name: "", Value: "" }
+	);
+	const [banco, setBanco] = useState(
+		associado_atendimento?.banco ?? { Name: "", Value: "" }
+	);
+	const [agencia, setAgencia] = useState(associado_atendimento?.agencia ?? "");
+	const [conta, setConta] = useState(associado_atendimento?.conta ?? "");
+	const [digitoConta, setDigitoConta] = useState(
+		associado_atendimento?.digito_conta ?? ""
+	);
+	const [estornado, setEstornado] = useState(
+		associado_atendimento?.estornado ?? false
+	);
+	const [indica, setIndica] = useState(associado_atendimento?.indica ?? false);
+	const [observacao, setObservacao] = useState(
+		associado_atendimento?.observacao ?? ""
+	);
 
 	const nascimentoRef = useRef(null);
 	const cpfRef = useRef(null);
@@ -84,19 +134,17 @@ function CadastrarAssociado(props) {
 	const showModal = () => setModalJoia(true);
 	const hideModal = () => setModalJoia(false);
 
-	const onToggleEstornado = () =>
-		setAssociado({ ...associado, estornado: !associado.estornado });
-
-	const onToggleIndica = () =>
-		setAssociado({ ...associado, indica: !associado.indica });
+	const onToggleEstornado = () => setEstornado(!estornado);
+	const onToggleIndica = () => setIndica(!indica);
 
 	useEffect(() => {
-		if (associado.matricula?.length < 6) {
+		if (associado_atendimento.matricula?.length < 6) {
 			setNextStep(false);
 		}
-	}, [associado.matricula]);
+	}, [associado_atendimento.matricula]);
 
 	useEffect(() => {
+		console.log(associado_atendimento);
 		listarCidades();
 		listarOrgaos();
 		listarBancos();
@@ -243,80 +291,6 @@ function CadastrarAssociado(props) {
 		}
 	}
 
-	const verificarMatricula = async () => {
-		if (matricula.length == 6) {
-			if (!isNaN(matricula)) {
-				setCarregando(true);
-
-				try {
-					const { data } = await api({
-						url: "/associados/verificarMatricula",
-						method: "GET",
-						params: { cartao: matricula },
-						headers: { "x-access-token": token },
-					});
-
-					if (data.status) {
-						setAssociado(data);
-						setMostrarDadosAssociado(true);
-
-						if (data.tipo === "01") {
-							setBtnRecadastrar(true);
-							setNextStep(false);
-						} else {
-							setBtnRecadastrar(false);
-							setNextStep(true);
-						}
-					} else {
-						setAssociado({ ...ASSOCIADO_INITIAL, matricula });
-						setBtnRecadastrar(false);
-						setNextStep(true);
-					}
-
-					setCarregando(false);
-				} catch (error) {
-					setCarregando(false);
-					setAssociado(ASSOCIADO_INITIAL);
-					setBtnRecadastrar(false);
-					setNextStep(false);
-					setAlerta({
-						visible: true,
-						title: "ATENÇÃO!",
-						message: "Ocorreu um erro ao verificar a matrícula.",
-						type: "danger",
-						confirmText: "FECHAR",
-						showConfirm: true,
-						showCancel: false,
-					});
-				}
-			} else {
-				setBtnRecadastrar(false);
-				setMostrarDadosAssociado(false);
-				setNextStep(false);
-				setAlerta({
-					visible: true,
-					title: "ATENÇÃO!",
-					message: "A matrícula informada está inválida.",
-					type: "danger",
-					confirmText: "FECHAR",
-					showConfirm: true,
-					showCancel: false,
-				});
-			}
-		} else {
-			setAlerta({
-				visible: true,
-				title: "ATENÇÃO!",
-				message:
-					"Para prosseguir é necessário informar a matrícula corretamente.",
-				type: "warning",
-				confirmText: "Ok, Informar a Matrícula!",
-				showConfirm: true,
-				showCancel: false,
-			});
-		}
-	};
-
 	const cadastrarAssociado = async () => {
 		setAlerta({
 			visible: true,
@@ -331,7 +305,7 @@ function CadastrarAssociado(props) {
 			const { data } = await api({
 				url: "/cadastrarAssociado",
 				method: "POST",
-				data: { associado },
+				data: { associado: associado_atendimento },
 				headers: { "x-access-token": token },
 			});
 
@@ -347,15 +321,57 @@ function CadastrarAssociado(props) {
 
 			if (data.status) {
 				setActiveStep(0);
-				setAssociado(ASSOCIADO_INITIAL);
 				setPrevStep(false);
 				setTextNext("PRÓXIMO");
-				setMostrarDadosAssociado(false);
-				setCpf("");
-				setRg("");
-				setContraCheque("");
-				setComprovanteResidencia("");
-				setMatricula("");
+				setImagemCpf("");
+				setImagemRg("");
+				setImagemContraCheque("");
+				setImagemComprovanteResidencia("");
+
+				setUsuario({
+					...usuario,
+					associado_atendimento: {
+						...associado_atendimento,
+						nome,
+						nascimento,
+						sexo,
+						cpf: cpf.replace(/[.-]/g, "").trim(),
+						rg,
+						telefone_comercial: telefoneComercial.replace(/[()-]/g, "").trim(),
+						telefone_residencial: telefoneResidencial
+							.replace(/[()-]/g, "")
+							.trim(),
+						celular: celular.replace(/[()-]/g, "").trim(),
+						email,
+						endereco,
+						numero: numero.trim(),
+						complemento,
+						bairro,
+						cidade,
+						cep,
+						orgao,
+						local_trabalho: localTrabalho,
+						funcao,
+						mesano,
+						identificador,
+						banco,
+						agencia,
+						conta,
+						digito_conta: digitoConta,
+						digito,
+						forma_desconto: formaDesconto,
+						estornado,
+						indica,
+						observacao: (
+							usuario.associado_atendimento.observacao +
+							" " +
+							observacao
+						).trim(),
+						tipo: "01",
+						status: true,
+						recadastrado: true,
+					},
+				});
 			}
 		} catch (error) {
 			setAlerta({
@@ -371,10 +387,10 @@ function CadastrarAssociado(props) {
 	};
 
 	async function verificarCpf() {
-		if (associado.cpf === "") {
+		if (cpf === "") {
 			return false;
 		} else {
-			if (associado.nascimento == "") {
+			if (nascimento == "") {
 				return false;
 			} else {
 				try {
@@ -382,9 +398,9 @@ function CadastrarAssociado(props) {
 						url: "/associados/verificarCpf",
 						method: "GET",
 						params: {
-							cartao: associado.matricula + "00001",
-							cpf: associado.cpf,
-							nascimento: formatDate(associado.nascimento, "AMD"),
+							cartao: associado_atendimento.matricula + "00001",
+							cpf,
+							nascimento: formatDate(nascimento, "AMD"),
 						},
 						headers: { "x-access-token": token },
 					});
@@ -398,7 +414,9 @@ function CadastrarAssociado(props) {
 	}
 
 	async function buscarCep() {
-		if (associado.cep === "" || associado.cep?.length < 8) {
+		setCarregando(true);
+
+		if (cep === "" || cep?.length < 8) {
 			setAlerta({
 				visible: true,
 				title: "ATENÇÃO!",
@@ -410,7 +428,7 @@ function CadastrarAssociado(props) {
 			});
 		} else {
 			const response = await fetch(
-				`https://viacep.com.br/ws/${associado.cep.replace(/[-.]/g, "")}/json/`,
+				`https://viacep.com.br/ws/${cep.replace(/[-.]/g, "")}/json/`,
 				{
 					method: "GET",
 					mode: "no-cors",
@@ -430,7 +448,7 @@ function CadastrarAssociado(props) {
 					type: "danger",
 				});
 			} else {
-				let cid = associado.cidade;
+				let cid = cidade;
 
 				cidades.map((cidade) => {
 					if (
@@ -441,15 +459,14 @@ function CadastrarAssociado(props) {
 					}
 				});
 
-				setAssociado({
-					...associado,
-					endereco: `${dados.logradouro}`,
-					complemento: `${dados.complemento}`,
-					bairro: `${dados.bairro}`,
-					cidade: cid,
-				});
+				setEndereco(dados.logradouro);
+				setComplemento(dados.complemento);
+				setBairro(dados.bairro);
+				setCidade(cid);
 			}
 		}
+
+		setCarregando(false);
 	}
 
 	async function tirarFoto(tipo) {
@@ -486,13 +503,15 @@ function CadastrarAssociado(props) {
 				let extensao = uri.split(".")[uri.split(".").length - 1];
 
 				const formulario = new FormData();
-				formulario.append("matricula", `${associado.matricula}`);
+				formulario.append("matricula", `${associado_atendimento.matricula}`);
 				formulario.append("dependente", `00`);
 				formulario.append("tipo", tipo);
 				formulario.append("file", {
 					uri,
 					type: `image/${extensao}`,
-					name: `${associado.matricula}_${new Date().toJSON()}.${extensao}`,
+					name: `${
+						associado_atendimento.matricula
+					}_${new Date().toJSON()}.${extensao}`,
 				});
 
 				const { data } = await api.post("/enviarDocumentoTitular", formulario, {
@@ -505,16 +524,16 @@ function CadastrarAssociado(props) {
 				if (data.status) {
 					switch (tipo) {
 						case "CPF":
-							setCpf(data.link);
+							setImagemCpf(data.link);
 							break;
 						case "RG":
-							setRg(data.link);
+							setImagemRg(data.link);
 							break;
 						case "CC":
-							setContraCheque(data.link);
+							setImagemContraCheque(data.link);
 							break;
 						case "CR":
-							setComprovanteResidencia(data.link);
+							setImagemComprovanteResidencia(data.link);
 							break;
 						default:
 							break;
@@ -548,66 +567,30 @@ function CadastrarAssociado(props) {
 		let erros = 0;
 		let msgErro = "";
 
+		setModalCarregando(true);
+
 		switch (activeStep) {
 			case 0:
-				if (associado.matricula?.length < 6 || isNaN(associado.matricula)) {
-					setAlerta({
-						visible: true,
-						title: "ATENÇÃO!",
-						message: "A matrícula encontra-se incorreta.",
-						showCancel: false,
-						showConfirm: true,
-						confirmText: "FECHAR",
-						type: "danger",
-					});
-
-					setPrevStep(false);
-				} else {
-					setPrevStep(true);
-					setActiveStep(1);
-				}
-				break;
-			case 1:
 				erros = 0;
 				msgErro = "";
 
 				const cpfValido = await verificarCpf();
 
-				let data = new Date(formatDate(associado.nascimento, "AMD"));
-
-				if (associado?.nome?.length < 3) {
-					erros++;
-					msgErro += "O campo NOME não pode ser menor do que 3 caracteres.\n";
-				}
+				let data = new Date(formatDate(nascimento, "AMD"));
 
 				if (!isDate(data)) {
 					erros++;
 					msgErro += "O campo DATA DE NASCIMENTO está incorreto.\n";
 				}
 
-				if (associado?.sexo?.Name === "") {
+				if (nome?.length < 3) {
+					erros++;
+					msgErro += "O campo NOME não pode ser menor do que 3 caracteres.\n";
+				}
+
+				if (sexo?.Name === "") {
 					erros++;
 					msgErro += "É obrigatório selecionar o SEXO.\n";
-				}
-
-				if (associado?.rg === "") {
-					erros++;
-					msgErro += "É obrigatório preencher o RG.\n";
-				}
-
-				if (associado?.digito === "") {
-					erros++;
-					msgErro += "É obrigatório preencher o DÍGITO DA MATRÍCULA.\n";
-				}
-
-				if (
-					associado?.telefone_comercial === "" &&
-					associado?.telefone_residencial === "" &&
-					associado?.celular === ""
-				) {
-					erros++;
-					msgErro +=
-						"É obrigatório preencher pelo menos um telefone (RESIDENCIAL, COMERCIAL OU CELULAR).\n";
 				}
 
 				if (!cpfValido) {
@@ -615,42 +598,42 @@ function CadastrarAssociado(props) {
 					msgErro += "O campo CPF está inválido.\n";
 				}
 
-				if (erros > 0) {
-					setAlerta({
-						visible: true,
-						title: "ATENÇÃO!",
-						message: `Para prosseguir é necessário preencher corretamente os campos:\n\n${msgErro}`,
-						showCancel: false,
-						showConfirm: true,
-						confirmText: "OK, Corrigir campos",
-						type: "warning",
-					});
-				} else {
-					setActiveStep(2);
-					setTextNext("PRÓXIMO");
+				if (rg === "") {
+					erros++;
+					msgErro += "É obrigatório preencher o RG.\n";
 				}
 
-				break;
-			case 2:
-				erros = 0;
-				msgErro = "";
+				if (digito === "") {
+					erros++;
+					msgErro += "É obrigatório preencher o DÍGITO DA MATRÍCULA.\n";
+				}
 
-				if (associado?.cep?.length < 8) {
+				if (
+					telefoneComercial === "" &&
+					telefoneResidencial === "" &&
+					celular === ""
+				) {
+					erros++;
+					msgErro +=
+						"É obrigatório preencher pelo menos um telefone (RESIDENCIAL, COMERCIAL OU CELULAR).\n";
+				}
+
+				if (cep?.length < 8) {
 					erros++;
 					msgErro += "O CEP informado está incorreto.\n";
 				}
 
-				if (associado?.endereco === "") {
+				if (endereco === "") {
 					erros++;
 					msgErro += "É obrigatório preencher o ENDEREÇO.\n";
 				}
 
-				if (associado?.bairro === "") {
+				if (bairro === "") {
 					erros++;
 					msgErro += "É obrigatório preencher o BAIRRO.\n";
 				}
 
-				if (associado?.cidade === "") {
+				if (cidade === "") {
 					erros++;
 					msgErro += "É obrigatório selecionar a CIDADE.\n";
 				}
@@ -666,58 +649,47 @@ function CadastrarAssociado(props) {
 						type: "warning",
 					});
 				} else {
-					setActiveStep(3);
+					setPrevStep(true);
+					setActiveStep(1);
 					setTextNext("PRÓXIMO");
 				}
 
 				break;
-			case 3:
-				if (associado.valor_mensalidade !== "") {
-					if (associado?.valor_mensalidade?.toString().indexOf("R$") >= 0) {
-						setAssociado({
-							...associado,
-							valor_mensalidade: MaskService.toRawValue(
-								"money",
-								associado.valor_mensalidade
-							),
-						});
-					}
-				}
-
+			case 1:
 				erros = 0;
 				msgErro = "";
 
-				if (associado?.orgao?.Name === "") {
+				if (orgao?.Name === "") {
 					erros++;
 					msgErro += "É obrigatório selecionar o ÓRGÃO DE RECEBIMENTO.\n";
 				}
 
-				if (associado?.local_trabalho?.Name === "") {
+				if (localTrabalho?.Name === "") {
 					erros++;
 					msgErro += "É obrigatório selecionar o LOCAL DE TRABALHO.\n";
 				}
 
-				if (associado?.funcao?.Name === "") {
+				if (funcao?.Name === "") {
 					erros++;
 					msgErro += "É obrigatório selecionar a FUNÇÃO.\n";
 				}
 
-				if (associado?.banco?.Name === "") {
+				if (banco?.Name === "") {
 					erros++;
 					msgErro += "É obrigatório selecionar o BANCO.\n";
 				}
 
-				if (associado?.agencia === "") {
+				if (agencia === "") {
 					erros++;
 					msgErro += "É obrigatório preencher a AGÊNCIA.\n";
 				}
 
-				if (associado?.conta === "") {
+				if (conta === "") {
 					erros++;
 					msgErro += "É obrigatório preencher a CONTA.\n";
 				}
 
-				if (associado?.forma_desconto?.Name === "") {
+				if (formaDesconto?.Name === "") {
 					erros++;
 					msgErro += "É obrigatório selecionar a FORMA DE DESCONTO.\n";
 				}
@@ -733,31 +705,32 @@ function CadastrarAssociado(props) {
 						type: "warning",
 					});
 				} else {
-					setActiveStep(4);
+					setPrevStep(true);
+					setActiveStep(2);
 					setTextNext("CADASTRAR");
 				}
 
 				break;
-			case 4:
+			case 2:
 				erros = 0;
 				msgErro = "";
 
-				if (cpf === "") {
+				if (imagemCpf === "") {
 					erros++;
 					msgErro += "É obrigatório enviar a imagem do CPF.\n";
 				}
 
-				if (rg === "") {
+				if (imagemRg === "") {
 					erros++;
 					msgErro += "É obrigatório enviar a imagem do RG.\n";
 				}
 
-				if (contraCheque === "") {
+				if (imagemContraCheque === "") {
 					erros++;
 					msgErro += "É obrigatório enviar a imagem do CONTRA CHEQUE.\n";
 				}
 
-				if (comprovanteResidencia === "") {
+				if (imagemComprovanteResidencia === "") {
 					erros++;
 					msgErro +=
 						"É obrigatório enviar a imagem do COMPROVANTE DE RESIDÊNCIA.\n";
@@ -774,7 +747,7 @@ function CadastrarAssociado(props) {
 						type: "warning",
 					});
 				} else {
-					if (associado.data_saida == 1) {
+					if (associado_atendimento.data_saida == 1) {
 						showModal();
 					} else {
 						cadastrarAssociado();
@@ -785,6 +758,8 @@ function CadastrarAssociado(props) {
 			default:
 				break;
 		}
+
+		setModalCarregando(false);
 	};
 
 	const goToPrevStep = () => {
@@ -799,33 +774,51 @@ function CadastrarAssociado(props) {
 	return (
 		<>
 			<Header titulo={"Cadastrar Associado"} {...props} />
-			<Modal animationType="fade" transparent visible={modalJoia}>
-				<View
-					style={{
-						flex: 1,
-						alignItems: "center",
-						justifyContent: "center",
-						backgroundColor: "#000C",
-					}}
-				>
-					<View
-						style={[
-							styles.centralizado,
-							{
-								padding: 20,
-								margin: 10,
-								borderRadius: 6,
-								backgroundColor: "#fff",
-							},
-						]}
+			<ModalLoading visible={modalCarregando} />
+			<Modal animationType="fade" transparent={true} visible={modal} {...props}>
+				<View style={[s.fl1, s.bgcm, s.jcc, s.aic]}>
+					<View style={[s.pd10, s.m20, s.bgcw, s.bgcw, s.br9, s.smd, s.el5]}>
+						{imagemAmpliada !== "" ? (
+							<Image
+								source={{ uri: imagemAmpliada }}
+								style={{ width: 600, height: 800 }}
+							/>
+						) : (
+							<Text>NENHUMA IMAGEM ENCONTRADA</Text>
+						)}
+					</View>
+					<TouchableOpacity
+						onPress={() => {
+							setModal(false);
+							setImagemAmpliada("");
+						}}
+						style={[s.w50, s.h50, s.br50, s.bgcp, s.b15, s.pd10, s.jcc, s.aic]}
 					>
+						<Image
+							source={images.fechar}
+							style={[s.w20, s.h20, s.tcw]}
+							tintColor={tema.colors.background}
+						/>
+					</TouchableOpacity>
+				</View>
+			</Modal>
+			<Modal animationType="fade" transparent visible={modalJoia}>
+				<View style={[s.fl1, s.aic, s.jcc, s.bgcm]}>
+					<View style={[s.jcc, s.aic, s.pd20, s.m10, s.br6, s.bgcw]}>
 						<Text>
-							Atenção {nome}, este associado pagará joia, e esta será descontada
-							em {associado.parcelas_joia} parcelas. Deseja continuar?
+							Atenção {usuario.nome}, este associado pagará joia, e esta será
+							descontada em {associado_atendimento.parcelas_joia} parcelas.
+							Deseja continuar?
 						</Text>
 						<TouchableOpacity
 							onPress={() => {
-								setAssociado({ ...associado, paga_joia: 1 });
+								setUsuario({
+									...usuario,
+									associado_atendimento: {
+										...associado_atendimento,
+										paga_joia: 1,
+									},
+								});
 								cadastrarAssociado();
 							}}
 						>
@@ -837,19 +830,12 @@ function CadastrarAssociado(props) {
 					</View>
 				</View>
 			</Modal>
-			<SafeAreaView style={{ flex: 1, zIndex: 100 }}>
-				<View style={{ flex: 1, margin: 20 }}>
-					<Text
-						style={{
-							textAlign: "center",
-							marginTop: 10,
-							marginBottom: 20,
-							fontSize: 18,
-						}}
-					>
+			<SafeAreaView style={s.fl1}>
+				<View style={[s.fl1, s.m20]}>
+					<Text style={[s.tac, s.mt10, s.mb20, s.fs18]}>
 						Preencha os campos abaixo para efetuar a inclusão do associado.
 					</Text>
-					<View style={{ flex: 1 }}>
+					<View style={s.fl1}>
 						<ProgressSteps
 							activeStep={activeStep}
 							activeStepIconBorderColor="#031e3f"
@@ -857,205 +843,40 @@ function CadastrarAssociado(props) {
 							completedStepIconColor="#031e3f"
 							activeLabelColor="#031e3f"
 							labelFontSize={18}
-							marginBottom={100}
+							marginBottom={50}
 							style={{ zIndex: 12 }}
 						>
-							<ProgressStep label="Matrícula" removeBtnRow>
-								<View style={{ flexDirection: "row" }}>
-									<View style={{ flex: 1 }}></View>
-									<View style={{ flex: 2 }}>
-										<TextInput
-											label="Matrícula"
-											mode={"outlined"}
-											value={matricula}
-											keyboardType={"numeric"}
-											maxLength={6}
-											theme={tema}
-											style={{ fontSize: 25 }}
-											placeholder={"Digite a matrícula"}
-											onChangeText={(text) => setMatricula(text)}
-											render={(props) => (
-												<TextInputMask
-													{...props}
-													type={"custom"}
-													options={{
-														mask: "999999",
-													}}
-												/>
-											)}
-										/>
-									</View>
-									<View style={{ flex: 1 }}></View>
-								</View>
-								<View style={{ flexDirection: "row", marginTop: 20 }}>
-									<View style={{ flex: 1 }}></View>
-									<View style={{ flex: 2 }}>
-										<TouchableOpacity
-											onPress={() => verificarMatricula()}
-											style={{
-												flexDirection: "row",
-												alignItems: "center",
-												justifyContent: "center",
-												backgroundColor: "#031e3f",
-												borderRadius: 6,
-												height: 50,
-											}}
-										>
-											<IconButton icon="magnify" color={"#fff"} size={20} />
-											<Text style={{ color: "#fff", fontSize: 17 }}>
-												VERIFICAR MATRÍCULA
-											</Text>
-										</TouchableOpacity>
-									</View>
-									<View style={{ flex: 1 }}></View>
-								</View>
-								{carregando ? (
-									<View
-										style={{
-											justifyContent: "center",
-											alignItems: "center",
-											marginTop: 40,
-										}}
-									>
-										<Loading size={110} />
-									</View>
-								) : (
-									<>
-										{mostrarDadosAssociado && (
-											<View
-												style={{
-													flex: 1,
-													margin: 20,
-													backgroundColor: "#fff",
-													borderWidth: associado.status
-														? associado.tipo === "01"
-															? 2
-															: 0
-														: 0,
-													borderColor: associado.status
-														? associado.tipo === "01"
-															? "#07A85C"
-															: "#fff"
-														: "#fff",
-													padding: 20,
-													borderRadius: 6,
-													elevation: 1,
-												}}
-											>
-												{associado.status ? (
-													<>
-														<Text style={{ fontSize: 20, fontWeight: "bold" }}>
-															{associado.nome} ({associado.matricula})
-														</Text>
-														<Text style={{ fontSize: 18 }}>
-															SITUAÇÃO ATUAL:{" "}
-															<Text style={{ fontWeight: "bold" }}>
-																{associado.tipo !== "01"
-																	? "NÃO ASSOCIADO - COM DADOS PRÉ-PREENCHIDOS"
-																	: "ASSOCIADO ABEPOM"}
-															</Text>
-														</Text>
-														{associado.data_saida == 1 && (
-															<Text
-																style={{
-																	color: tema.colors.vermelho,
-																	fontSize: 15,
-																}}
-															>
-																O ASSOCIADO DEVERÁ PAGAR JOIA
-															</Text>
-														)}
-													</>
-												) : (
-													<>
-														<Text style={{ fontSize: 20, fontWeight: "bold" }}>
-															MILITAR SEM REGISTRO COM A ABEPOM
-														</Text>
-													</>
-												)}
-											</View>
-										)}
-										{btnRecadastrar && (
-											<View style={{ flexDirection: "row" }}>
-												<View style={{ flex: 1 }}></View>
-												<View style={{ flex: 2 }}>
-													<TouchableOpacity
-														onPress={() =>
-															navigation.navigate("RecadastrarAssociado", {
-																associado,
-															})
-														}
-														style={{
-															flexDirection: "row",
-															flex: 1,
-															marginVertical: 20,
-															backgroundColor: "#031e3f",
-															justifyContent: "center",
-															padding: 20,
-															borderRadius: 6,
-														}}
-													>
-														<Text
-															style={{
-																color: "#fff",
-																fontSize: 17,
-																marginRight: 10,
-															}}
-														>
-															RECADASTRAR ASSOCIADO
-														</Text>
-														<Image
-															source={images.seta}
-															style={{
-																width: 20,
-																height: 20,
-																tintColor: "#fff",
-															}}
-															tintColor={"#fff"}
-														/>
-													</TouchableOpacity>
-												</View>
-												<View style={{ flex: 1 }}></View>
-											</View>
-										)}
-									</>
-								)}
-							</ProgressStep>
 							<ProgressStep label="Geral" removeBtnRow>
-								<View style={{ flexDirection: "row", marginBottom: 15 }}>
-									<View style={{ flex: 4, marginRight: 5 }}>
+								<View style={[s.row, s.mb10]}>
+									<View style={[s.fl4, s.mr5]}>
 										<TextInput
 											label="Nome"
 											mode={"outlined"}
 											theme={tema}
-											value={associado.nome}
+											value={nome}
 											maxLength={40}
-											style={{ fontSize: 18 }}
+											style={s.fs18}
 											returnKeyType={"next"}
 											onSubmitEditing={() =>
 												nascimentoRef?.current?._inputElement.focus()
 											}
-											onChangeText={(text) =>
-												setAssociado({ ...associado, nome: text })
-											}
+											onChangeText={(text) => setNome(text)}
 										/>
 									</View>
-									<View style={{ flex: 2 }}>
+									<View style={s.fl2}>
 										<TextInput
 											label="Data de Nascimento"
 											mode={"outlined"}
 											theme={tema}
-											value={associado.nascimento}
+											value={nascimento}
 											keyboardType={"numeric"}
-											style={{ fontSize: 18 }}
+											style={s.fs18}
 											maxLength={10}
 											returnKeyType={"next"}
 											onSubmitEditing={() =>
 												cpfRef?.current?._inputElement.focus()
 											}
-											onChangeText={(text) =>
-												setAssociado({ ...associado, nascimento: text })
-											}
+											onChangeText={(text) => setNascimento(text)}
 											render={(props) => (
 												<TextInputMask
 													{...props}
@@ -1069,100 +890,30 @@ function CadastrarAssociado(props) {
 										/>
 									</View>
 								</View>
-								<View style={{ flexDirection: "row", marginBottom: 15 }}>
-									<View style={{ flex: 2, marginRight: 5 }}>
-										<TextInput
-											label="Sexo"
-											mode={"outlined"}
-											theme={tema}
-											style={{ fontSize: 18 }}
-											value={true}
-											onChangeText={(text) =>
-												setAssociado({ ...associado, sexo: text })
-											}
-											render={() => (
-												<PickerModal
-													renderSelectView={(disabled, selected, showModal) => (
-														<TouchableOpacity
-															style={{
-																flexDirection: "row",
-																flex: 1,
-																justifyContent: "flex-start",
-																alignItems: "center",
-																paddingLeft: 10,
-															}}
-															disabled={disabled}
-															onPress={showModal}
-														>
-															<View style={{ flex: 3 }}>
-																<Text
-																	style={{ fontSize: associado.sexo ? 15 : 12 }}
-																>
-																	{associado.sexo.Name
-																		? associado.sexo.Name === "F"
-																			? "FEMININO"
-																			: "MASCULINO"
-																		: "SELECIONE"}
-																</Text>
-															</View>
-															<View
-																style={{
-																	flex: 1,
-																	alignItems: "flex-end",
-																	paddingRight: 10,
-																}}
-															>
-																<Image
-																	source={images.seta}
-																	tintColor={"#031e3f"}
-																	style={{
-																		width: 10,
-																		height: 10,
-																		right: 0,
-																		tintColor: "#031e3f",
-																		transform: [{ rotate: "90deg" }],
-																	}}
-																/>
-															</View>
-														</TouchableOpacity>
-													)}
-													modalAnimationType="fade"
-													selected={
-														associado.sexo.Name.substring(0, 1).toUpperCase() ==
-														"M"
-															? { Name: "MASCULINO", Value: "M" }
-															: { Name: "FEMININO", Value: "F" }
-													}
-													selectPlaceholderText="SELECIONE O SEXO"
-													searchPlaceholderText="DIGITE O SEXO"
-													onSelected={(key) =>
-														setAssociado({ ...associado, sexo: key })
-													}
-													onClosed={() =>
-														setAssociado({ ...associado, sexo: associado.sexo })
-													}
-													items={[
-														{ Name: "MASCULINO", Value: "M" },
-														{ Name: "FEMININO", Value: "F" },
-													]}
-												/>
-											)}
+								<View style={[s.row, s.mb10]}>
+									<View style={[s.fl2, s.mr5]}>
+										<Combo
+											label={"Sexo"}
+											pronome={"o"}
+											lista={[
+												{ Name: "MASCULINO", Value: "M" },
+												{ Name: "FEMININO", Value: "F" },
+											]}
+											item={[sexo, setSexo]}
 										/>
 									</View>
-									<View style={{ flex: 2, marginRight: 5 }}>
+									<View style={[s.fl2, s.mr5]}>
 										<TextInput
 											label="CPF"
 											mode={"outlined"}
 											theme={tema}
-											value={associado.cpf}
+											value={cpf}
 											maxLength={14}
-											style={{ fontSize: 18 }}
+											style={s.fs18}
 											keyboardType={"number-pad"}
 											returnKeyType={"next"}
 											onSubmitEditing={() => rgRef?.current?.focus()}
-											onChangeText={(text) =>
-												setAssociado({ ...associado, cpf: text })
-											}
+											onChangeText={(text) => setCpf(text)}
 											render={(props) => (
 												<TextInputMask
 													{...props}
@@ -1175,12 +926,12 @@ function CadastrarAssociado(props) {
 											)}
 										/>
 									</View>
-									<View style={{ flex: 2 }}>
+									<View style={s.fl2}>
 										<TextInput
 											label="RG"
 											mode={"outlined"}
 											theme={tema}
-											value={associado.rg}
+											value={rg}
 											maxLength={15}
 											ref={rgRef}
 											returnKeyType={"next"}
@@ -1188,30 +939,26 @@ function CadastrarAssociado(props) {
 												comercialRef?.current?._inputElement.focus()
 											}
 											keyboardType={"number-pad"}
-											style={{ fontSize: 18 }}
-											onChangeText={(text) =>
-												setAssociado({ ...associado, rg: text })
-											}
+											style={s.fs18}
+											onChangeText={(text) => setRg(text)}
 										/>
 									</View>
 								</View>
-								<View style={{ flexDirection: "row", marginBottom: 15 }}>
-									<View style={{ flex: 1, marginRight: 5 }}>
+								<View style={[s.row, s.mb10]}>
+									<View style={[s.fl1, s.mr5]}>
 										<TextInput
 											label="Telefone Comercial"
 											mode={"outlined"}
 											theme={tema}
-											value={associado.telefone_comercial}
+											value={telefoneComercial}
 											keyboardType={"number-pad"}
-											style={{ fontSize: 18 }}
+											style={s.fs18}
 											maxLength={15}
 											returnKeyType={"next"}
 											onSubmitEditing={() =>
 												residencialRef?.current?._inputElement.focus()
 											}
-											onChangeText={(text) =>
-												setAssociado({ ...associado, telefone_comercial: text })
-											}
+											onChangeText={(text) => setTelefoneComercial(text)}
 											render={(props) => (
 												<TextInputMask
 													{...props}
@@ -1224,25 +971,20 @@ function CadastrarAssociado(props) {
 											)}
 										/>
 									</View>
-									<View style={{ flex: 1, marginRight: 5 }}>
+									<View style={[s.fl1, s.mr5]}>
 										<TextInput
 											label="Telefone Residencial"
 											mode={"outlined"}
 											theme={tema}
-											value={associado.telefone_residencial}
+											value={telefoneResidencial}
 											maxLength={15}
 											keyboardType={"number-pad"}
-											style={{ fontSize: 18 }}
+											style={s.fs18}
 											returnKeyType={"next"}
 											onSubmitEditing={() =>
 												celularRef?.current?._inputElement.focus()
 											}
-											onChangeText={(text) =>
-												setAssociado({
-													...associado,
-													telefone_residencial: text,
-												})
-											}
+											onChangeText={(text) => setTelefoneResidencial(text)}
 											render={(props) => (
 												<TextInputMask
 													{...props}
@@ -1255,20 +997,18 @@ function CadastrarAssociado(props) {
 											)}
 										/>
 									</View>
-									<View style={{ flex: 1 }}>
+									<View style={s.fl1}>
 										<TextInput
 											label="Celular"
 											mode={"outlined"}
 											theme={tema}
-											value={associado.celular}
+											value={celular}
 											maxLength={16}
 											keyboardType={"numeric"}
-											style={{ fontSize: 18 }}
+											style={s.fs18}
 											returnKeyType={"next"}
 											onSubmitEditing={() => emailRef?.current?.focus()}
-											onChangeText={(text) =>
-												setAssociado({ ...associado, celular: text })
-											}
+											onChangeText={(text) => setCelular(text)}
 											render={(props) => (
 												<TextInputMask
 													{...props}
@@ -1282,982 +1022,511 @@ function CadastrarAssociado(props) {
 										/>
 									</View>
 								</View>
-								<View style={{ flexDirection: "row", marginBottom: 15 }}>
-									<View style={{ flex: 4, marginRight: 5 }}>
+								<View style={[s.row, s.mb10]}>
+									<View style={[s.fl4, s.mr5]}>
 										<TextInput
 											label="E-mail"
 											mode={"outlined"}
 											theme={tema}
 											textContentType={"emailAddress"}
 											maxLength={60}
-											value={associado.email}
-											style={{ fontSize: 18 }}
+											value={email}
+											style={s.fs18}
 											ref={emailRef}
 											returnKeyType={"next"}
 											onSubmitEditing={() => digitoRef.current.focus()}
-											onChangeText={(text) =>
-												setAssociado({ ...associado, email: text })
-											}
+											onChangeText={(text) => setEmail(text)}
 										/>
 									</View>
-									<View style={{ flex: 2 }}>
+									<View style={s.fl2}>
 										<TextInput
 											label="Díg. da Matrícula"
 											mode={"outlined"}
 											theme={tema}
-											value={associado.digito}
+											value={digito}
 											maxLength={1}
-											style={{ fontSize: 18 }}
+											style={s.fs18}
 											ref={digitoRef}
 											keyboardType="number-pad"
-											onChangeText={(text) =>
-												setAssociado({ ...associado, digito: text })
-											}
+											onChangeText={(text) => setDigito(text)}
 										/>
 									</View>
 								</View>
-							</ProgressStep>
-							<ProgressStep label="Endereço" removeBtnRow>
-								<View style={{ flexDirection: "row", marginBottom: 15 }}>
-									<View style={{ flex: 1, marginRight: 5 }}>
+								<View style={[s.row, s.mb10]}>
+									<View style={[s.fl1, s.mr5]}>
 										<TextInput
 											label="CEP"
 											mode={"outlined"}
 											theme={tema}
-											value={associado.cep}
+											value={cep}
 											maxLength={10}
-											style={{ fontSize: 18 }}
+											style={s.fs18}
 											keyboardType={"numeric"}
-											onChangeText={(text) =>
-												setAssociado({ ...associado, cep: text })
-											}
+											onChangeText={(text) => setCep(text)}
 											render={(props) => (
 												<TextInputMask
 													{...props}
 													type={"custom"}
-													options={{
-														mask: "99999-999",
-													}}
+													options={{ mask: "99999-999" }}
 												/>
 											)}
 										/>
 									</View>
-									<View style={{ flex: 1, marginRight: 5 }}>
+									<View style={[s.fl1, s.mr5, s.pdt7]}>
 										<TouchableOpacity
 											onPress={() => buscarCep()}
-											style={{
-												flex: 1,
-												flexDirection: "row",
-												alignItems: "center",
-												justifyContent: "center",
-												backgroundColor: "#031e3f",
-												borderRadius: 6,
-											}}
+											style={[s.fl1, s.row, s.aic, s.jcc, s.bgcp, s.br6]}
 										>
 											<IconButton icon="magnify" color={"#fff"} size={20} />
-											<Text
-												style={{ color: "#fff", fontSize: 17, marginRight: 10 }}
-											>
-												BUSCAR CEP
-											</Text>
+											<Text style={[s.fcw, s.fs18, s.mr10]}>BUSCAR CEP</Text>
 										</TouchableOpacity>
 									</View>
-									<View style={{ flex: 3, marginRight: 5 }}></View>
+									<View style={[s.fl3, s.mr5]}>
+										{carregando ? (
+											<View style={[s.row, s.aic]}>
+												<Loading size={45} />
+												<Text style={[s.fs18, s.fcp]}>CARREGANDO...</Text>
+											</View>
+										) : null}
+									</View>
 								</View>
-								<View style={{ flexDirection: "row", marginBottom: 15 }}>
-									<View style={{ flex: 4, marginRight: 5 }}>
+								<View style={[s.row, s.mb10]}>
+									<View style={s.fl1}>
 										<TextInput
 											label="Endereço"
 											mode={"outlined"}
 											theme={tema}
-											value={associado.endereco}
+											value={endereco}
 											maxLength={50}
-											style={{ fontSize: 18 }}
+											style={s.fs18}
 											returnKeyType={"next"}
 											onSubmitEditing={() => numeroRef?.current?.focus()}
-											onChangeText={(text) =>
-												setAssociado({ ...associado, endereco: text })
-											}
+											onChangeText={(text) => setEndereco(text)}
 										/>
 									</View>
-									<View style={{ flex: 1, marginRight: 5 }}>
+								</View>
+								<View style={[s.row, s.mb10]}>
+									<View style={[s.fl1, s.mr5]}>
 										<TextInput
 											label="Número"
 											mode={"outlined"}
 											theme={tema}
 											ref={numeroRef}
-											style={{ fontSize: 18 }}
-											value={associado.numero}
+											style={s.fs18}
+											value={numero}
 											returnKeyType={"next"}
 											onSubmitEditing={() => complementoRef?.current?.focus()}
-											onChangeText={(text) =>
-												setAssociado({ ...associado, numero: text })
-											}
+											onChangeText={(text) => setNumero(text)}
 										/>
 									</View>
-								</View>
-								<View style={{ flexDirection: "row", marginBottom: 15 }}>
-									<View style={{ flex: 1, marginRight: 5 }}>
+									<View style={[s.fl1, s.mr5]}>
 										<TextInput
 											label="Complemento"
 											mode={"outlined"}
 											ref={complementoRef}
 											theme={tema}
-											style={{ fontSize: 18 }}
-											value={associado.complemento}
+											style={s.fs18}
+											value={complemento}
 											maxLength={40}
 											returnKeyType={"next"}
 											onSubmitEditing={() => bairroRef?.current?.focus()}
-											onChangeText={(text) =>
-												setAssociado({ ...associado, complemento: text })
-											}
+											onChangeText={(text) => setComplemento(text)}
 										/>
 									</View>
-									<View style={{ flex: 1, marginRight: 5 }}>
+									<View style={s.fl1}>
 										<TextInput
 											label="Bairro"
 											ref={bairroRef}
-											value={associado.bairro}
+											value={bairro}
 											maxLength={35}
 											mode={"outlined"}
 											theme={tema}
-											style={{ fontSize: 18 }}
-											onChangeText={(text) =>
-												setAssociado({ ...associado, bairro: text })
-											}
+											style={s.fs18}
+											onChangeText={(text) => setBairro(text)}
 										/>
 									</View>
-									<View style={{ flex: 1, marginRight: 5 }}>
-										<TextInput
-											label="Cidade"
-											mode={"outlined"}
-											theme={tema}
-											style={{ fontSize: 18 }}
-											value={
-												associado.cidade.Value == ""
-													? "SELECIONE A CIDADE"
-													: associado.cidade.Value
-											}
-											onChangeText={(text) =>
-												setAssociado({ ...associado, cidade: text })
-											}
-											render={(props) => (
-												<PickerModal
-													renderSelectView={(disabled, selected, showModal) => (
-														<TouchableOpacity
-															style={{
-																flexDirection: "row",
-																flex: 1,
-																justifyContent: "flex-start",
-																alignItems: "center",
-																paddingLeft: 10,
-															}}
-															disabled={disabled}
-															onPress={showModal}
-														>
-															<View style={{ flex: 3 }}>
-																<Text
-																	style={{
-																		fontSize: associado.cidade ? 15 : 12,
-																	}}
-																>
-																	{associado.cidade.Name !== ""
-																		? associado.cidade.Name
-																		: "SELECIONE A CIDADE"}
-																</Text>
-															</View>
-															<View
-																style={{
-																	flex: 1,
-																	alignItems: "flex-end",
-																	paddingRight: 10,
-																}}
-															>
-																<Image
-																	source={images.seta}
-																	tintColor={"#031e3f"}
-																	style={{
-																		width: 10,
-																		height: 10,
-																		right: 0,
-																		tintColor: "#031e3f",
-																		transform: [{ rotate: "90deg" }],
-																	}}
-																/>
-															</View>
-														</TouchableOpacity>
-													)}
-													sortingLanguage={"pt-br"}
-													autoGenerateAlphabeticalIndex={true}
-													showAlphabeticalIndex={true}
-													modalAnimationType="fade"
-													selected={associado.cidade}
-													selectPlaceholderText="SELECIONE A CIDADE"
-													searchPlaceholderText="DIGITE A CIDADE"
-													onSelected={(key) =>
-														setAssociado({ ...associado, cidade: key })
-													}
-													onClosed={() =>
-														setAssociado({
-															...associado,
-															cidade: associado.cidade,
-														})
-													}
-													items={cidades}
-												/>
-											)}
+								</View>
+								<View style={[s.row, s.mb10]}>
+									<View style={s.fl1}>
+										<Combo
+											label={"Cidade"}
+											pronome={"o"}
+											lista={cidades}
+											item={[cidade, setCidade]}
 										/>
 									</View>
 								</View>
 							</ProgressStep>
 							<ProgressStep label="Outros" removeBtnRow>
-								<View style={{ flexDirection: "row", marginBottom: 15 }}>
-									<View style={{ flex: 1, marginRight: 5 }}>
-										<TextInput
-											label="Órgão"
-											mode={"outlined"}
-											theme={tema}
-											style={{ fontSize: 18 }}
-											value={
-												associado.orgao.Value == ""
-													? "SELECIONE O ÓRGÃO"
-													: associado.orgao.Value
-											}
-											onChangeText={(text) =>
-												setAssociado({ ...associado, orgao: text })
-											}
-											render={(props) => (
-												<PickerModal
-													renderSelectView={(disabled, selected, showModal) => (
-														<TouchableOpacity
-															style={{
-																flexDirection: "row",
-																flex: 1,
-																justifyContent: "flex-start",
-																alignItems: "center",
-																paddingLeft: 10,
-															}}
-															disabled={disabled}
-															onPress={showModal}
-														>
-															<View style={{ flex: 3 }}>
-																<Text
-																	style={{
-																		fontSize: associado.orgao ? 15 : 12,
-																	}}
-																>
-																	{associado.orgao.Name !== ""
-																		? associado.orgao.Name
-																		: "SELECIONE"}
-																</Text>
-															</View>
-															<View
-																style={{
-																	flex: 1,
-																	alignItems: "flex-end",
-																	paddingRight: 10,
-																}}
-															>
-																<Image
-																	source={images.seta}
-																	tintColor={"#031e3f"}
-																	style={{
-																		width: 10,
-																		height: 10,
-																		right: 0,
-																		tintColor: "#031e3f",
-																		transform: [{ rotate: "90deg" }],
-																	}}
-																/>
-															</View>
-														</TouchableOpacity>
-													)}
-													modalAnimationType="fade"
-													selected={associado.orgao}
-													selectPlaceholderText="SELECIONE O ÓRGÃO"
-													searchPlaceholderText="DIGITE O ÓRGÃO"
-													onSelected={(key) =>
-														setAssociado({ ...associado, orgao: key })
-													}
-													onClosed={() =>
-														setAssociado({
-															...associado,
-															orgao: associado.orgao,
-														})
-													}
-													items={orgaos}
-												/>
-											)}
+								<View style={[s.row, s.mb10]}>
+									<View style={[s.fl1, s.mr5]}>
+										<Combo
+											label={"Órgão"}
+											pronome={"o"}
+											lista={orgaos}
+											item={[orgao, setOrgao]}
 										/>
 									</View>
-									<View style={{ flex: 2, marginRight: 5 }}>
-										<TextInput
-											label="Local de Trabalho"
-											mode={"outlined"}
-											theme={tema}
-											style={{ fontSize: 18 }}
-											value={
-												associado.local_trabalho.Name === ""
-													? "SELECIONE"
-													: associado.local_trabalho.Name
-											}
-											onChangeText={(text) =>
-												setAssociado({ ...associado, local_trabalho: text })
-											}
-											render={(props) => (
-												<PickerModal
-													renderSelectView={(disabled, selected, showModal) => (
-														<TouchableOpacity
-															style={{
-																flexDirection: "row",
-																flex: 1,
-																justifyContent: "flex-start",
-																alignItems: "center",
-																paddingLeft: 10,
-															}}
-															disabled={disabled}
-															onPress={showModal}
-														>
-															<View style={{ flex: 3 }}>
-																<Text
-																	style={{
-																		fontSize:
-																			associado.local_trabalho.Name !== ""
-																				? 15
-																				: 12,
-																	}}
-																>
-																	{associado.local_trabalho.Name === ""
-																		? "SELECIONE"
-																		: associado.local_trabalho.Name}
-																</Text>
-															</View>
-															<View
-																style={{
-																	flex: 1,
-																	alignItems: "flex-end",
-																	paddingRight: 10,
-																}}
-															>
-																<Image
-																	source={images.seta}
-																	tintColor={"#031e3f"}
-																	style={{
-																		width: 10,
-																		height: 10,
-																		right: 0,
-																		tintColor: "#031e3f",
-																		transform: [{ rotate: "90deg" }],
-																	}}
-																/>
-															</View>
-														</TouchableOpacity>
-													)}
-													modalAnimationType="fade"
-													selected={associado.local_trabalho}
-													selectPlaceholderText="SELECIONE O LOCAL DE TRABALHO"
-													searchPlaceholderText="DIGITE O LOCAL DE TRABALHO"
-													onSelected={(key) =>
-														setAssociado({ ...associado, local_trabalho: key })
-													}
-													onClosed={() =>
-														setAssociado({
-															...associado,
-															local_trabalho: associado.local_trabalho,
-														})
-													}
-													items={lotacoes}
-												/>
-											)}
+									<View style={s.fl2}>
+										<Combo
+											label={"Local de Trabalho"}
+											pronome={"o"}
+											lista={lotacoes}
+											item={[localTrabalho, setLocalTrabalho]}
 										/>
 									</View>
 								</View>
-								<View style={{ flexDirection: "row", marginBottom: 15 }}>
-									<View style={{ flex: 1, marginRight: 5 }}>
-										<TextInput
-											label="Função"
-											mode={"outlined"}
-											theme={tema}
-											style={{ fontSize: 18 }}
-											value={
-												associado.funcao.Name === ""
-													? "SELECIONE"
-													: associado.funcao.Name
-											}
-											onChangeText={(text) =>
-												setAssociado({ ...associado, funcao: text })
-											}
-											render={(props) => (
-												<PickerModal
-													renderSelectView={(disabled, selected, showModal) => (
-														<TouchableOpacity
-															style={{
-																flexDirection: "row",
-																flex: 1,
-																justifyContent: "flex-start",
-																alignItems: "center",
-																paddingLeft: 10,
-															}}
-															disabled={disabled}
-															onPress={showModal}
-														>
-															<View style={{ flex: 3 }}>
-																<Text
-																	style={{
-																		fontSize: associado.funcao !== "" ? 15 : 12,
-																	}}
-																>
-																	{associado.funcao.Name === ""
-																		? "SELECIONE"
-																		: associado.funcao.Name}
-																</Text>
-															</View>
-															<View
-																style={{
-																	flex: 1,
-																	alignItems: "flex-end",
-																	paddingRight: 10,
-																}}
-															>
-																<Image
-																	source={images.seta}
-																	tintColor={"#031e3f"}
-																	style={{
-																		width: 10,
-																		height: 10,
-																		right: 0,
-																		tintColor: "#031e3f",
-																		transform: [{ rotate: "90deg" }],
-																	}}
-																/>
-															</View>
-														</TouchableOpacity>
-													)}
-													modalAnimationType="fade"
-													selected={associado.funcao}
-													selectPlaceholderText="SELECIONE A FUNÇÃO"
-													searchPlaceholderText="DIGITE A FUNÇÃO"
-													onSelected={(key) =>
-														setAssociado({ ...associado, funcao: key })
-													}
-													onClosed={() =>
-														setAssociado({
-															...associado,
-															funcao: associado.funcao,
-														})
-													}
-													items={funcoes}
-												/>
-											)}
+								<View style={[s.row, s.mb10]}>
+									<View style={[s.fl2, s.mr5]}>
+										<Combo
+											label={"Função"}
+											pronome={"a"}
+											lista={funcoes}
+											item={[funcao, setFuncao]}
 										/>
 									</View>
-									<View style={{ flex: 2, marginRight: 5 }}>
+									<View style={[s.fl1, s.mr5]}>
 										<TextInput
 											label="Mês / Ano Últ. Desc."
 											mode={"outlined"}
 											theme={tema}
-											style={{ fontSize: 18 }}
-											value={associado.mesano}
+											style={s.fs18}
+											value={mesano}
 											maxLength={7}
 											returnKeyType={"next"}
 											onSubmitEditing={() => identificadorRef?.current?.focus()}
-											onChangeText={(text) =>
-												setAssociado({ ...associado, mesano: text })
-											}
+											onChangeText={(text) => setMesano(text)}
 											render={(props) => (
 												<TextInputMask
 													{...props}
 													type={"custom"}
-													options={{
-														mask: "99/9999",
-													}}
+													options={{ mask: "99/9999" }}
 												/>
 											)}
 										/>
 									</View>
-									<View style={{ flex: 1, marginRight: 5 }}>
+									<View style={s.fl1}>
 										<TextInput
 											label="Identificador"
 											ref={identificadorRef}
 											mode={"outlined"}
 											theme={tema}
-											style={{ fontSize: 18 }}
-											value={associado.identificador}
+											style={s.fs18}
+											value={identificador}
 											maxLength={15}
 											returnKeyType={"next"}
 											onSubmitEditing={() => agenciaRef?.current?.focus()}
-											onChangeText={(text) =>
-												setAssociado({ ...associado, identificador: text })
-											}
+											onChangeText={(text) => setIdentificador(text)}
 										/>
 									</View>
 								</View>
-								<View style={{ flexDirection: "row", marginBottom: 15 }}>
-									<View style={{ flex: 1, marginRight: 5 }}>
-										<TextInput
-											label="Banco"
-											mode={"outlined"}
-											theme={tema}
-											style={{ fontSize: 18 }}
-											value={
-												associado.banco.Name === ""
-													? "SELECIONE"
-													: associado.banco.Name
-											}
-											onChangeText={(text) =>
-												setAssociado({ ...associado, banco: text })
-											}
-											render={(props) => (
-												<PickerModal
-													renderSelectView={(disabled, selected, showModal) => (
-														<TouchableOpacity
-															style={{
-																flexDirection: "row",
-																flex: 1,
-																justifyContent: "flex-start",
-																alignItems: "center",
-																paddingLeft: 10,
-															}}
-															disabled={disabled}
-															onPress={showModal}
-														>
-															<View style={{ flex: 3 }}>
-																<Text
-																	style={{
-																		fontSize: associado.banco !== "" ? 15 : 12,
-																	}}
-																>
-																	{associado.banco.Name === ""
-																		? "SELECIONE"
-																		: associado.banco.Name}
-																</Text>
-															</View>
-															<View
-																style={{
-																	flex: 1,
-																	alignItems: "flex-end",
-																	paddingRight: 10,
-																}}
-															>
-																<Image
-																	source={images.seta}
-																	tintColor={"#031e3f"}
-																	style={{
-																		width: 10,
-																		height: 10,
-																		right: 0,
-																		tintColor: "#031e3f",
-																		transform: [{ rotate: "90deg" }],
-																	}}
-																/>
-															</View>
-														</TouchableOpacity>
-													)}
-													modalAnimationType="fade"
-													selected={associado.banco}
-													selectPlaceholderText="SELECIONE O BANCO"
-													searchPlaceholderText="DIGITE O BANCO"
-													onSelected={(key) =>
-														setAssociado({ ...associado, banco: key })
-													}
-													onClosed={() =>
-														setAssociado({
-															...associado,
-															banco: associado.banco,
-														})
-													}
-													items={bancos}
-												/>
-											)}
+								<View style={[s.row, s.mb10]}>
+									<View style={[s.fl2, s.mr5]}>
+										<Combo
+											label={"Banco"}
+											pronome={"o"}
+											lista={bancos}
+											item={[banco, setBanco]}
 										/>
 									</View>
-									<View style={{ flex: 1, marginRight: 5 }}>
+									<View style={[s.fl1, s.mr5]}>
 										<TextInput
 											label="Agência"
 											mode={"outlined"}
 											ref={agenciaRef}
 											theme={tema}
-											style={{ fontSize: 18 }}
-											value={associado.agencia}
+											style={s.fs18}
+											value={agencia}
 											maxLength={7}
 											returnKeyType={"next"}
 											onSubmitEditing={() => contaRef?.current?.focus()}
-											onChangeText={(text) =>
-												setAssociado({ ...associado, agencia: text })
-											}
+											onChangeText={(text) => setAgencia(text)}
 										/>
 									</View>
-									<View style={{ flex: 2, marginRight: 5 }}>
+									<View style={[s.fl1, s.mr5]}>
 										<TextInput
 											label="Conta Corrente"
 											ref={contaRef}
 											mode={"outlined"}
 											theme={tema}
-											style={{ fontSize: 18 }}
-											value={associado.conta}
+											style={s.fs18}
+											value={conta}
 											maxLength={8}
 											returnKeyType={"next"}
 											onSubmitEditing={() => digitoContaRef?.current?.focus()}
-											onChangeText={(text) =>
-												setAssociado({ ...associado, conta: text })
-											}
+											onChangeText={(text) => setConta(text)}
 										/>
 									</View>
-									<View style={{ flex: 1, marginRight: 5 }}>
+									<View style={s.fl1}>
 										<TextInput
 											label="Dígito"
 											ref={digitoContaRef}
 											mode={"outlined"}
 											theme={tema}
-											style={{ fontSize: 18 }}
-											value={associado.digito_conta}
+											style={s.fs18}
+											value={digitoConta}
 											maxLength={1}
 											returnKeyType={"next"}
-											onSubmitEditing={() =>
-												mensalidadeRef?.current?._inputElement.focus()
-											}
-											onChangeText={(text) =>
-												setAssociado({ ...associado, digito_conta: text })
-											}
+											onSubmitEditing={() => mensalidadeRef?.current?.focus()}
+											onChangeText={(text) => setDigitoConta(text)}
 										/>
 									</View>
 								</View>
-								<View style={{ flexDirection: "row", marginBottom: 15 }}>
-									<View style={{ flex: 2, marginRight: 5 }}>
-										<TextInput
-											label="Forma de Desconto"
-											mode={"outlined"}
-											theme={tema}
-											style={{ fontSize: 18 }}
-											value={
-												associado.forma_desconto.Name === ""
-													? "SELECIONE"
-													: associado.forma_desconto.Name
-											}
-											onChangeText={(text) =>
-												setAssociado({ ...associado, forma_desconto: text })
-											}
-											render={(props) => (
-												<PickerModal
-													renderSelectView={(disabled, selected, showModal) => (
-														<TouchableOpacity
-															style={{
-																flexDirection: "row",
-																flex: 1,
-																justifyContent: "flex-start",
-																alignItems: "center",
-																paddingLeft: 10,
-															}}
-															disabled={disabled}
-															onPress={showModal}
-														>
-															<View style={{ flex: 3 }}>
-																<Text
-																	style={{
-																		fontSize:
-																			associado.forma_desconto !== "" ? 15 : 12,
-																	}}
-																>
-																	{associado.forma_desconto.Name === ""
-																		? "SELECIONE"
-																		: associado.forma_desconto.Name}
-																</Text>
-															</View>
-															<View
-																style={{
-																	flex: 1,
-																	alignItems: "flex-end",
-																	paddingRight: 10,
-																}}
-															>
-																<Image
-																	source={images.seta}
-																	tintColor={"#031e3f"}
-																	style={{
-																		width: 10,
-																		height: 10,
-																		right: 0,
-																		tintColor: "#031e3f",
-																		transform: [{ rotate: "90deg" }],
-																	}}
-																/>
-															</View>
-														</TouchableOpacity>
-													)}
-													modalAnimationType="fade"
-													selected={associado.forma_desconto}
-													selectPlaceholderText="SELECIONE A FORMA DE DESCONTO"
-													searchPlaceholderText="DIGITE A FORMA DE DESCONTO"
-													onSelected={(key) =>
-														setAssociado({ ...associado, forma_desconto: key })
-													}
-													onClosed={() =>
-														setAssociado({
-															...associado,
-															forma_desconto: associado.forma_desconto,
-														})
-													}
-													items={formas}
-												/>
-											)}
+								<View style={[s.row, s.mb10]}>
+									<View style={[s.fl2, s.mr5]}>
+										<Combo
+											label={"Forma de Desconto"}
+											pronome={"a"}
+											lista={formas}
+											item={[formaDesconto, setFormaDesconto]}
 										/>
 									</View>
-
-									<View
-										style={{ flex: 2, marginRight: 5, alignItems: "center" }}
-									>
+									<View style={[s.fl1, s.mr5, s.aic]}>
 										<Text>ESTORNADO</Text>
 										<Switch
-											value={associado.estornado}
+											value={estornado}
 											onValueChange={onToggleEstornado}
 										/>
 									</View>
-								</View>
-								<View style={{ flexDirection: "row", marginBottom: 15 }}>
-									<View style={{ flex: 1, marginRight: 5 }}>
-										<TextInput
-											label="Valor da Mensalidade"
-											mode={"outlined"}
-											theme={tema}
-											style={{ fontSize: 18 }}
-											value={associado.valor_mensalidade.toString()}
-											returnKeyType={"next"}
-											onSubmitEditing={() => obsRef?.current?.focus()}
-											onChangeText={(text) =>
-												setAssociado({ ...associado, valor_mensalidade: text })
-											}
-											render={(props) => (
-												<TextInputMask
-													{...props}
-													ref={mensalidadeRef}
-													type={"money"}
-													options={{
-														precision: 2,
-														separator: ",",
-														delimiter: ".",
-														unit: "R$ ",
-														suffixUnit: "",
-													}}
-												/>
-											)}
-										/>
-									</View>
-									<View
-										style={{ flex: 1, marginRight: 5, alignItems: "center" }}
-									>
+									<View style={[s.fl1, s.aic]}>
 										<Text>INDICA ASSOC. ESP.</Text>
-										<Switch
-											value={associado.indica}
-											onValueChange={onToggleIndica}
-										/>
+										<Switch value={indica} onValueChange={onToggleIndica} />
 									</View>
 								</View>
-								<View style={{ flexDirection: "row", marginBottom: 15 }}>
-									<View style={{ flex: 1, marginRight: 5 }}>
+								<View style={[s.row, s.mb10]}>
+									<View style={[s.fl1, s.mr5]}>
 										<TextInput
 											label="Observação"
 											ref={obsRef}
 											mode={"outlined"}
 											theme={tema}
-											style={{ fontSize: 18 }}
-											value={associado.observacao}
+											style={s.fs18}
+											value={observacao}
 											multiline
 											numberOfLines={10}
 											returnKeyType={"done"}
-											onChangeText={(text) =>
-												setAssociado({ ...associado, observacao: text })
-											}
+											onChangeText={(text) => setObservacao(text)}
 										/>
 									</View>
 								</View>
 							</ProgressStep>
 							<ProgressStep label="Arquivos" removeBtnRow>
-								<Text style={{ textAlign: "center", marginBottom: 20 }}>
-									Clique nos botões abaixo para tirar foto dos documentos:
+								<Text style={[s.tac, s.mb20]}>
+									Clique nos botões abaixo para tirar foto dos documentos e
+									clique nas imagens para ampliá-las.
 								</Text>
 								<ScrollView>
-									<View style={{ flexDirection: "row" }}>
-										<View
-											style={{
-												flex: 1,
-												alignItems: "center",
-												marginVertical: 20,
-											}}
-										>
+									<View style={s.row}>
+										<View style={[s.fl1, s.aic, s.mv20]}>
+											{imagemCpf.length > 0 ? (
+												<TouchableOpacity
+													onPress={() => {
+														setImagemAmpliada(imagemCpf);
+														setModal(true);
+													}}
+												>
+													<Image
+														source={{ uri: imagemCpf }}
+														style={[s.w200, s.h200, s.mv25]}
+													/>
+												</TouchableOpacity>
+											) : (
+												<Image
+													source={images.imagem_padrao}
+													style={[s.w250, s.h250]}
+												/>
+											)}
+
 											<TouchableOpacity
-												style={{
-													backgroundColor: "#031e3f",
-													padding: 20,
-													borderRadius: 6,
-													width: "70%",
-													alignItems: "center",
-												}}
+												style={[
+													s.bgcp,
+													s.pd20,
+													s.br6,
+													s.w70p,
+													s.aic,
+													s.row,
+													s.jcc,
+												]}
 												onPress={() => tirarFoto("CPF")}
 											>
-												<Text style={{ color: "#fff", fontSize: 20 }}>CPF</Text>
+												<IconButton icon="camera" color={"#fff"} size={20} />
+												<Text style={[s.fcw, s.fs20]}>CPF</Text>
 											</TouchableOpacity>
-											{cpf.length > 0 && (
-												<View
-													style={{
-														flex: 1,
-														alignItems: "center",
-														marginVertical: 20,
+										</View>
+										<View style={[s.fl1, s.aic, s.mv20]}>
+											{imagemRg.length > 0 ? (
+												<TouchableOpacity
+													onPress={() => {
+														setImagemAmpliada(imagemRg);
+														setModal(true);
 													}}
 												>
 													<Image
-														source={{ uri: cpf }}
-														style={{ width: 300, height: 300 }}
+														source={{ uri: imagemRg }}
+														style={[s.w200, s.h200, s.mv25]}
 													/>
-												</View>
+												</TouchableOpacity>
+											) : (
+												<Image
+													source={images.imagem_padrao}
+													style={[s.w250, s.h250]}
+												/>
 											)}
-										</View>
-										<View
-											style={{
-												flex: 1,
-												alignItems: "center",
-												marginVertical: 20,
-											}}
-										>
 											<TouchableOpacity
-												style={{
-													backgroundColor: "#031e3f",
-													padding: 20,
-													borderRadius: 6,
-													width: "70%",
-													alignItems: "center",
-												}}
+												style={[
+													s.bgcp,
+													s.pd20,
+													s.br6,
+													s.w70p,
+													s.aic,
+													s.jcc,
+													s.row,
+												]}
 												onPress={() => tirarFoto("RG")}
 											>
-												<Text style={{ color: "#fff", fontSize: 20 }}>RG</Text>
+												<IconButton icon="camera" color={"#fff"} size={20} />
+												<Text style={[s.fcw, s.fs20]}>RG</Text>
 											</TouchableOpacity>
-											{rg.length > 0 && (
-												<View
-													style={{
-														flex: 1,
-														alignItems: "center",
-														marginVertical: 20,
+										</View>
+									</View>
+									<View style={s.row}>
+										<View style={[s.fl1, s.aic, s.mv20]}>
+											{imagemContraCheque.length > 0 ? (
+												<TouchableOpacity
+													onPress={() => {
+														setImagemAmpliada(imagemContraCheque);
+														setModal(true);
 													}}
 												>
 													<Image
-														source={{ uri: rg }}
-														style={{ width: 300, height: 300 }}
+														source={{ uri: imagemContraCheque }}
+														style={[s.w200, s.h200, s.mv25]}
 													/>
-												</View>
+												</TouchableOpacity>
+											) : (
+												<Image
+													source={images.imagem_padrao}
+													style={[s.w250, s.h250]}
+												/>
 											)}
-										</View>
-									</View>
-									<View style={{ flexDirection: "row" }}>
-										<View
-											style={{
-												flex: 1,
-												alignItems: "center",
-												marginVertical: 20,
-											}}
-										>
 											<TouchableOpacity
-												style={{
-													backgroundColor: "#031e3f",
-													padding: 20,
-													borderRadius: 6,
-													width: "70%",
-													alignItems: "center",
-												}}
+												style={[
+													s.bgcp,
+													s.pd20,
+													s.br6,
+													s.w70p,
+													s.aic,
+													s.jcc,
+													s.row,
+												]}
 												onPress={() => tirarFoto("CC")}
 											>
-												<Text style={{ color: "#fff", fontSize: 20 }}>
-													CONTRA CHEQUE
-												</Text>
+												<IconButton icon="camera" color={"#fff"} size={20} />
+												<Text style={[s.fcw, s.fs20]}>CONTRA CHEQUE</Text>
 											</TouchableOpacity>
-											{contraCheque.length > 0 && (
-												<View
-													style={{
-														flex: 1,
-														alignItems: "center",
-														marginVertical: 20,
+										</View>
+										<View style={[s.fl1, s.aic, s.mv20]}>
+											{imagemComprovanteResidencia.length > 0 ? (
+												<TouchableOpacity
+													onPress={() => {
+														setImagemAmpliada(imagemComprovanteResidencia);
+														setModal(true);
 													}}
 												>
 													<Image
-														source={{ uri: contraCheque }}
-														style={{ width: 300, height: 300 }}
+														source={{ uri: imagemComprovanteResidencia }}
+														style={[s.w200, s.h200, s.mv25]}
 													/>
-												</View>
+												</TouchableOpacity>
+											) : (
+												<Image
+													source={images.imagem_padrao}
+													style={[s.w250, s.h250]}
+												/>
 											)}
-										</View>
-										<View
-											style={{
-												flex: 1,
-												alignItems: "center",
-												marginVertical: 20,
-											}}
-										>
 											<TouchableOpacity
-												style={{
-													backgroundColor: "#031e3f",
-													padding: 20,
-													borderRadius: 6,
-													width: "70%",
-													alignItems: "center",
-												}}
+												style={[
+													s.bgcp,
+													s.pd20,
+													s.br6,
+													s.w70p,
+													s.aic,
+													s.jcc,
+													s.row,
+												]}
 												onPress={() => tirarFoto("CR")}
 											>
-												<Text style={{ color: "#fff", fontSize: 20 }}>
-													COMPROV. DE RESIDÊNCIA
-												</Text>
+												<IconButton icon="camera" color={"#fff"} size={20} />
+												<Text style={[s.fcw, s.fs20]}>COMP. DE RESIDÊNCIA</Text>
 											</TouchableOpacity>
-											{comprovanteResidencia.length > 0 && (
-												<View
-													style={{
-														flex: 1,
-														alignItems: "center",
-														marginVertical: 20,
-													}}
-												>
-													<Image
-														source={{ uri: comprovanteResidencia }}
-														style={{ width: 300, height: 300 }}
-													/>
-												</View>
-											)}
 										</View>
 									</View>
-									<View style={{ height: 110 }}></View>
+									<View style={s.h100}></View>
 								</ScrollView>
 							</ProgressStep>
 						</ProgressSteps>
 						{prevStep && (
 							<TouchableOpacity
 								onPress={goToPrevStep}
-								style={{
-									backgroundColor: "#031e3f",
-									padding: 20,
-									borderRadius: 6,
-									position: "absolute",
-									left: 50,
-									bottom: 40,
-								}}
+								style={[
+									s.bgcp,
+									s.pd20,
+									s.br6,
+									s.psa,
+									s.l50,
+									s.b40,
+									s.row,
+									s.jcc,
+									s.aic,
+								]}
 							>
-								<Text style={{ color: "#fff", fontSize: 20 }}>ANTERIOR</Text>
+								<Image
+									source={images.seta}
+									style={[s.w20, s.h20, s.tcw, s.mr10, s.tr180]}
+									tintColor={tema.colors.background}
+								/>
+								<Text style={[s.fcw, s.fs20]}>ANTERIOR</Text>
 							</TouchableOpacity>
 						)}
 						<TouchableOpacity
 							disabled={!nextStep}
 							onPress={goToNextStep}
-							style={{
-								backgroundColor: nextStep
-									? activeStep === 4
-										? "#188038"
-										: "#031e3f"
-									: "#aaa",
-								padding: 20,
-								borderRadius: 6,
-								position: "absolute",
-								right: 50,
-								bottom: 40,
-							}}
+							style={[
+								s.pd20,
+								s.br6,
+								s.psa,
+								s.r50,
+								s.b40,
+								s.row,
+								s.jcc,
+								s.aic,
+								{
+									backgroundColor: nextStep
+										? activeStep === 2
+											? "#188038"
+											: "#031e3f"
+										: "#aaa",
+								},
+							]}
 						>
-							<Text style={{ color: nextStep ? "#fff" : "#000", fontSize: 20 }}>
+							<Text style={[s.fs20, { color: nextStep ? "#fff" : "#000" }]}>
 								{textNext}
 							</Text>
+							{nextStep ? (
+								activeStep === 2 ? (
+									<Image
+										source={images.sucesso}
+										style={[s.w20, s.h20, s.tcw, s.ml10]}
+										tintColor={tema.colors.background}
+									/>
+								) : (
+									<Image
+										source={images.seta}
+										style={[s.w20, s.h20, s.tcw, s.ml10]}
+										tintColor={tema.colors.background}
+									/>
+								)
+							) : null}
 						</TouchableOpacity>
 					</View>
 				</View>

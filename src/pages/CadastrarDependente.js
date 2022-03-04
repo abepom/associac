@@ -6,6 +6,7 @@ import {
 	TouchableOpacity,
 	Text,
 	View,
+	Image,
 } from "react-native";
 import Header from "../components/Header";
 import { TextInput } from "react-native-paper";
@@ -18,6 +19,7 @@ import HTMLView from "react-native-htmlview";
 import Alert from "../components/Alert";
 import Loading from "../components/Loading";
 import compararValores from "../functions/compararValores";
+import images from "../utils/images";
 
 function CadastrarDependente(props) {
 	const { navigation } = props;
@@ -383,6 +385,7 @@ function CadastrarDependente(props) {
 					) : (
 						<TouchableOpacity
 							style={{
+								flexDirection: "row",
 								flex: 1,
 								margin: 0,
 								padding: 15,
@@ -395,7 +398,14 @@ function CadastrarDependente(props) {
 							}}
 							onPress={() => cadastrar()}
 						>
-							<Text style={{ color: "#fff" }}>PRÉ-CADASTRAR</Text>
+							<Image
+								source={images.sucesso}
+								style={[s.w20, s.h20, s.tcw]}
+								tintColor={tema.colors.background}
+							/>
+							<Text style={{ color: "#fff", marginLeft: 10 }}>
+								PRÉ-CADASTRAR
+							</Text>
 						</TouchableOpacity>
 					)}
 					<View style={{ height: 100 }} />

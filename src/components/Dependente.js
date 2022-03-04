@@ -19,7 +19,19 @@ export default (props) => {
 	};
 
 	return (
-		<View style={[s.bgcw, s.el1, s.br6, s.flg1, s.mv6, s.pd20, s.row]}>
+		<View
+			style={[
+				s.bgcw,
+				s.el1,
+				s.br6,
+				s.flg1,
+				s.mv6,
+				s.pd20,
+				s.row,
+				s.h100,
+				s.aic,
+			]}
+		>
 			<View style={s.fl12}>
 				<Text style={[s.fs20, s.fcp]}>{item.nome.toUpperCase()}</Text>
 				<Text style={[s.fs15, s.fcp]}>TIPO: {item.tipo.toUpperCase()}</Text>
@@ -49,7 +61,7 @@ export default (props) => {
 			) : (
 				<TouchableOpacity
 					onPress={() =>
-						navigation.navigate("AlterarTipoDependente", {
+						navigation.navigate("AlterarDependente", {
 							matricula: associado_atendimento.matricula,
 							dependente: item,
 						})
@@ -57,8 +69,8 @@ export default (props) => {
 					style={[s.fl1, s.jcc, s.aic]}
 				>
 					<Image
-						source={images.recadastrar_associado}
-						style={[s.w50, s.h50, s.tcp]}
+						source={images.alterar_dados}
+						style={[s.w35, s.h35, s.tcp]}
 						tintColor={tema.colors.primary}
 					/>
 				</TouchableOpacity>
