@@ -40,7 +40,7 @@ function MigrarPlanoDeSaude(props) {
 	const [plano, setPlano] = useState(PLANO_INITIAL);
 	const [mostrarDadosAssociado, setMostrarDadosAssociado] = useState(false);
 	const [activeStep, setActiveStep] = useState(0);
-	const [nextStep, setNextStep] = useState(false);
+	const [nextStep, setNextStep] = useState(true);
 	const [prevStep, setPrevStep] = useState(false);
 	const [textNext, setTextNext] = useState("PRÓXIMO");
 	const [alerta, setAlerta] = useState({});
@@ -536,7 +536,7 @@ function MigrarPlanoDeSaude(props) {
 							method: "POST",
 							data: {
 								plano,
-								associado_atendimento,
+								associado: associado_atendimento,
 								dataVigencia,
 							},
 							headers: { "x-access-token": token },

@@ -9,7 +9,7 @@ import {
 	Modal,
 	Keyboard,
 } from "react-native";
-import { TextInput, IconButton, Button } from "react-native-paper";
+import { TextInput, Button } from "react-native-paper";
 import { TextInputMask } from "react-native-masked-text";
 import PickerModal from "react-native-picker-modal-view";
 import { ProgressSteps, ProgressStep } from "react-native-progress-steps";
@@ -20,7 +20,7 @@ import formatDate from "../functions/formatDate";
 import * as ImagePicker from "expo-image-picker";
 import * as Camera from "expo-camera";
 import Header from "../components/Header";
-import { tema } from "../../assets/style/Style";
+import s,{ tema } from "../../assets/style/Style";
 import Alert from "../components/Alert";
 import Loading from "../components/Loading";
 import { useUsuario } from "../store/Usuario";
@@ -29,6 +29,7 @@ import calculateAge from "../functions/calculateAge";
 import WebView from "react-native-webview";
 import * as Print from "expo-print";
 import * as ScreenOrientation from "expo-screen-orientation";
+import Combo from '../components/Combo';
 
 const BENEFICIARIO_INITIAL = {
 	Name: "",
@@ -52,14 +53,12 @@ function CadastrarPlanosDeSaude(props) {
 	const { navigation } = props;
 	const [usuario, setUsuario] = useUsuario();
 	const { token, associado_atendimento } = usuario;
-	const [associado, setAssociado] = useState();
 	const [dependentes, setDependentes] = useState([]);
 	const [beneficiario, setBeneficiario] = useState(BENEFICIARIO_INITIAL);
 	const [planos, setPlanos] = useState([]);
 	const [plano, setPlano] = useState(PLANO_INITIAL);
-	const [mostrarDadosAssociado, setMostrarDadosAssociado] = useState(false);
 	const [activeStep, setActiveStep] = useState(0);
-	const [nextStep, setNextStep] = useState(false);
+	const [nextStep, setNextStep] = useState(true);
 	const [prevStep, setPrevStep] = useState(false);
 	const [textNext, setTextNext] = useState("PRÓXIMO");
 	const [imagemCpf, setImagemCpf] = useState("");
@@ -69,7 +68,6 @@ function CadastrarPlanosDeSaude(props) {
 		useState("");
 	const [imagemDeclaracaoSaude, setImagemDeclaracaoSaude] = useState("");
 	const [alerta, setAlerta] = useState({});
-	const [carregando, setCarregando] = useState(false);
 	const [modal, setModal] = useState(false);
 	const [modalAssinatura, setModalAssinatura] = useState(false);
 	const [imagemAmpliada, setImagemAmpliada] = useState("");
@@ -95,11 +93,19 @@ function CadastrarPlanosDeSaude(props) {
 	const [assinaturaAssociado, setAssinaturaAssociado] = useState("");
 	const [assinaturaBeneficiario, setAssinaturaBeneficiario] = useState("");
 	const [mostrarBotoes, setMostrarBotoes] = useState(true);
-
 	const [nome, setNome] = useState(associado_atendimento?.nome ?? "");
 	const [nascimento, setNascimento] = useState(
 		associado_atendimento?.nascimento ?? ""
 	);
+	const [endereco, setEndereco] = useState(associado_atendimento?.endereco ?? "");
+	const [numero, setNumero] = useState(associado_atendimento?.numero ?? "");
+	const [complemento, setComplemento] = useState(associado_atendimento?.complemento ?? "");
+	const [cidade, setCidade] = useState(associado_atendimento?.cidade ?? {Name: "", Value: ""});
+	const [cep, setCep] = useState(associado_atendimento?.cep ?? "");
+	const [telefoneComercial, setTelefoneComercial] = useState(associado_atendimento?.telefone_comercial ?? "");
+	const [telefoneResidencial, setTelefoneResidencial] = useState(associado_atendimento?.telefone_residencial ?? "");
+	const [celular, setCelular] = useState(associado_atendimento?.celular ?? "");
+	const [email, setEmail] = useState(associado_atendimento?.email ?? "");
 
 	const refAssociado = useRef();
 	const refBeneficiario = useRef();
@@ -151,191 +157,100 @@ function CadastrarPlanosDeSaude(props) {
 		}
 	};
 
-	const verificarMatricula = async () => {
+	const listarBeneficiarios = async () => {
 		let dataFormat = "";
 		let age = 0;
 
-		if (associado_atendimento.matricula.length == 6) {
-			if (!isNaN(associado_atendimento.matricula)) {
-				setCarregando(true);
-				setBeneficiario(BENEFICIARIO_INITIAL);
-				setDependentes([]);
-				setPlano(PLANO_INITIAL);
+		setBeneficiario(BENEFICIARIO_INITIAL);
+		setDependentes([]);
+		setPlano(PLANO_INITIAL);
 
-				try {
-					const { data } = await api({
-						url: "/associados/verificarMatricula",
-						method: "GET",
-						params: { cartao: associado_atendimento.matricula },
-						headers: { "x-access-token": token },
-					});
+		let deps = [];
 
-					setAssociado(data);
-
-					if (data.status) {
-						setMostrarDadosAssociado(true);
-						if (data.tipo === "01") {
-							setNextStep(true);
-						} else {
-							setNextStep(false);
-						}
-
-						let deps = [];
-
-						dataFormat = formatDate(data.nascimento, "AMD");
-
-						if (isDate(new Date(dataFormat))) {
-							age = calculateAge(dataFormat);
-						} else {
-							age = 0;
-						}
-
-						deps.push({
-							Name: data.nome,
-							Value: data.cd_dependente,
-							data_nascimento: data.nascimento,
-							idade: age,
-							estado_civil: { Name: "", Value: "" },
-							sexo: data.sexo.Name,
-							tipo: "TITULAR",
-							codigo_tipo: "00",
-							local_cobranca: { Name: "", Value: "" },
-							cpf: data.cpf,
-							valor_mensalidade: 0,
-							possui_plano: data.possui_plano == 1 ? true : false,
-							nome_plano: data.nome_plano,
-						});
-
-						const retorno = await api({
-							url: "/associados/listarDependentes",
-							method: "GET",
-							params: {
-								cartao: `${associado_atendimento.matricula}00001`,
-							},
-							headers: { "x-access-token": token },
-						});
-
-						retorno.data.dependentes.map((dependente) => {
-							dataFormat = formatDate(dependente.data_nascimento, "AMD");
-
-							if (isDate(new Date(dataFormat))) {
-								age = calculateAge(dataFormat);
-							} else {
-								age = 0;
-							}
-
-							deps.push({
-								Name: dependente.nome,
-								Value: dependente.cont,
-								data_nascimento: dependente.data_nascimento,
-								idade: age,
-								estado_civil: { Name: "", Value: "" },
-								sexo: dependente.sexo === "M" ? "MASCULINO" : "FEMININO",
-								tipo: dependente.tipo.toUpperCase(),
-								codigo_tipo: dependente.cod_dep,
-								local_cobranca: { Name: "", Value: "" },
-								cpf: dependente.cpf,
-								valor_mensalidade: 0,
-								possui_plano: dependente.possui_plano == 1 ? true : false,
-								nome_plano: dependente.nome_plano,
-							});
-						});
-
-						let todos_com_plano = true;
-
-						deps.map((integrante) => {
-							if (!integrante.possui_plano) {
-								todos_com_plano = false;
-							}
-						});
-
-						if (!todos_com_plano) {
-							setAlerta({
-								visible: true,
-								title: "ATENÇÃO!",
-								message:
-									"O titular e todos os seus dependentes já possuem plano de saúde. Portanto, só é possível realizar a migração.",
-								type: "danger",
-								confirmText: "FECHAR",
-								showConfirm: true,
-								showCancel: false,
-								confirmFunction: () => {
-									navigation.navigate("MigrarPlanoDeSaude", {
-										id: new Date().toJSON(),
-									});
-								},
-							});
-
-							setNextStep(false);
-							setMostrarDadosAssociado(false);
-						} else {
-							setDependentes(deps);
-							setMostrarDadosAssociado(true);
-						}
-					} else {
-						setNextStep(false);
-
-						setAlerta({
-							visible: true,
-							title: "ATENÇÃO!",
-							message: data.message,
-							type: "danger",
-							confirmText: "FECHAR",
-							showConfirm: true,
-							showCancel: false,
-						});
-					}
-
-					setCarregando(false);
-					Keyboard.dismiss();
-				} catch (error) {
-					setDependentes([]);
-					setCarregando(false);
-					setMostrarDadosAssociado(false);
-					setNextStep(false);
-					Keyboard.dismiss();
-
-					setAlerta({
-						visible: true,
-						title: "ATENÇÃO!",
-						message: "Ocorreu um erro ao tentar verificar a matrícula.",
-						type: "danger",
-						confirmText: "FECHAR",
-						showConfirm: true,
-						showCancel: false,
-					});
-				}
+		
+		if(!associado_atendimento?.possui_plano){
+			dataFormat = formatDate(associado_atendimento.nascimento, "AMD");
+	
+			if (isDate(new Date(dataFormat))) {
+				age = calculateAge(dataFormat);
 			} else {
-				setDependentes([]);
-				setCarregando(false);
-				setMostrarDadosAssociado(false);
-				setNextStep(false);
-				Keyboard.dismiss();
-				setAlerta({
-					visible: true,
-					title: "ATENÇÃO!",
-					message: "Para prosseguir é obrigatório informar a matrícula.",
-					type: "danger",
-					confirmText: "FECHAR",
-					showConfirm: true,
-					showCancel: false,
+				age = 0;
+			}
+			
+			deps.push({
+				Name: associado_atendimento.nome,
+				Value: associado_atendimento.cd_dependente,
+				data_nascimento: associado_atendimento.nascimento,
+				idade: age,
+				estado_civil: { Name: "", Value: "" },
+				sexo: associado_atendimento.sexo.Name,
+				tipo: "TITULAR",
+				codigo_tipo: "00",
+				local_cobranca: { Name: "", Value: "" },
+				cpf: associado_atendimento.cpf,
+				valor_mensalidade: 0,
+				possui_plano: associado_atendimento.possui_plano == 1 ? true : false,
+				nome_plano: associado_atendimento.nome_plano,
+			});
+		}
+
+		associado_atendimento?.dependentes?.map((dependente) => {
+			if(!dependente.possui_plano){
+				dataFormat = formatDate(dependente.data_nascimento, "AMD");
+	
+				if (isDate(new Date(dataFormat))) {
+					age = calculateAge(dataFormat);
+				} else {
+					age = 0;
+				}
+	
+				deps.push({
+					Name: dependente.nome,
+					Value: dependente.cont,
+					data_nascimento: dependente.data_nascimento,
+					idade: age,
+					estado_civil: { Name: "", Value: "" },
+					sexo: dependente.sexo === "M" ? "MASCULINO" : "FEMININO",
+					tipo: dependente.tipo.toUpperCase(),
+					codigo_tipo: dependente.cod_dep,
+					local_cobranca: { Name: "", Value: "" },
+					cpf: dependente.cpf,
+					valor_mensalidade: 0,
+					possui_plano: dependente.possui_plano == 1 ? true : false,
+					nome_plano: dependente.nome_plano,
 				});
 			}
-		} else {
-			setDependentes([]);
-			setCarregando(false);
-			setMostrarDadosAssociado(false);
-			setNextStep(false);
-			Keyboard.dismiss();
+		});
+
+		let todos_com_plano = true;
+
+		console.log(deps)
+
+		deps.map((integrante) => {
+			if (!integrante.possui_plano) {
+				todos_com_plano = false;
+			}
+		});
+
+		if (todos_com_plano) {
 			setAlerta({
 				visible: true,
 				title: "ATENÇÃO!",
-				message: "Para prosseguir é obrigatório informar a matrícula.",
+				message:
+					`O titular e todos os seus dependentes já possuem plano de saúde.{'\n'}Portanto, só é possível realizar a migração.`,
 				type: "danger",
 				confirmText: "FECHAR",
 				showConfirm: true,
 				showCancel: false,
+				width: "70%",
+				confirmFunction: () => {
+					navigation.navigate("Inicio");
+				},
 			});
+
+			setNextStep(false);
+		} else {
+			setDependentes(deps);
 		}
 	};
 
@@ -536,7 +451,7 @@ function CadastrarPlanosDeSaude(props) {
 					</div>
 					<div style="display: flex; flex-direction: row; flex: 1; justify-content: center; align-items: center">
 						<div style="display: flex; flex: 5;">
-							E-mail: ${associado.email}
+							E-mail: ${email}
 						</div>
 					</div>
 				</div>
@@ -728,7 +643,7 @@ function CadastrarPlanosDeSaude(props) {
 									),
 								},
 								plano,
-								associado,
+								associado: associado_atendimento,
 								cancelar,
 								dataVigencia,
 							},
@@ -749,7 +664,6 @@ function CadastrarPlanosDeSaude(props) {
 							setActiveStep(0);
 							setPrevStep(false);
 							setTextNext("PRÓXIMO");
-							setMostrarDadosAssociado(false);
 							setImagemCpf("1");
 							setImagemRg("1");
 							setImagemCartaoSUS("1");
@@ -901,33 +815,6 @@ function CadastrarPlanosDeSaude(props) {
 
 		switch (activeStep) {
 			case 0:
-				if (
-					associado_atendimento.matricula?.length < 6 ||
-					isNaN(associado_atendimento.matricula)
-				) {
-					setAlerta({
-						visible: true,
-						title: "ATENÇÃO!",
-						message: "A matrícula encontra-se incorreta.",
-						showCancel: false,
-						showConfirm: true,
-						confirmText: "FECHAR",
-						type: "danger",
-					});
-
-					setPrevStep(false);
-				} else {
-					setPrevStep(true);
-
-					if (beneficiario?.Name !== "" && plano?.Name !== "") {
-						setNextStep(true);
-					} else {
-						setNextStep(false);
-					}
-					setActiveStep(1);
-				}
-				break;
-			case 1:
 				erros = 0;
 				msgErro = "";
 
@@ -962,12 +849,12 @@ function CadastrarPlanosDeSaude(props) {
 						type: "warning",
 					});
 				} else {
-					setActiveStep(2);
+					setActiveStep(1);
 					setTextNext("PRÓXIMO");
 				}
 
 				break;
-			case 2:
+			case 1:
 				erros = 0;
 				msgErro = "";
 
@@ -1014,7 +901,7 @@ function CadastrarPlanosDeSaude(props) {
 				}
 
 				break;
-			case 3:
+			case 2:
 				if (beneficiario?.possui_plano) {
 					setAlerta({
 						visible: true,
@@ -1105,6 +992,7 @@ function CadastrarPlanosDeSaude(props) {
 
 		listarPlanos();
 		listarTermos();
+		listarBeneficiarios();
 
 		return () => {
 			Keyboard.removeListener("keyboardDidShow", _keyboardDidShow);
@@ -1116,14 +1004,7 @@ function CadastrarPlanosDeSaude(props) {
 		<>
 			<Header titulo={"Cadastrar Planos de Saúde"} {...props} />
 			<Modal animationType="fade" transparent={true} visible={modal} {...props}>
-				<View
-					style={{
-						flex: 1,
-						backgroundColor: "#000A",
-						justifyContent: "center",
-						alignItems: "center",
-					}}
-				>
+				<View style={[s.fl1, s.bgcm, s.jcc, s.aic]}>
 					<View
 						style={{
 							paddingVertical: 10,
@@ -1189,7 +1070,7 @@ function CadastrarPlanosDeSaude(props) {
 					</Text>
 					<Text>Assinatura de</Text>
 					<Text style={{ fontWeight: "bold" }}>
-						{associado?.nome?.toUpperCase()}
+						{nome?.toUpperCase()}
 					</Text>
 					<Signature
 						ref={refAssociado}
@@ -1325,7 +1206,7 @@ function CadastrarPlanosDeSaude(props) {
 							completedStepIconColor="#031e3f"
 							activeLabelColor="#031e3f"
 							labelFontSize={18}
-							marginBottom={100}
+							marginBottom={50}
 							style={{ zIndex: 12 }}
 						>
 							<ProgressStep label="Geral" removeBtnRow>
@@ -1338,7 +1219,6 @@ function CadastrarPlanosDeSaude(props) {
 											value={nome}
 											style={{ fontSize: 18 }}
 											disabled
-											dense
 										/>
 									</View>
 									<View style={{ flex: 2 }}>
@@ -1346,7 +1226,6 @@ function CadastrarPlanosDeSaude(props) {
 											label="Data de Nascimento"
 											mode={"outlined"}
 											theme={tema}
-											dense
 											value={nascimento}
 											style={{ fontSize: 18 }}
 											disabled
@@ -1368,10 +1247,9 @@ function CadastrarPlanosDeSaude(props) {
 											label="Endereço"
 											mode={"outlined"}
 											theme={tema}
-											value={associado.endereco}
+											value={endereco}
 											style={{ fontSize: 18 }}
 											disabled
-											dense
 										/>
 									</View>
 									<View style={{ flex: 1, marginRight: 5 }}>
@@ -1379,10 +1257,9 @@ function CadastrarPlanosDeSaude(props) {
 											label="Número"
 											mode={"outlined"}
 											theme={tema}
-											value={associado.numero}
+											value={numero}
 											style={{ fontSize: 18 }}
 											disabled
-											dense
 										/>
 									</View>
 									<View style={{ flex: 2 }}>
@@ -1390,10 +1267,9 @@ function CadastrarPlanosDeSaude(props) {
 											label="Complemento"
 											mode={"outlined"}
 											theme={tema}
-											value={associado.complemento}
+											value={complemento}
 											style={{ fontSize: 18 }}
 											disabled
-											dense
 										/>
 									</View>
 								</View>
@@ -1403,10 +1279,9 @@ function CadastrarPlanosDeSaude(props) {
 											label="Cidade"
 											mode={"outlined"}
 											theme={tema}
-											value={associado.cidade.Name + " / SC"}
+											value={cidade.Name + " / SC"}
 											style={{ fontSize: 18 }}
 											disabled
-											dense
 										/>
 									</View>
 									<View style={{ flex: 1 }}>
@@ -1414,10 +1289,9 @@ function CadastrarPlanosDeSaude(props) {
 											label="CEP"
 											mode={"outlined"}
 											theme={tema}
-											value={associado.cep}
+											value={cep}
 											style={{ fontSize: 18 }}
 											disabled
-											dense
 										/>
 									</View>
 								</View>
@@ -1427,10 +1301,9 @@ function CadastrarPlanosDeSaude(props) {
 											label="Telefone Comercial"
 											mode={"outlined"}
 											theme={tema}
-											value={associado.telefone_comercial}
+											value={telefoneComercial}
 											style={{ fontSize: 18 }}
 											disabled
-											dense
 										/>
 									</View>
 									<View style={{ flex: 1, marginRight: 5 }}>
@@ -1438,10 +1311,9 @@ function CadastrarPlanosDeSaude(props) {
 											label="Telefone Residencial"
 											mode={"outlined"}
 											theme={tema}
-											value={associado.telefone_residencial}
+											value={telefoneResidencial}
 											style={{ fontSize: 18 }}
 											disabled
-											dense
 										/>
 									</View>
 									<View style={{ flex: 1 }}>
@@ -1449,10 +1321,9 @@ function CadastrarPlanosDeSaude(props) {
 											label="Celular"
 											mode={"outlined"}
 											theme={tema}
-											value={associado.celular}
+											value={celular}
 											style={{ fontSize: 18 }}
 											disabled
-											dense
 										/>
 									</View>
 								</View>
@@ -1462,10 +1333,9 @@ function CadastrarPlanosDeSaude(props) {
 											label="E-mail"
 											mode={"outlined"}
 											theme={tema}
-											value={associado.email}
+											value={email}
 											style={{ fontSize: 18 }}
 											disabled
-											dense
 										/>
 									</View>
 								</View>
@@ -1481,7 +1351,7 @@ function CadastrarPlanosDeSaude(props) {
 											color: tema.colors.vermelho,
 										}}
 									>
-										Ultima atualização em {associado.data_recadastro}
+										Ultima atualização em {associado_atendimento.data_recadastro}
 									</Text>
 								</View>
 								<ScrollView>
@@ -1493,74 +1363,7 @@ function CadastrarPlanosDeSaude(props) {
 										}}
 									>
 										<View style={{ flex: 1, marginRight: 5 }}>
-											<TextInput
-												label="Beneficiário"
-												mode={"outlined"}
-												theme={tema}
-												style={{ fontSize: 18 }}
-												value={beneficiario}
-												onChangeText={(text) => setBeneficiario(text)}
-												dense
-												render={() => (
-													<PickerModal
-														renderSelectView={(
-															disabled,
-															selected,
-															showModal
-														) => (
-															<TouchableOpacity
-																style={{
-																	flexDirection: "row",
-																	flex: 1,
-																	justifyContent: "flex-start",
-																	alignItems: "center",
-																	paddingLeft: 10,
-																}}
-																disabled={disabled}
-																onPress={showModal}
-															>
-																<View style={{ flex: 3 }}>
-																	<Text
-																		style={{
-																			fontSize: beneficiario ? 15 : 12,
-																		}}
-																	>
-																		{beneficiario.Name === ""
-																			? "SELECIONE"
-																			: beneficiario.Name}
-																	</Text>
-																</View>
-																<View
-																	style={{
-																		flex: 1,
-																		alignItems: "flex-end",
-																		paddingRight: 10,
-																	}}
-																>
-																	<Image
-																		source={images.seta}
-																		tintColor={"#031e3f"}
-																		style={{
-																			width: 10,
-																			height: 10,
-																			right: 0,
-																			tintColor: "#031e3f",
-																			transform: [{ rotate: "90deg" }],
-																		}}
-																	/>
-																</View>
-															</TouchableOpacity>
-														)}
-														modalAnimationType="fade"
-														selected={beneficiario}
-														selectPlaceholderText="SELECIONE O BENEFICIÁRIO"
-														searchPlaceholderText="DIGITE O BENEFICIÁRIO"
-														onSelected={(key) => selecionarBeneficiario(key)}
-														onClosed={() => setBeneficiario(beneficiario)}
-														items={dependentes}
-													/>
-												)}
-											/>
+											<Combo label={"Beneficiário"} pronome={"o"} lista={dependentes} item={[beneficiario, setBeneficiario]} />
 										</View>
 									</View>
 									{beneficiario?.possui_plano && (
@@ -1590,74 +1393,7 @@ function CadastrarPlanosDeSaude(props) {
 										}}
 									>
 										<View style={{ flex: 1 }}>
-											<TextInput
-												label="Plano"
-												mode={"outlined"}
-												theme={tema}
-												style={{ fontSize: 18 }}
-												value={plano}
-												onChangeText={(text) => setPlano(text)}
-												dense
-												render={() => (
-													<PickerModal
-														renderSelectView={(
-															disabled,
-															selected,
-															showModal
-														) => (
-															<TouchableOpacity
-																style={{
-																	flexDirection: "row",
-																	flex: 1,
-																	justifyContent: "flex-start",
-																	alignItems: "center",
-																	paddingLeft: 10,
-																}}
-																disabled={disabled}
-																onPress={showModal}
-															>
-																<View style={{ flex: 3 }}>
-																	<Text
-																		style={{
-																			fontSize: plano ? 15 : 12,
-																		}}
-																	>
-																		{plano.Name === ""
-																			? "SELECIONE"
-																			: plano.Name}
-																	</Text>
-																</View>
-																<View
-																	style={{
-																		flex: 1,
-																		alignItems: "flex-end",
-																		paddingRight: 10,
-																	}}
-																>
-																	<Image
-																		source={images.seta}
-																		tintColor={"#031e3f"}
-																		style={{
-																			width: 10,
-																			height: 10,
-																			right: 0,
-																			tintColor: "#031e3f",
-																			transform: [{ rotate: "90deg" }],
-																		}}
-																	/>
-																</View>
-															</TouchableOpacity>
-														)}
-														modalAnimationType="fade"
-														selected={plano}
-														selectPlaceholderText="SELECIONE O PLANO"
-														searchPlaceholderText="DIGITE O PLANO"
-														onSelected={(key) => selecionarPlano(key)}
-														onClosed={() => setPlano(plano)}
-														items={planos}
-													/>
-												)}
-											/>
+											<Combo label={"Plano"} pronome={"o"} lista={planos} item={[plano, setPlano]} />
 										</View>
 									</View>
 									<View style={{ flexDirection: "row", marginBottom: 5 }}>
@@ -1669,7 +1405,6 @@ function CadastrarPlanosDeSaude(props) {
 												value={beneficiario.data_nascimento}
 												style={{ fontSize: 18 }}
 												disabled
-												dense
 											/>
 										</View>
 										<View style={{ flex: 1, marginRight: 5 }}>
@@ -1680,7 +1415,6 @@ function CadastrarPlanosDeSaude(props) {
 												value={beneficiario.idade.toString()}
 												style={{ fontSize: 18 }}
 												disabled
-												dense
 											/>
 										</View>
 										<View style={{ flex: 1 }}>
@@ -1689,7 +1423,6 @@ function CadastrarPlanosDeSaude(props) {
 												mode={"outlined"}
 												theme={tema}
 												value={beneficiario.estado_civil}
-												dense
 												style={{ fontSize: 18 }}
 												onChangeText={(text) =>
 													setBeneficiario({
@@ -1797,7 +1530,6 @@ function CadastrarPlanosDeSaude(props) {
 												value={beneficiario.sexo}
 												style={{ fontSize: 18 }}
 												disabled
-												dense
 											/>
 										</View>
 										<View style={{ flex: 1, marginRight: 5 }}>
@@ -1808,7 +1540,6 @@ function CadastrarPlanosDeSaude(props) {
 												value={beneficiario.tipo}
 												style={{ fontSize: 18 }}
 												disabled
-												dense
 											/>
 										</View>
 										<View style={{ flex: 1 }}>
@@ -1820,7 +1551,6 @@ function CadastrarPlanosDeSaude(props) {
 												style={{ fontSize: 18 }}
 												disabled={beneficiario?.cpf === "" ? false : true}
 												maxLength={14}
-												dense
 												keyboardType={"number-pad"}
 												onChangeText={(text) =>
 													setBeneficiario({ ...beneficiario, cpf: text })
@@ -1851,7 +1581,6 @@ function CadastrarPlanosDeSaude(props) {
 												theme={tema}
 												value={beneficiario.local_cobranca}
 												style={{ fontSize: 18 }}
-												dense
 												onChangeText={(text) =>
 													setBeneficiario({
 														...beneficiario,
@@ -1941,7 +1670,6 @@ function CadastrarPlanosDeSaude(props) {
 													fontWeight: "bold",
 													color: tema.colors.primary,
 												}}
-												dense
 												value={beneficiario.valor_mensalidade.toString()}
 												disabled
 												render={(props) => (
@@ -1972,7 +1700,6 @@ function CadastrarPlanosDeSaude(props) {
 												label="Data de Movimentação"
 												mode={"outlined"}
 												theme={tema}
-												dense
 												value={dataMovimentacao}
 												style={{ fontSize: 18 }}
 												disabled
@@ -1986,7 +1713,6 @@ function CadastrarPlanosDeSaude(props) {
 												value={dataVigencia}
 												style={{ fontSize: 18 }}
 												maxLength={14}
-												dense
 												keyboardType={"number-pad"}
 												onChangeText={(text) => setDataVigencia(text)}
 												render={(props) => (
@@ -2208,11 +1934,11 @@ function CadastrarPlanosDeSaude(props) {
 												marginHorizontal: 5,
 											}}
 										>
-											{declaracaoSaude !== "" && (
+											{imagemDeclaracaoSaude !== "" && (
 												<TouchableOpacity
 													onPress={() => {
 														setModal(true);
-														setImagemAmpliada(declaracaoSaude);
+														setImagemAmpliada(imagemDeclaracaoSaude);
 													}}
 													style={{
 														width: "100%",
@@ -2221,7 +1947,7 @@ function CadastrarPlanosDeSaude(props) {
 													}}
 												>
 													<Image
-														source={{ uri: declaracaoSaude }}
+														source={{ uri: imagemDeclaracaoSaude }}
 														style={{ width: "100%", height: 150 }}
 													/>
 													<Text style={{ fontSize: 13 }}>DECLAR. DE SAÚDE</Text>
