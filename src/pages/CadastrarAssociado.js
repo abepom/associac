@@ -1072,7 +1072,7 @@ function CadastrarAssociado(props) {
 											)}
 										/>
 									</View>
-									<View style={[s.fl1, s.mr5, s.pdt7]}>
+									<View style={[s.fl2, s.mr5, s.pdt7]}>
 										<TouchableOpacity
 											onPress={() => buscarCep()}
 											style={[s.fl1, s.row, s.aic, s.jcc, s.bgcp, s.br6]}

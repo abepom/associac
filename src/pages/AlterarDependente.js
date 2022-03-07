@@ -445,6 +445,7 @@ function AlterarTipoDependente(props) {
 									{ Name: "MASCULINO", Value: "M" },
 									{ Name: "FEMININO", Value: "F" },
 								]}
+								style={s.fs15}
 								item={[sexo, setSexo]}
 							/>
 						</View>
@@ -457,17 +458,7 @@ function AlterarTipoDependente(props) {
 								maxLength={10}
 							/>
 						</View>
-						<View style={s.fl2}>
-							<Combo
-								label={"Tipo de Dependência"}
-								pronome={"o"}
-								lista={tipos}
-								item={[tipo, setTipo]}
-							/>
-						</View>
-					</View>
-					<View style={[s.row, s.mb10]}>
-						<View style={[s.fl1, s.mr10]}>
+						<View style={s.fl1}>
 							<InputMask
 								label={"CPF"}
 								value={[cpf, setCpf]}
@@ -476,6 +467,8 @@ function AlterarTipoDependente(props) {
 								maxLength={14}
 							/>
 						</View>
+					</View>
+					<View style={[s.row, s.mb10]}>
 						<View style={[s.fl1, s.mr10]}>
 							<Input
 								label={"Instagram"}
@@ -488,6 +481,16 @@ function AlterarTipoDependente(props) {
 								label={"Facebook"}
 								value={[facebook, setFacebook]}
 								maxLength={100}
+							/>
+						</View>
+					</View>
+					<View style={[s.row, s.mb10]}>
+						<View style={s.fl1}>
+							<Combo
+								label={"Tipo de Dependência"}
+								pronome={"o"}
+								lista={tipos}
+								item={[tipo, setTipo]}
 							/>
 						</View>
 					</View>

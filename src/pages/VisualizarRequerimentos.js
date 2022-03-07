@@ -44,9 +44,12 @@ function VisualizarRequerimentosPlano(props) {
 		setCarregar(true);
 
 		const { data } = await api({
-			url: "/visualizarArquivo",
+			url: "/visualizarArquivoAssociac",
 			method: "POST",
-			data: { matricula: associado_atendimento.matricula, arquivo },
+			data: {
+				matricula: associado_atendimento.matricula,
+				arquivo: arquivo.toString(),
+			},
 			headers: { "x-access-token": token },
 		});
 

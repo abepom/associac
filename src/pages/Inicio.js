@@ -29,7 +29,7 @@ import compararValores from "../functions/compararValores";
 function Inicio(props) {
 	const { navigation } = props;
 	const [usuario, setUsuario] = useUsuario();
-	const [matricula, setMatricula] = useState("000006");
+	const [matricula, setMatricula] = useState("");
 	const [alerta, setAlerta] = useState({ visible: false });
 	const [carregando, setCarregando] = useState(false);
 	const [dependenteEscolhido, setDependenteEscolhido] = useState({});
@@ -75,8 +75,7 @@ function Inicio(props) {
 			setAlerta({
 				visible: true,
 				title: "ATENÇÃO!",
-				message:
-					"Para prosseguir com o atendimento é necessário informar a matrícula corretamente.",
+				message: `Para prosseguir com o atendimento é${"\n"}necessário informar a matrícula corretamente.`,
 				type: "danger",
 				showConfirm: true,
 				showCancel: false,

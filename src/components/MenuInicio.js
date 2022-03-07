@@ -31,18 +31,18 @@ export default (props) => {
 			image: images.gerar_senha,
 			title: "GERAR SENHA\nMINHA ABEPOM",
 		},
-		{
-			id: 5,
-			link: "CadastrarPlanosDeSaude",
-			image: images.cadastrar_plano_saude,
-			title: "CADASTRAR\nPLANO DE SAÚDE",
-		},
-		{
-			id: 6,
-			link: "CancelarPlanoDeSaude",
-			image: images.cancelar_plano,
-			title: "CANCELAR\nPLANO DE SAÚDE",
-		},
+		// {
+		// 	id: 5,
+		// 	link: "CadastrarPlanosDeSaude",
+		// 	image: images.cadastrar_plano_saude,
+		// 	title: "CADASTRAR\nPLANO DE SAÚDE",
+		// },
+		// {
+		// 	id: 6,
+		// 	link: "CancelarPlanoDeSaude",
+		// 	image: images.cancelar_plano,
+		// 	title: "CANCELAR\nPLANO DE SAÚDE",
+		// },
 		{
 			id: 7,
 			link: "VisualizarRequerimentos",

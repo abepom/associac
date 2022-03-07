@@ -184,8 +184,7 @@ function EnviarDocumentoDependente(props) {
 				setAlerta({
 					visible: true,
 					title: "EXTENSÃO INVÁLIDA!",
-					message:
-						"A extensão do arquivo selecionado é inválida. Por favor, selecione arquivos com as seguintes extensões: JPG / JPEG / PNG / BMP / PDF.",
+					message: `A extensão do arquivo selecionado é inválida.${"\n"}Por favor, selecione arquivos com as seguintes extensões:${"\n"}JPG / JPEG / PNG / BMP / PDF.`,
 					type: "danger",
 					confirmText: "BUSCAR",
 					cancelText: "FECHAR",
@@ -254,8 +253,7 @@ function EnviarDocumentoDependente(props) {
 		setAlerta({
 			visible: true,
 			title: "APROVAÇÃO DE DEPENDÊNCIA",
-			message:
-				"Você realmente deseja aprovar todos os documentos e tornar este pré-cadastro como um dependente?",
+			message: `Você realmente deseja aprovar todos os documentos e${"\n"}tornar este pré-cadastro como um dependente?`,
 			type: "warning",
 			confirmText: "SIM, APROVAR!",
 			cancelText: "FECHAR",
@@ -275,6 +273,23 @@ function EnviarDocumentoDependente(props) {
 				});
 
 				if (data.status) {
+					const retorno = await api({
+						url: "/associados/listarDependentes",
+						method: "GET",
+						params: {
+							cartao: `${usuario.associado_atendimento.matricula}00001`,
+						},
+						headers: { "x-access-token": usuario.token },
+					});
+
+					setUsuario({
+						...usuario,
+						associado_atendimento: {
+							...usuario.associado_atendimento,
+							dependentes: retorno.data.dependentes,
+						},
+					});
+
 					setAlerta({
 						visible: true,
 						title: data.title,
@@ -283,9 +298,7 @@ function EnviarDocumentoDependente(props) {
 						confirmText: "FECHAR",
 						showConfirm: true,
 						showCancel: false,
-						confirmFunction: () => {
-							navigation.navigate("Dependentes", { id: new Date().toJSON() });
-						},
+						confirmFunction: () => navigation.navigate("Inicio"),
 					});
 				} else {
 					setAlerta({
@@ -361,7 +374,7 @@ function EnviarDocumentoDependente(props) {
 					</View>
 				</View>
 			</Modal>
-			<View style={[s.fl1, s.bgcg]}>
+			<View style={s.fl1}>
 				<View style={[s.fl6, s.aic, s.mt10]}>
 					{carregando ? (
 						<View style={[s.jcc, s.aic, s.fl1]}>
@@ -584,10 +597,12 @@ function EnviarDocumentoDependente(props) {
 										) : null}
 									</>
 								) : (
-									<Messages
-										titulo="NENHUM DOCUMENTO À SER ENVIADO"
-										subtitulo="Não é necessário o envio de nenhum documento. Aguarde a análise."
-									/>
+									<View style={s.fl1}>
+										<Messages
+											titulo="NENHUM DOCUMENTO À SER ENVIADO"
+											subtitulo="Não é necessário o envio de nenhum documento. Aguarde a análise."
+										/>
+									</View>
 								)}
 							</ScrollView>
 						</>

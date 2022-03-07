@@ -125,7 +125,7 @@ function GerarSenha(props) {
 			setAlerta({
 				visible: true,
 				title: "ATENÇÃO!",
-				message: "O dependente selecionado não possui o cartão da ABEPOM.",
+				message: `O dependente selecionado não possui${"\n"}o cartão da ABEPOM.`,
 				type: "danger",
 				confirmText: "ATUALIZAR TELEFONE",
 				cancelText: "FECHAR",
@@ -133,7 +133,7 @@ function GerarSenha(props) {
 				showCancel: true,
 				confirmFunction: () => {
 					setAlerta({ visible: false });
-					navigation.navigate("AlterarTipoDependente", { dependente: item });
+					navigation.navigate("AlterarDependente", { dependente: item });
 				},
 			});
 		} else {
@@ -141,8 +141,7 @@ function GerarSenha(props) {
 				setAlerta({
 					visible: true,
 					title: "ATENÇÃO!",
-					message:
-						"O dependente selecionado não possui o celular cadastrado na ABEPOM.",
+					message: `O dependente selecionado não possui o${"\n"}celular cadastrado na ABEPOM.`,
 					type: "danger",
 					confirmText: "ATUALIZAR TELEFONE",
 					cancelText: "FECHAR",
@@ -150,15 +149,14 @@ function GerarSenha(props) {
 					showCancel: true,
 					confirmFunction: () => {
 						setAlerta({ visible: false });
-						navigation.navigate("AlterarTipoDependente", { dependente: item });
+						navigation.navigate("AlterarDependente", { dependente: item });
 					},
 				});
 			} else {
 				setAlerta({
 					visible: true,
 					title: "ATENÇÃO!",
-					message:
-						"Não é possível gerar uma nova senha para o dependente selecionado.",
+					message: `Não é possível gerar uma nova senha${"\n"}para o dependente selecionado.`,
 					type: "danger",
 					confirmText: "ATUALIZAR TELEFONE",
 					cancelText: "FECHAR",
@@ -166,7 +164,7 @@ function GerarSenha(props) {
 					showCancel: true,
 					confirmFunction: () => {
 						setAlerta({ visible: false });
-						navigation.navigate("AlterarTipoDependente", { dependente: item });
+						navigation.navigate("AlterarDependente", { dependente: item });
 					},
 				});
 			}
