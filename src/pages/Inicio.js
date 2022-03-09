@@ -164,40 +164,57 @@ function Inicio(props) {
 			});
 
 			if (data.status) {
-				let dependente = usuario.associado_atendimento.dependentes.find(
-					(dep) => dep.cont === dependenteEscolhido.cont
-				);
+				if (dependenteEscolhido.pre_cadastro) {
+					let dependentes = usuario.associado_atendimento.dependentes.filter(
+						(dep) => dep.cont !== dependenteEscolhido.cont
+					);
 
-				dependente = {
-					...dependente,
-					inativo: 1,
-					data_inativo:
-						("0" + data_atual.getDate()).slice(-2) +
-						"/" +
-						("0" + (data_atual.getMonth() + 1)).slice(-2) +
-						"/" +
-						data_atual.getFullYear(),
-				};
+					dependentes = dependentes
+						.sort(compararValores("nome", "asc"))
+						.sort(compararValores("pre_cadastro", "desc"))
+						.sort(compararValores("inativo"), "asc");
 
-				let dependentes = usuario.associado_atendimento.dependentes.filter(
-					(dep) => dep.cont !== dependenteEscolhido.cont
-				);
+					setUsuario({
+						...usuario,
+						associado_atendimento: {
+							...usuario.associado_atendimento,
+							dependentes,
+						},
+					});
+				} else {
+					let dependente = usuario.associado_atendimento.dependentes.find(
+						(dep) => dep.cont === dependenteEscolhido.cont
+					);
 
-				dependentes = [...dependentes, dependente];
-				dependentes = dependentes
-					.sort(compararValores("nome", "asc"))
-					.sort(compararValores("pre_cadastro", "desc"))
-					.sort(compararValores("inativo"), "asc");
+					dependente = {
+						...dependente,
+						inativo: 1,
+						data_inativo:
+							("0" + data_atual.getDate()).slice(-2) +
+							"/" +
+							("0" + (data_atual.getMonth() + 1)).slice(-2) +
+							"/" +
+							data_atual.getFullYear(),
+					};
 
-				console.log(dependente);
+					let dependentes = usuario.associado_atendimento.dependentes.filter(
+						(dep) => dep.cont !== dependenteEscolhido.cont
+					);
 
-				setUsuario({
-					...usuario,
-					associado_atendimento: {
-						...usuario.associado_atendimento,
-						dependentes,
-					},
-				});
+					dependentes = [...dependentes, dependente];
+					dependentes = dependentes
+						.sort(compararValores("nome", "asc"))
+						.sort(compararValores("pre_cadastro", "desc"))
+						.sort(compararValores("inativo"), "asc");
+
+					setUsuario({
+						...usuario,
+						associado_atendimento: {
+							...usuario.associado_atendimento,
+							dependentes,
+						},
+					});
+				}
 			}
 
 			setModalCarregando(false);
