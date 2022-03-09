@@ -91,8 +91,8 @@ export default (props) => {
 					>
 						<Image
 							source={images.ativar_dependente}
-							style={[s.w35, s.h35, s.tcp]}
-							tintColor={tema.colors.tcp}
+							style={[s.w35, s.h35, s.tcg]}
+							tintColor={tema.colors.tcg}
 						/>
 					</TouchableOpacity>
 				) : (
