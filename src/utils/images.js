@@ -28,6 +28,8 @@ import alterar_dados from "../../assets/img/alterar_dados.png";
 import assinatura from "../../assets/img/assinatura.png";
 import cancelar_plano from "../../assets/img/cancelar_plano.png";
 import imagem_padrao from "../../assets/img/imagem_padrao.png";
+import ativar_dependente from "../../assets/img/ativar_dependente.png";
+
 export default {
 	bg,
 	logo_abepom,
@@ -59,4 +61,5 @@ export default {
 	assinatura,
 	cancelar_plano,
 	imagem_padrao,
+	ativar_dependente,
 };

@@ -316,7 +316,8 @@ function AlterarTipoDependente(props) {
 					dependentes = [...dependentes, dependente];
 					dependentes = dependentes
 						.sort(compararValores("nome", "asc"))
-						.sort(compararValores("pre_cadastro", "desc"));
+						.sort(compararValores("pre_cadastro", "desc"))
+						.sort(compararValores("inativo", "asc"));
 
 					setUsuario({
 						...usuario,

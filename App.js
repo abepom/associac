@@ -11,8 +11,8 @@ import Constants from "expo-constants";
 import GerarSenha from "./src/pages/GerarSenha";
 import RecadastrarAssociado from "./src/pages/RecadastrarAssociado";
 import CancelarPlanoDeSaude from "./src/pages/CancelarPlanoDeSaude";
-import Dependentes from "./src/pages/Dependentes";
 import AlterarDependente from "./src/pages/AlterarDependente";
+import AtivarDependente from "./src/pages/AtivarDependente";
 import CadastrarDependente from "./src/pages/CadastrarDependente";
 import EnviarDocumentoDependente from "./src/pages/EnviarDocumentoDependente";
 import CadastrarPlanosDeSaude from "./src/pages/CadastrarPlanosDeSaude";
@@ -80,13 +80,13 @@ export default function App() {
 							options={{ headerShown: false, orientation: "portrait" }}
 						/>
 						<Stack.Screen
-							name="Dependentes"
-							component={Dependentes}
+							name="AlterarDependente"
+							component={AlterarDependente}
 							options={{ headerShown: false }}
 						/>
 						<Stack.Screen
-							name="AlterarDependente"
-							component={AlterarDependente}
+							name="AtivarDependente"
+							component={AtivarDependente}
 							options={{ headerShown: false }}
 						/>
 						<Stack.Screen

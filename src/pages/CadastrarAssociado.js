@@ -9,7 +9,7 @@ import {
 	Modal,
 } from "react-native";
 import { TextInput, Switch, IconButton } from "react-native-paper";
-import { TextInputMask, MaskService } from "react-native-masked-text";
+import { TextInputMask } from "react-native-masked-text";
 import { ProgressSteps, ProgressStep } from "react-native-progress-steps";
 import api from "../../services/api";
 import isDate from "../functions/isDate";

@@ -195,7 +195,8 @@ function CadastrarDependente(props) {
 				let dependentes = [...associado_atendimento.dependentes, dependente];
 				dependentes = dependentes
 					.sort(compararValores("nome", "asc"))
-					.sort(compararValores("pre_cadastro", "desc"));
+					.sort(compararValores("pre_cadastro", "desc"))
+					.sort(compararValores("inativo", "asc"));
 
 				setUsuario({
 					...usuario,

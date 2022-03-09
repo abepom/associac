@@ -25,11 +25,13 @@ import WebView from "react-native-webview";
 import MenuInicio from "../components/MenuInicio";
 import Dependente from "../components/Dependente";
 import compararValores from "../functions/compararValores";
+import formatDate from "../functions/formatDate";
 
 function Inicio(props) {
 	const { navigation } = props;
+	let data_atual = new Date();
 	const [usuario, setUsuario] = useUsuario();
-	const [matricula, setMatricula] = useState("");
+	const [matricula, setMatricula] = useState("478201");
 	const [alerta, setAlerta] = useState({ visible: false });
 	const [carregando, setCarregando] = useState(false);
 	const [dependenteEscolhido, setDependenteEscolhido] = useState({});
@@ -90,6 +92,7 @@ function Inicio(props) {
 			method: "GET",
 			params: {
 				cartao: `${matricula}00001`,
+				todos: 1,
 			},
 			headers: { "x-access-token": usuario.token },
 		});
@@ -160,21 +163,42 @@ function Inicio(props) {
 				headers: { "x-access-token": usuario.token },
 			});
 
-			let dependentes = usuario.associado_atendimento.dependentes.filter(
-				(dep) => dep.cont !== dependenteEscolhido.cont
-			);
+			if (data.status) {
+				let dependente = usuario.associado_atendimento.dependentes.find(
+					(dep) => dep.cont === dependenteEscolhido.cont
+				);
 
-			dependentes = dependentes
-				.sort(compararValores("nome", "asc"))
-				.sort(compararValores("pre_cadastro", "desc"));
+				dependente = {
+					...dependente,
+					inativo: 1,
+					data_inativo:
+						("0" + data_atual.getDate()).slice(-2) +
+						"/" +
+						("0" + (data_atual.getMonth() + 1)).slice(-2) +
+						"/" +
+						data_atual.getFullYear(),
+				};
 
-			setUsuario({
-				...usuario,
-				associado_atendimento: {
-					...usuario.associado_atendimento,
-					dependentes,
-				},
-			});
+				let dependentes = usuario.associado_atendimento.dependentes.filter(
+					(dep) => dep.cont !== dependenteEscolhido.cont
+				);
+
+				dependentes = [...dependentes, dependente];
+				dependentes = dependentes
+					.sort(compararValores("nome", "asc"))
+					.sort(compararValores("pre_cadastro", "desc"))
+					.sort(compararValores("inativo"), "asc");
+
+				console.log(dependente);
+
+				setUsuario({
+					...usuario,
+					associado_atendimento: {
+						...usuario.associado_atendimento,
+						dependentes,
+					},
+				});
+			}
 
 			setModalCarregando(false);
 			setAlerta({
@@ -454,6 +478,7 @@ function Inicio(props) {
 												{...props}
 												setDependenteEscolhido={setDependenteEscolhido}
 												setModalExcluirDependente={setModalExcluirDependente}
+												setAlerta={setAlerta}
 											/>
 										);
 									}}

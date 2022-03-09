@@ -15,9 +15,9 @@ import Header from "../components/Header";
 import Loading from "../components/Loading";
 import { useUsuario } from "../store/Usuario";
 import images from "../utils/images";
-import imagens from "../utils/images";
 import PDFReader from "rn-pdf-reader-js";
 import Messages from "../components/Messages";
+import Documento from "../components/Documento";
 
 function VisualizarRequerimentosPlano(props) {
 	const [{ token, associado_atendimento }] = useUsuario();
@@ -29,7 +29,7 @@ function VisualizarRequerimentosPlano(props) {
 
 	async function listarRequerimentos() {
 		const { data } = await api({
-			url: "/associados/listarRequerimentosPlanosDeSaude",
+			url: "/associados/listarRequerimentos",
 			method: "GET",
 			params: { matricula: associado_atendimento.matricula },
 			headers: { "x-access-token": token },
@@ -37,24 +37,6 @@ function VisualizarRequerimentosPlano(props) {
 
 		setRequerimentos(data.requerimentos);
 		setCarregarDocs(false);
-	}
-
-	async function abrirRequerimento(arquivo) {
-		setModal(true);
-		setCarregar(true);
-
-		const { data } = await api({
-			url: "/visualizarArquivoAssociac",
-			method: "POST",
-			data: {
-				matricula: associado_atendimento.matricula,
-				arquivo: arquivo.toString(),
-			},
-			headers: { "x-access-token": token },
-		});
-
-		setLink(data.caminho);
-		setCarregar(false);
 	}
 
 	useEffect(() => {
@@ -105,7 +87,7 @@ function VisualizarRequerimentosPlano(props) {
 						style={[s.w50, s.h50, s.br50, s.bgcp, s.b15, s.pd10, s.jcc, s.aic]}
 					>
 						<Image
-							source={imagens.fechar}
+							source={images.fechar}
 							style={[s.w20, s.h20, s.tcw]}
 							tintColor={tema.colors.background}
 						/>
@@ -136,48 +118,12 @@ function VisualizarRequerimentosPlano(props) {
 								}
 								renderItem={({ item, index }) => {
 									return (
-										<TouchableOpacity
-											key={index}
-											onPress={() => abrirRequerimento(item.local_documento)}
-											style={[
-												s.bgcw,
-												s.el1,
-												s.br6,
-												s.flg1,
-												s.mv6,
-												s.pd20,
-												s.row,
-											]}
-										>
-											<View style={s.fl8}>
-												<Text style={[s.fs20, s.fcp, s.bold]}>
-													{item.nome.toUpperCase()}
-												</Text>
-												<Text style={[s.fs15, s.fcp]}>
-													DOCUMENTO: {item.nome_documento.toUpperCase()}
-												</Text>
-												<Text style={[s.fs12, s.fcp]}>
-													COMPLEMENTO: {item.complemento_desc.toUpperCase()}
-												</Text>
-												<Text style={[s.fs12, s.fcp]}>
-													USUÁRIO DE INCLUSÃO:{" "}
-													{item.usuario_inclusao.toUpperCase()}
-												</Text>
-											</View>
-											<View style={[s.fl2, s.jcc, s.aic]}>
-												<Text style={[s.fs15, s.fcp, s.tac]}>
-													INCLUÍDO EM{`\n`}
-													{item.data_inclusao}
-												</Text>
-											</View>
-											<View style={[s.fl1, s.jcc, s.aic]}>
-												<Image
-													source={images.file}
-													style={[s.w50, s.h50, s.tcp]}
-													tintColor={tema.colors.primary}
-												/>
-											</View>
-										</TouchableOpacity>
+										<Documento
+											item={item}
+											setLink={setLink}
+											setCarregar={setCarregar}
+											setModal={setModal}
+										/>
 									);
 								}}
 							/>
