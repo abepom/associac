@@ -190,6 +190,8 @@ function CadastrarDependente(props) {
 					sexo: sexo.Value,
 					telefone: "",
 					tipo: tipo.Name,
+					inativo: 0,
+					data_inativo: "",
 				};
 
 				let dependentes = [...associado_atendimento.dependentes, dependente];
