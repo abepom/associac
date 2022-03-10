@@ -57,7 +57,14 @@ function Inicio(props) {
 					headers: { "x-access-token": usuario.token },
 				});
 
-				listarDependentes(data);
+				if (data.status) {
+					listarDependentes(data);
+				} else {
+					setUsuario({
+						...usuario,
+						associado_atendimento: { matricula, dependentes: [] },
+					});
+				}
 			} catch (error) {
 				setUsuario({ ...usuario, associado_atendimento: null });
 				setAlerta({

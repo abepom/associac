@@ -200,7 +200,7 @@ function EnviarDocumentoDependente(props) {
 		setAlerta({
 			visible: true,
 			title: "EXCLUSÃO DO ARQUIVO",
-			message: `Você realmente deseja REMOVER permanentemente o arquivo ${tipo}?`,
+			message: `Você realmente deseja REMOVER${"\n"}permanentemente o arquivo ${tipo}?`,
 			type: "warning",
 			confirmText: "SIM, REMOVER!",
 			cancelText: "NÃO, FECHAR!",

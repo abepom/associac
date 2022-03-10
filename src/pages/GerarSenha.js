@@ -32,9 +32,9 @@ function GerarSenha(props) {
 				setAlerta({
 					visible: true,
 					title: data.title,
-					message: `Uma nova senha será enviada para o celular do ${
+					message: `Uma nova senha será enviada para o celular do${"\n"}${
 						tipo == 1 ? "titular" : "dependente"
-					} ${nome}. Caso o ${
+					} ${nome}.${"\n"}Caso o ${
 						tipo == 1 ? "titular" : "dependente"
 					} não receba o SMS, entre em contato com a ABEPOM.`,
 					type: "success",
@@ -95,8 +95,7 @@ function GerarSenha(props) {
 					setAlerta({
 						visible: true,
 						title: "ATENÇÃO!",
-						message:
-							"O titular informado não possui o celular cadastrado na ABEPOM.",
+						message: `O titular informado não possui o${"\n"}celular cadastrado na ABEPOM.`,
 						type: "danger",
 						confirmText: "FECHAR",
 						showConfirm: true,
@@ -176,7 +175,7 @@ function GerarSenha(props) {
 		setAlerta({
 			visible: true,
 			title: "ATENÇÃO!",
-			message: `Você deseja enviar um SMS para o ${
+			message: `Você deseja enviar um SMS para o${"\n"}${
 				tipo == 1 ? "titular" : "dependente"
 			} ${nome} com a senha do ABEPOM Mobile no número ${celular}?`,
 			type: "warning",

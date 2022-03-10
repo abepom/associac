@@ -27,6 +27,7 @@ import images from "../utils/images";
 import ModalLoading from "../components/ModalLoading";
 
 function CadastrarAssociado(props) {
+	const { navigation } = props;
 	const [usuario, setUsuario] = useUsuario();
 	const { token, associado_atendimento } = usuario;
 	const [cidades, setCidades] = useState([]);
@@ -294,7 +295,7 @@ function CadastrarAssociado(props) {
 	const cadastrarAssociado = async () => {
 		setAlerta({
 			visible: true,
-			title: "CARREGANDO ASSOCIADO",
+			title: "CADASTRANDO ASSOCIADO",
 			message: <Loading size={125} />,
 			showConfirm: false,
 			showCancel: false,
@@ -305,18 +306,52 @@ function CadastrarAssociado(props) {
 			const { data } = await api({
 				url: "/cadastrarAssociado",
 				method: "POST",
-				data: { associado: associado_atendimento },
+				data: {
+					associado: {
+						matricula: associado_atendimento.matricula,
+						nome,
+						nascimento,
+						sexo,
+						cpf: cpf.replace(/[.-]/g, "").trim(),
+						rg,
+						telefone_comercial: telefoneComercial.replace(/[()-]/g, "").trim(),
+						telefone_residencial: telefoneResidencial
+							.replace(/[()-]/g, "")
+							.trim(),
+						celular: celular.replace(/[()-]/g, "").trim(),
+						email,
+						endereco,
+						numero: numero.trim(),
+						complemento,
+						bairro,
+						cidade,
+						cep,
+						orgao,
+						local_trabalho: localTrabalho,
+						funcao,
+						mesano,
+						identificador,
+						banco,
+						agencia,
+						conta,
+						digito_conta: digitoConta,
+						digito,
+						forma_desconto: formaDesconto,
+						estornado,
+						indica,
+						vinculo: 1,
+						observacao: (
+							associado_atendimento.observacao +
+							" " +
+							observacao
+						).trim(),
+						tipo: "01",
+						status: true,
+						recadastrado: true,
+						paga_joia: associado_atendimento.paga_joia,
+					},
+				},
 				headers: { "x-access-token": token },
-			});
-
-			setAlerta({
-				visible: true,
-				title: data.title,
-				message: data.message,
-				showCancel: false,
-				showConfirm: true,
-				confirmText: "FECHAR",
-				type: data.status ? "success" : "danger",
 			});
 
 			if (data.status) {
@@ -332,7 +367,7 @@ function CadastrarAssociado(props) {
 					...usuario,
 					associado_atendimento: {
 						...associado_atendimento,
-						nome,
+						nome: nome.toUpperCase(),
 						nascimento,
 						sexo,
 						cpf: cpf.replace(/[.-]/g, "").trim(),
@@ -371,6 +406,27 @@ function CadastrarAssociado(props) {
 						status: true,
 						recadastrado: true,
 					},
+				});
+
+				setAlerta({
+					visible: true,
+					title: data.title,
+					message: data.message,
+					showCancel: false,
+					showConfirm: true,
+					confirmText: "FECHAR",
+					type: "success",
+					confirmFunction: () => navigation.navigate("Inicio"),
+				});
+			} else {
+				setAlerta({
+					visible: true,
+					title: data.title,
+					message: data.message,
+					showCancel: false,
+					showConfirm: true,
+					confirmText: "FECHAR",
+					type: "danger",
 				});
 			}
 		} catch (error) {
@@ -1159,7 +1215,7 @@ function CadastrarAssociado(props) {
 							</ProgressStep>
 							<ProgressStep label="Outros" removeBtnRow>
 								<View style={[s.row, s.mb10]}>
-									<View style={[s.fl1, s.mr5]}>
+									<View style={s.fl1}>
 										<Combo
 											label={"Órgão"}
 											pronome={"o"}
@@ -1167,7 +1223,9 @@ function CadastrarAssociado(props) {
 											item={[orgao, setOrgao]}
 										/>
 									</View>
-									<View style={s.fl2}>
+								</View>
+								<View style={[s.row, s.mb10]}>
+									<View style={s.fl1}>
 										<Combo
 											label={"Local de Trabalho"}
 											pronome={"o"}
@@ -1239,13 +1297,14 @@ function CadastrarAssociado(props) {
 											value={agencia}
 											maxLength={7}
 											returnKeyType={"next"}
+											keyboardType={"number-pad"}
 											onSubmitEditing={() => contaRef?.current?.focus()}
 											onChangeText={(text) => setAgencia(text)}
 										/>
 									</View>
 									<View style={[s.fl1, s.mr5]}>
 										<TextInput
-											label="Conta Corrente"
+											label="Conta"
 											ref={contaRef}
 											mode={"outlined"}
 											theme={tema}
@@ -1253,6 +1312,7 @@ function CadastrarAssociado(props) {
 											value={conta}
 											maxLength={8}
 											returnKeyType={"next"}
+											keyboardType={"number-pad"}
 											onSubmitEditing={() => digitoContaRef?.current?.focus()}
 											onChangeText={(text) => setConta(text)}
 										/>
@@ -1267,13 +1327,14 @@ function CadastrarAssociado(props) {
 											value={digitoConta}
 											maxLength={1}
 											returnKeyType={"next"}
+											keyboardType={"number-pad"}
 											onSubmitEditing={() => mensalidadeRef?.current?.focus()}
 											onChangeText={(text) => setDigitoConta(text)}
 										/>
 									</View>
 								</View>
 								<View style={[s.row, s.mb10]}>
-									<View style={[s.fl2, s.mr5]}>
+									<View style={[s.fl3, s.mr5]}>
 										<Combo
 											label={"Forma de Desconto"}
 											pronome={"a"}
@@ -1457,7 +1518,7 @@ function CadastrarAssociado(props) {
 												onPress={() => tirarFoto("CR")}
 											>
 												<IconButton icon="camera" color={"#fff"} size={20} />
-												<Text style={[s.fcw, s.fs20]}>COMP. DE RESIDÊNCIA</Text>
+												<Text style={[s.fcw, s.fs20]}>COMP. DE RESID.</Text>
 											</TouchableOpacity>
 										</View>
 									</View>
