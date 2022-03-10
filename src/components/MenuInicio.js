@@ -70,6 +70,12 @@ export default (props) => {
 			image: images.tipos_dependente,
 			title: "CADASTRAR DEPENDENTES",
 		},
+		{
+			id: 4,
+			link: "VisualizarRequerimentos",
+			image: images.visualizar_requerimentos,
+			title: "VISUALIZAR REQUERIMENTOS",
+		},
 	];
 
 	return (
