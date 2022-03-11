@@ -19,7 +19,6 @@ import { TextInputMask } from "react-native-masked-text";
 import Header from "../components/Header";
 import Alert from "../components/Alert";
 import Loading from "../components/Loading";
-import ModalLoading from "../components/ModalLoading";
 import Input from "../components/Input";
 import WebView from "react-native-webview";
 import MenuInicio from "../components/MenuInicio";
@@ -35,12 +34,11 @@ function Inicio(props) {
 	let data_atual = new Date();
 	const [usuario, setUsuario] = useUsuario();
 	const { associado_atendimento } = usuario;
-	const [matricula, setMatricula] = useState("478201");
+	const [matricula, setMatricula] = useState("");
 	const [alerta, setAlerta] = useState({ visible: false });
 	const [carregando, setCarregando] = useState(false);
 	const [dependenteEscolhido, setDependenteEscolhido] = useState({});
 	const [motivoExclusao, setMotivoExclusao] = useState("");
-	const [modalCarregando, setModalCarregando] = useState(false);
 	const [modalTermoExclusao, setModalTermoEsclusao] = useState(false);
 	const [modalExcluirDependente, setModalExcluirDependente] = useState(false);
 	const [termo, setTermo] = useState({});
@@ -295,9 +293,9 @@ function Inicio(props) {
 
 				setAlerta({
 					visible: true,
-					title: data.title,
-					message: data.message.replace(/@@/g, `\n`),
-					type: data.status ? "success" : "danger",
+					title: retorno.data.title,
+					message: retorno.data.message.replace(/@@/g, `\n`),
+					type: retorno.data.status ? "success" : "danger",
 					confirmText: "FECHAR",
 					showConfirm: true,
 					showCancel: false,
@@ -355,7 +353,6 @@ function Inicio(props) {
 	return (
 		<>
 			<Header titulo={"Associac Mobile"} {...props} />
-			<ModalLoading visible={modalCarregando} />
 			<Modal visible={modalExcluirDependente} transparent>
 				<View style={[s.fl1, s.jcc, s.aic, s.bgcm]}>
 					<View
@@ -384,46 +381,6 @@ function Inicio(props) {
 								style={s.fullw}
 							/>
 						</View>
-						{/* <View style={[s.row, s.mt10, s.h35, s.jcc, s.aic]}>
-							<TouchableOpacity
-								onPress={() => visualizarTermoExclusaoDependente()}
-								style={[s.row, s.jcc, s.aic, s.h35, s.fullw]}
-							>
-								<Image
-									source={images.recadastrar_associado}
-									style={[s.w35, s.h35, s.tcp]}
-									tintColor={tema.colors.primary}
-								/>
-								<Text style={[s.fs18, s.bold, s.ml10, s.fcp]}>
-									CLIQUE AQUI E LEIA O TERMO DE EXCLUSÃO
-								</Text>
-							</TouchableOpacity>
-						</View>
-						<View style={[s.row, s.mt10]}>
-							<Checkbox
-								status={aceitoTermoExclusaoDependente ? "checked" : "unchecked"}
-								theme={tema}
-								onPress={() => {
-									Keyboard.dismiss();
-									setAceitoTermoExclusaoDependente(
-										!aceitoTermoExclusaoDependente
-									);
-								}}
-							/>
-							<TouchableOpacity
-								onPress={() => {
-									Keyboard.dismiss();
-									setAceitoTermoExclusaoDependente(
-										!aceitoTermoExclusaoDependente
-									);
-								}}
-							>
-								<Text style={[s.fs18, s.mt5]}>
-									Eu declaro que li e aceito o Termo de Exclusão de Dependentes
-								</Text>
-							</TouchableOpacity>
-						</View> */}
-
 						{motivoExclusao.length < 5 ? (
 							<TouchableOpacity
 								onPress={() =>
