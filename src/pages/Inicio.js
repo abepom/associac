@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
 	View,
 	Text,
@@ -14,7 +14,7 @@ import images from "../utils/images";
 import app from "../../app.json";
 import s, { tema } from "../../assets/style/Style";
 import { useUsuario } from "../store/Usuario";
-import { Checkbox, IconButton, TextInput } from "react-native-paper";
+import { Button, IconButton, TextInput } from "react-native-paper";
 import { TextInputMask } from "react-native-masked-text";
 import Header from "../components/Header";
 import Alert from "../components/Alert";
@@ -25,13 +25,17 @@ import WebView from "react-native-webview";
 import MenuInicio from "../components/MenuInicio";
 import Dependente from "../components/Dependente";
 import compararValores from "../functions/compararValores";
-import formatDate from "../functions/formatDate";
+import Signature from "react-native-signature-canvas";
+import api from "../../services/api";
+import * as Print from "expo-print";
 
 function Inicio(props) {
 	const { navigation } = props;
+	const refAssoc = useRef();
 	let data_atual = new Date();
 	const [usuario, setUsuario] = useUsuario();
-	const [matricula, setMatricula] = useState("");
+	const { associado_atendimento } = usuario;
+	const [matricula, setMatricula] = useState("478201");
 	const [alerta, setAlerta] = useState({ visible: false });
 	const [carregando, setCarregando] = useState(false);
 	const [dependenteEscolhido, setDependenteEscolhido] = useState({});
@@ -39,9 +43,8 @@ function Inicio(props) {
 	const [modalCarregando, setModalCarregando] = useState(false);
 	const [modalTermoExclusao, setModalTermoEsclusao] = useState(false);
 	const [modalExcluirDependente, setModalExcluirDependente] = useState(false);
-	const [aceitoTermoExclusaoDependente, setAceitoTermoExclusaoDependente] =
-		useState(false);
 	const [termo, setTermo] = useState({});
+	const [assinaturaAssociado, setAssinaturaAssociado] = useState("");
 
 	async function iniciarAtendimento() {
 		Keyboard.dismiss();
@@ -123,7 +126,7 @@ function Inicio(props) {
 
 		let t = data.termo;
 		t = t
-			.replace("@TITULAR", usuario.associado_atendimento.nome)
+			.replace("@TITULAR", associado_atendimento.nome)
 			.replace(
 				"@DEPENDENTE",
 				dependenteEscolhido.nome !== ""
@@ -146,115 +149,206 @@ function Inicio(props) {
 		});
 	}
 
-	const excluirDependente = async () => {
-		if (
-			dependenteEscolhido.nome !== "" &&
-			motivoExclusao !== "" &&
-			aceitoTermoExclusaoDependente
-		) {
-			setModalExcluirDependente(false);
-			setModalCarregando(true);
+	const handleEndAssociado = () => {
+		refAssoc.current.readSignature();
+	};
 
-			const { data } = await api({
-				url: "/associados/excluirDependente",
-				method: "POST",
-				data: {
-					cartao: usuario.associado_atendimento.cartao,
-					dep: dependenteEscolhido.cont,
-					cd_dep: dependenteEscolhido.cod_dep,
-					nome: dependenteEscolhido.nome,
-					tipo: dependenteEscolhido.pre_cadastro ? 2 : 1,
-					motivo: motivoExclusao,
-					origem: "Associac Mobile",
-				},
-				headers: { "x-access-token": usuario.token },
+	const handleClear = () => {
+		refAssoc.current.clearSignature();
+	};
+
+	const handleOK = async () => {
+		setModalExcluirDependente(false);
+		setModalTermoEsclusao(false);
+
+		let html =
+			termo.texto +
+			` 
+				<p align="justify" style="font-size: 12px;">Local: Florianpolis</p>
+				<p align="justify" style="font-size: 12px;">Data: ${
+					("0" + data_atual.getDate()).slice(-2) +
+					"/" +
+					("0" + (data_atual.getMonth() + 1)).slice(-2) +
+					"/" +
+					data_atual.getFullYear()
+				}</p>
+				<center>
+					<img src="${assinaturaAssociado}" style="width: 300px;" />
+					<hr style="width: 60%; margin-top: -15px;" />
+					<p style="font-size:12px !important;">Assinatura de<br/><b>${associado_atendimento?.nome?.toUpperCase()}</b></p>
+				</center>
+				<div style="display: flex; flex: 1; flex-direction: row; width: 100%;margin-top: 50px;">
+					<div style="display: flex; flex: 1; justify-content: center;">
+						<center>
+							<img src="" style="width: 250px;" /><br />
+							<hr style="width: 80%; margin-top: -15px;" />
+							<p style="text-align: center; font-size:12px !important;"><b>${usuario.nome}</b>
+							<br />Representante ABEPOM</p>
+						</center>
+					</div>
+					<div style="display: flex; flex: 1; justify-content: center;">
+						<center>
+							<img src="" style="width: 250px;" /><br />
+							<hr style="width: 80%; margin-top: -15px;" />
+							<p style="text-align: center; font-size:12px !important;">Cel Aroldo<br />Presidente da ABEPOM</p>
+						</center>
+					</div>
+				</div>
+			</body>
+		</html>`;
+
+		try {
+			const { uri } = await Print.printToFileAsync({ html });
+
+			const formulario = new FormData();
+			formulario.append("matricula", `${matricula}`);
+			formulario.append("dep", dependenteEscolhido.cont);
+			formulario.append("nome_doc", "REQUERIMENTO DE EXCLUSÃO DE DEPENDENTE");
+			formulario.append("tipo_doc", 15);
+			formulario.append("usuario", usuario.usuario);
+			formulario.append("file", {
+				uri,
+				type: `application/pdf`,
+				name: `REQUERIMENTO_EXCLUSAO_${matricula}.pdf`,
 			});
+
+			const { data } = await api.post(
+				"/associados/enviarDocumento",
+				formulario,
+				{
+					headers: {
+						"Content-Type": `multipart/form-data; boundary=${formulario._boundary}`,
+						"x-access-token": usuario.token,
+					},
+				}
+			);
 
 			if (data.status) {
-				if (dependenteEscolhido.pre_cadastro) {
-					let dependentes = usuario.associado_atendimento.dependentes.filter(
-						(dep) => dep.cont !== dependenteEscolhido.cont
-					);
+				const retorno = await api({
+					url: "/associados/excluirDependente",
+					method: "POST",
+					data: {
+						cartao: associado_atendimento.cartao,
+						dep: dependenteEscolhido.cont,
+						cd_dep: dependenteEscolhido.cod_dep,
+						nome: dependenteEscolhido.nome,
+						tipo: dependenteEscolhido.pre_cadastro ? 2 : 1,
+						motivo: motivoExclusao,
+						origem: "Associac Mobile",
+					},
+					headers: { "x-access-token": usuario.token },
+				});
 
-					dependentes = dependentes
-						.sort(compararValores("nome", "asc"))
-						.sort(compararValores("pre_cadastro", "desc"))
-						.sort(compararValores("inativo"), "asc");
+				if (retorno.data.status) {
+					if (dependenteEscolhido.pre_cadastro) {
+						let dependentes = associado_atendimento.dependentes.filter(
+							(dep) => dep.cont !== dependenteEscolhido.cont
+						);
 
-					setUsuario({
-						...usuario,
-						associado_atendimento: {
-							...usuario.associado_atendimento,
-							dependentes,
-						},
-					});
-				} else {
-					let dependente = usuario.associado_atendimento.dependentes.find(
-						(dep) => dep.cont === dependenteEscolhido.cont
-					);
+						dependentes = dependentes
+							.sort(compararValores("nome", "asc"))
+							.sort(compararValores("pre_cadastro", "desc"))
+							.sort(compararValores("inativo"), "asc");
 
-					dependente = {
-						...dependente,
-						inativo: 1,
-						data_inativo:
-							("0" + data_atual.getDate()).slice(-2) +
-							"/" +
-							("0" + (data_atual.getMonth() + 1)).slice(-2) +
-							"/" +
-							data_atual.getFullYear(),
-					};
+						setUsuario({
+							...usuario,
+							associado_atendimento: {
+								...associado_atendimento,
+								dependentes,
+							},
+						});
+					} else {
+						let dependente = associado_atendimento.dependentes.find(
+							(dep) => dep.cont === dependenteEscolhido.cont
+						);
 
-					let dependentes = usuario.associado_atendimento.dependentes.filter(
-						(dep) => dep.cont !== dependenteEscolhido.cont
-					);
+						dependente = {
+							...dependente,
+							inativo: 1,
+							data_inativo:
+								("0" + data_atual.getDate()).slice(-2) +
+								"/" +
+								("0" + (data_atual.getMonth() + 1)).slice(-2) +
+								"/" +
+								data_atual.getFullYear(),
+						};
 
-					dependentes = [...dependentes, dependente];
-					dependentes = dependentes
-						.sort(compararValores("nome", "asc"))
-						.sort(compararValores("pre_cadastro", "desc"))
-						.sort(compararValores("inativo"), "asc");
+						let dependentes = associado_atendimento.dependentes.filter(
+							(dep) => dep.cont !== dependenteEscolhido.cont
+						);
 
-					setUsuario({
-						...usuario,
-						associado_atendimento: {
-							...usuario.associado_atendimento,
-							dependentes,
-						},
-					});
+						dependentes = [...dependentes, dependente];
+						dependentes = dependentes
+							.sort(compararValores("nome", "asc"))
+							.sort(compararValores("pre_cadastro", "desc"))
+							.sort(compararValores("inativo"), "asc");
+
+						setUsuario({
+							...usuario,
+							associado_atendimento: {
+								...associado_atendimento,
+								dependentes,
+							},
+						});
+					}
 				}
+
+				setAlerta({
+					visible: true,
+					title: data.title,
+					message: data.message.replace(/@@/g, `\n`),
+					type: data.status ? "success" : "danger",
+					confirmText: "FECHAR",
+					showConfirm: true,
+					showCancel: false,
+				});
+
+				setDependenteEscolhido({});
+				setMotivoExclusao("");
+			} else {
+				setAlerta({
+					visible: true,
+					title: data.title,
+					message: data.message,
+					type: "danger",
+					cancelText: "FECHAR",
+					confirmText: "OK",
+					showConfirm: true,
+					showCancel: true,
+				});
 			}
-
-			setModalCarregando(false);
-			setAlerta({
-				visible: true,
-				title: data.title,
-				message: data.message.replace(/@@/g, `\n`),
-				type: data.status ? "success" : "danger",
-				confirmText: "FECHAR",
-				showConfirm: true,
-				showCancel: false,
-			});
-
-			setDependenteEscolhido({});
-			setMotivoExclusao("");
-			setAceitoTermoExclusaoDependente(false);
-		} else {
-			setModalExcluirDependente(false);
+		} catch (error) {
 			setAlerta({
 				visible: true,
 				title: "ATENÇÃO!",
 				message:
-					"Para prosseguir é necessário selecionar o dependente, preencher o motivo e aceitar o Termo de Exclusão de Dependentes.",
+					"Ocorreu um erro ao tentar recolher a assinatura do associado.",
 				type: "danger",
-				confirmText: "OK, PREENCHER!",
 				cancelText: "FECHAR",
-				showConfirm: true,
+				showConfirm: false,
 				showCancel: true,
-				confirmFunction: () => {
-					setAlerta({ visible: false });
-					setModalExcluirDependente(true);
-				},
 			});
+		}
+	};
+
+	const handleOKAssoc = (signature) => {
+		setAssinaturaAssociado(signature);
+
+		return true;
+	};
+
+	const handleConfirm = () => {
+		if (assinaturaAssociado !== "") {
+			setAlerta({
+				visible: true,
+				title: "CADASTRANDO ASSINATURA",
+				message: <Loading size={125} />,
+				showConfirm: false,
+				showCancel: false,
+				showIcon: false,
+			});
+
+			handleOK();
 		}
 	};
 
@@ -290,7 +384,7 @@ function Inicio(props) {
 								style={s.fullw}
 							/>
 						</View>
-						<View style={[s.row, s.mt10, s.h35, s.jcc, s.aic]}>
+						{/* <View style={[s.row, s.mt10, s.h35, s.jcc, s.aic]}>
 							<TouchableOpacity
 								onPress={() => visualizarTermoExclusaoDependente()}
 								style={[s.row, s.jcc, s.aic, s.h35, s.fullw]}
@@ -328,18 +422,43 @@ function Inicio(props) {
 									Eu declaro que li e aceito o Termo de Exclusão de Dependentes
 								</Text>
 							</TouchableOpacity>
-						</View>
-						<TouchableOpacity
-							onPress={() => excluirDependente()}
-							style={[s.row, s.mt20, s.bgcp, s.br6, s.jcc, s.aic, s.pd20]}
-						>
-							<Image
-								source={images.trash}
-								style={[s.w20, s.h20, s.tcw]}
-								tintColor={tema.colors.background}
-							/>
-							<Text style={[s.fcw, s.fs20, s.ml10]}>EXCLUIR DEPENDENTE</Text>
-						</TouchableOpacity>
+						</View> */}
+
+						{motivoExclusao.length < 5 ? (
+							<TouchableOpacity
+								onPress={() =>
+									setAlerta({
+										visible: true,
+										title: "ATENÇÃO!",
+										message: "Para prosseguir preencha o motivo de exclusão.",
+										type: "warning",
+										showConfirm: true,
+										confirmText: "FECHAR",
+										showCancel: false,
+									})
+								}
+								style={[s.row, s.mt20, s.br6, s.jcc, s.aic, s.bgcd, s.pd20]}
+							>
+								<Image
+									source={images.atencao}
+									style={[s.w20, s.h20, s.tcw]}
+									tintColor={tema.colors.background}
+								/>
+								<Text style={[s.fcw, s.fs20, s.ml10]}>PREENCHA O MOTIVO</Text>
+							</TouchableOpacity>
+						) : (
+							<TouchableOpacity
+								onPress={() => visualizarTermoExclusaoDependente()}
+								style={[s.row, s.mt20, s.br6, s.jcc, s.aic, s.pd20, s.bgcp]}
+							>
+								<Image
+									source={images.assinatura}
+									style={[s.w20, s.h20, s.tcw]}
+									tintColor={tema.colors.background}
+								/>
+								<Text style={[s.fcw, s.fs20, s.ml10]}>RECOLHER ASSINATURA</Text>
+							</TouchableOpacity>
+						)}
 					</View>
 					<TouchableOpacity
 						onPress={() => setModalExcluirDependente(false)}
@@ -360,9 +479,9 @@ function Inicio(props) {
 							<>
 								<WebView
 									source={{ html: termo.texto }}
-									style={[s.jcc, s.aic, s.fl1, s.mv6]}
-									textZoom={240}
-									containerStyle={s.fs25}
+									style={[s.jcc, s.aic, s.fl2, s.mv6]}
+									textZoom={150}
+									containerStyle={s.fs15}
 									startInLoadingState={true}
 									renderLoading={() => (
 										<View style={[s.fl1, s.jcc, s.aic]}>
@@ -370,13 +489,60 @@ function Inicio(props) {
 										</View>
 									)}
 								/>
+								<Text style={s.tac}>Assinatura de</Text>
+								<Text style={[s.tac, s.bold]}>
+									{associado_atendimento?.nome?.toUpperCase()}
+								</Text>
+								<Signature
+									ref={refAssoc}
+									style={s.h150}
+									onOK={handleOKAssoc}
+									onEmpty={() =>
+										setAlerta({
+											visible: true,
+											title: "ATENÇÃO!",
+											message:
+												"Para confirmar é necessário preencher a assinatura do associado.",
+											showCancel: false,
+											showConfirm: true,
+											confirmText: "FECHAR",
+										})
+									}
+									onEnd={handleEndAssociado}
+									descriptionText=""
+									webStyle={`
+									.m-signature-pad {width: 80%; height: 250px; margin-left: auto; margin-right: auto; margin-top: 10px; margin-bottom: 0px; }
+									.m-signature-pad::before{
+										position: absolute;
+										top: 210px;
+										content: " ";
+										width: 70%;
+										background: #aaa;
+										height:2px;
+										left: 15%;
+										right: 15%;
+									}
+									.m-signature-pad--body {border: none;}
+									.m-signature-pad--footer{ display: none;}
+									`}
+								/>
+								<View style={[s.row, s.jcsb, s.aic, s.b20, s.m20]}>
+									<Button onPress={handleClear} color={"#fff"} style={s.bgcr}>
+										LIMPAR ASSINATURA
+									</Button>
+									<Button onPress={handleConfirm} color={"#fff"} style={s.bgcg}>
+										CONFIRMAR ASSINATURA E EXCLUIR DEPENDENTE
+									</Button>
+								</View>
 							</>
 						</View>
 						<View style={[s.jcc, s.aic, s.m10]}>
 							<TouchableOpacity
 								onPress={() => {
 									setModalTermoEsclusao(false);
-									setModalExcluirDependente(true);
+									setModalExcluirDependente(false);
+									setMotivoExclusao("");
+									setAssinaturaAssociado("");
 								}}
 								style={[s.row, s.bgcp, s.br50, s.pd15, s.w50, s.h50]}
 							>

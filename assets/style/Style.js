@@ -118,6 +118,7 @@ const styles = StyleSheet.create({
 	bgcm: { backgroundColor: "#000A" },
 	bgcr: { backgroundColor: tema.colors.vermelho },
 	bgca: { backgroundColor: tema.colors.amarelo },
+	bgcd: { backgroundColor: tema.colors.disabled },
 	/* POSICIONAMENTO */
 	psa: { position: "absolute" },
 	zit: { zIndex: 999999 },

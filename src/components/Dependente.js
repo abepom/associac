@@ -143,7 +143,7 @@ export default (props) => {
 				>
 					<Image
 						source={images.trash}
-						style={[s.w38, s.h38, s.tcr]}
+						style={[s.w35, s.h35, s.tcr]}
 						tintColor={tema.colors.vermelho}
 					/>
 				</TouchableOpacity>
