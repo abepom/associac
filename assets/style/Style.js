@@ -104,6 +104,8 @@ const styles = StyleSheet.create({
 	h150: { height: 150 },
 	h200: { height: 200 },
 	h250: { height: 250 },
+	h300: { height: 300 },
+	h400: { height: 400 },
 	mxh200: { maxHeight: 200 },
 	mxh300: { maxHeight: 300 },
 	mxh340: { maxHeight: 340 },

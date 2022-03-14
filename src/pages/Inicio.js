@@ -34,7 +34,7 @@ function Inicio(props) {
 	let data_atual = new Date();
 	const [usuario, setUsuario] = useUsuario();
 	const { associado_atendimento } = usuario;
-	const [matricula, setMatricula] = useState("");
+	const [matricula, setMatricula] = useState("999354");
 	const [alerta, setAlerta] = useState({ visible: false });
 	const [carregando, setCarregando] = useState(false);
 	const [dependenteEscolhido, setDependenteEscolhido] = useState({});

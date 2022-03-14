@@ -17,6 +17,7 @@ import removerAcentos from "../functions/removerAcentos";
 import formatDate from "../functions/formatDate";
 import * as ImagePicker from "expo-image-picker";
 import * as Camera from "expo-camera";
+import * as Print from "expo-print";
 import Header from "../components/Header";
 import s, { tema } from "../../assets/style/Style";
 import Alert from "../components/Alert";
@@ -25,9 +26,13 @@ import { useUsuario } from "../store/Usuario";
 import Combo from "../components/Combo";
 import images from "../utils/images";
 import ModalLoading from "../components/ModalLoading";
+import Signature from "react-native-signature-canvas";
+import WebView from "react-native-webview";
 
 function CadastrarAssociado(props) {
 	const { navigation } = props;
+	let data_atual = new Date();
+	const refAssoc = useRef();
 	const [usuario, setUsuario] = useUsuario();
 	const { token, associado_atendimento } = usuario;
 	const [cidades, setCidades] = useState([]);
@@ -113,6 +118,9 @@ function CadastrarAssociado(props) {
 	const [observacao, setObservacao] = useState(
 		associado_atendimento?.observacao ?? ""
 	);
+	const [associadoSemDocumentos, setAssociadoSemDocumentos] = useState(false);
+	const [assinaturaAssociado, setAssinaturaAssociado] = useState("");
+	const [termo, setTermo] = useState({});
 
 	const nascimentoRef = useRef(null);
 	const cpfRef = useRef(null);
@@ -145,14 +153,25 @@ function CadastrarAssociado(props) {
 	}, [associado_atendimento.matricula]);
 
 	useEffect(() => {
-		console.log(associado_atendimento);
 		listarCidades();
 		listarOrgaos();
 		listarBancos();
 		listarFuncoes();
 		listarLotacoes();
 		listarFormas();
+		listarTermoInclusao();
 	}, []);
+
+	async function listarTermoInclusao() {
+		const { data } = await api({
+			url: "/associados/visualizarTermo",
+			method: "GET",
+			params: { id_local: 17 },
+			headers: { "x-access-token": usuario.token },
+		});
+
+		setTermo({ id: data.id_termo, texto: data.termo });
+	}
 
 	async function listarCidades() {
 		try {
@@ -303,130 +322,266 @@ function CadastrarAssociado(props) {
 		});
 
 		try {
-			const { data } = await api({
-				url: "/cadastrarAssociado",
-				method: "POST",
-				data: {
-					associado: {
-						matricula: associado_atendimento.matricula,
-						nome,
-						nascimento,
-						sexo,
-						cpf: cpf.replace(/[.-]/g, "").trim(),
-						rg,
-						telefone_comercial: telefoneComercial.replace(/[()-]/g, "").trim(),
-						telefone_residencial: telefoneResidencial
-							.replace(/[()-]/g, "")
-							.trim(),
-						celular: celular.replace(/[()-]/g, "").trim(),
-						email,
-						endereco,
-						numero: numero.trim(),
-						complemento,
-						bairro,
-						cidade,
-						cep,
-						orgao,
-						local_trabalho: localTrabalho,
-						funcao,
-						mesano,
-						identificador,
-						banco,
-						agencia,
-						conta,
-						digito_conta: digitoConta,
-						digito,
-						forma_desconto: formaDesconto,
-						estornado,
-						indica,
-						vinculo: 1,
-						observacao: (
-							associado_atendimento.observacao +
-							" " +
-							observacao
-						).trim(),
-						tipo: "01",
-						status: true,
-						recadastrado: true,
-						paga_joia: associado_atendimento.paga_joia,
-					},
-				},
-				headers: { "x-access-token": token },
+			let html =
+				`
+				<center><img src="https://assets.abepom.org.br/img/logo.png" style="width: 70px;" />
+				<br />
+				<h4>ASSOCIAÇÃO BENEFICENTE DOS MILITARES ESTADUAIS DE SANTA CATARINA</h4>
+				<h3>REQUERIMENTO DE INCLUSÃO DE ASSOCIADO</h3>
+				</center>
+				<table style="width: 100%;font-size: 11px;" border="1" cellspacing="0" cellpadding="3">
+					<tbody>
+						<tr>
+							<td colspan="3" style="width: 99.8834%;"><center><b>${
+								orgao.Name
+							}</b></center></td>
+						</tr>
+						<tr>
+							<td style="width: 33.3333%;">Matr&iacute;cula: <b>${
+								associado_atendimento.matricula
+							}</b></td>
+							<td colspan="2" style="width: 66.6667%;">Nome: <b>${nome.toUpperCase()}</b></td>
+						</tr>
+						<tr>
+							<td style="width: 33.3333%;">Nascimento: <b>${nascimento}</b></td>
+							<td style="width: 33.3333%;">CPF: <b>${cpf}</b></td>
+							<td style="width: 33.3333%;">RG: <b>${rg}</b></td>
+						</tr>
+						<tr>
+							<td style="width: 66.6666%;" colspan="2">Endere&ccedil;o: <b>${endereco}</b></td>
+							<td style="width: 33.3333%;">N&ordm;: <b>${numero}</b></td>
+						</tr>
+						<tr>
+							<td style="width: 33.3333%;">Complemento: <b>${complemento}</b></td>
+							<td style="width: 33.3333%;">Bairro: <b>${bairro}</b></td>
+							<td style="width: 33.3333%;">CEP: <b>${cep}</b></td>
+						</tr>
+						<tr>
+							<td colspan="2" style="width: 66.5501%;">Cidade: <b>${cidade.Name}</b></td>
+							<td style="width: 33.3333%;">Posto / Gradua&ccedil;&atilde;o: <b>${
+								funcao.Name
+							}</b></td>
+						</tr>
+						<tr>
+							<td style="width: 33.3333%;">Fone Residencial: <b>${telefoneResidencial}</b></td>
+							<td style="width: 33.3333%;">Celular: <b>${celular}</b></td>
+							<td style="width: 33.3333%;">Fone Comercial: <b>${telefoneComercial}</b></td>
+						</tr>
+						<tr>
+							<td colspan="2" style="width: 66.5501%;">E-mail: <b>${email}</b></td>
+							<td style="width: 33.3333%;">Lota&ccedil;&atilde;o: <b>${
+								localTrabalho.Name
+							}</b></td>
+						</tr>
+						<tr>
+							<td style="width: 33.3333%;">Banco: <b>${banco.Name}</b></td>
+							<td style="width: 33.3333%;">Ag&ecirc;ncia Banc&aacute;ria: <b>${agencia}</b></td>
+							<td style="width: 33.3333%;">Conta Corrente N&ordm;: <b>${conta} ${digitoConta}</b></td>
+						</tr>
+					</tbody>
+				</table><div style="font-size: 12px !important;">` +
+				termo.texto +
+				`</div><p align="justify" style="font-size: 12px;">Local: Florianópolis</p>
+					<p align="justify" style="font-size: 12px;">Data: ${
+						("0" + data_atual.getDate()).slice(-2) +
+						"/" +
+						("0" + (data_atual.getMonth() + 1)).slice(-2) +
+						"/" +
+						data_atual.getFullYear()
+					}</p>
+					<center>
+						<img src="${assinaturaAssociado}" style="width: 300px;" />
+						<hr style="width: 60%; margin-top: -15px;" />
+						<p style="font-size:12px !important;">Assinatura de<br/><b>${associado_atendimento?.nome?.toUpperCase()}</b></p>
+					</center>
+					<div style="display: flex; flex: 1; flex-direction: row; width: 100%;margin-top: 50px;">
+						<div style="display: flex; flex: 1; justify-content: center;">
+							<center>
+								<img src="" style="width: 250px;" /><br />
+								<hr style="width: 80%; margin-top: -15px;" />
+								<p style="text-align: center; font-size:12px !important;"><b>${usuario.nome}</b>
+								<br />Representante ABEPOM</p>
+							</center>
+						</div>
+						<div style="display: flex; flex: 1; justify-content: center;">
+							<center>
+								<img src="" style="width: 250px;" /><br />
+								<hr style="width: 80%; margin-top: -15px;" />
+								<p style="text-align: center; font-size:12px !important;">Cel Aroldo<br />Presidente da ABEPOM</p>
+							</center>
+						</div>
+					</div>
+				</body>
+			</html>`;
+
+			const { uri } = await Print.printToFileAsync({ html });
+
+			const formulario = new FormData();
+			formulario.append("matricula", `${associado_atendimento.matricula}`);
+			formulario.append("dep", "00");
+			formulario.append("nome_doc", "REQUERIMENTO DE INCLUSÃO DE ASSOCIADO");
+			formulario.append("tipo_doc", 8);
+			formulario.append("usuario", usuario.usuario);
+			formulario.append("file", {
+				uri,
+				type: `application/pdf`,
+				name: `REQUERIMENTO_INCLUSAO_${associado_atendimento.matricula}.pdf`,
 			});
 
-			if (data.status) {
-				setActiveStep(0);
-				setPrevStep(false);
-				setTextNext("PRÓXIMO");
-				setImagemCpf("");
-				setImagemRg("");
-				setImagemContraCheque("");
-				setImagemComprovanteResidencia("");
-
-				setUsuario({
-					...usuario,
-					associado_atendimento: {
-						...associado_atendimento,
-						nome: nome.toUpperCase(),
-						nascimento,
-						sexo,
-						cpf: cpf.replace(/[.-]/g, "").trim(),
-						rg,
-						telefone_comercial: telefoneComercial.replace(/[()-]/g, "").trim(),
-						telefone_residencial: telefoneResidencial
-							.replace(/[()-]/g, "")
-							.trim(),
-						celular: celular.replace(/[()-]/g, "").trim(),
-						email,
-						endereco,
-						numero: numero.trim(),
-						complemento,
-						bairro,
-						cidade,
-						cep,
-						orgao,
-						local_trabalho: localTrabalho,
-						funcao,
-						mesano,
-						identificador,
-						banco,
-						agencia,
-						conta,
-						digito_conta: digitoConta,
-						digito,
-						forma_desconto: formaDesconto,
-						estornado,
-						indica,
-						observacao: (
-							usuario.associado_atendimento.observacao +
-							" " +
-							observacao
-						).trim(),
-						tipo: "01",
-						status: true,
-						recadastrado: true,
+			const retorno = await api.post(
+				"/associados/enviarDocumento",
+				formulario,
+				{
+					headers: {
+						"Content-Type": `multipart/form-data; boundary=${formulario._boundary}`,
+						"x-access-token": usuario.token,
 					},
+				}
+			);
+
+			if (retorno.data.status) {
+				const { data } = await api({
+					url: "/cadastrarAssociado",
+					method: "POST",
+					data: {
+						associado: {
+							matricula: associado_atendimento.matricula,
+							nome,
+							nascimento,
+							sexo,
+							cpf: cpf.replace(/[.-]/g, "").trim(),
+							rg,
+							telefone_comercial: telefoneComercial
+								.replace(/[()-]/g, "")
+								.trim(),
+							telefone_residencial: telefoneResidencial
+								.replace(/[()-]/g, "")
+								.trim(),
+							celular: celular.replace(/[()-]/g, "").trim(),
+							email,
+							endereco,
+							numero: numero.trim(),
+							complemento,
+							bairro,
+							cidade,
+							cep,
+							orgao,
+							local_trabalho: localTrabalho,
+							funcao,
+							mesano,
+							identificador,
+							banco,
+							agencia,
+							conta,
+							digito_conta: digitoConta,
+							digito,
+							forma_desconto: formaDesconto,
+							estornado,
+							indica,
+							vinculo: 1,
+							observacao: (
+								associado_atendimento.observacao +
+								" " +
+								observacao
+							).trim(),
+							tipo: "01",
+							status: true,
+							recadastrado: true,
+							paga_joia: associado_atendimento.paga_joia,
+							sem_documentos: associadoSemDocumentos,
+						},
+					},
+					headers: { "x-access-token": token },
 				});
 
-				setAlerta({
-					visible: true,
-					title: data.title,
-					message: data.message,
-					showCancel: false,
-					showConfirm: true,
-					confirmText: "FECHAR",
-					type: "success",
-					confirmFunction: () => navigation.navigate("Inicio"),
-				});
+				if (data.status) {
+					setActiveStep(0);
+					setPrevStep(false);
+					setTextNext("PRÓXIMO");
+					setImagemCpf("");
+					setImagemRg("");
+					setImagemContraCheque("");
+					setImagemComprovanteResidencia("");
+
+					if (!associadoSemDocumentos) {
+						setUsuario({
+							...usuario,
+							associado_atendimento: {
+								...associado_atendimento,
+								nome: nome.toUpperCase(),
+								nascimento,
+								sexo,
+								cpf: cpf.replace(/[.-]/g, "").trim(),
+								rg,
+								telefone_comercial: telefoneComercial
+									.replace(/[()-]/g, "")
+									.trim(),
+								telefone_residencial: telefoneResidencial
+									.replace(/[()-]/g, "")
+									.trim(),
+								celular: celular.replace(/[()-]/g, "").trim(),
+								email,
+								endereco,
+								numero: numero.trim(),
+								complemento,
+								bairro,
+								cidade,
+								cep,
+								orgao,
+								local_trabalho: localTrabalho,
+								funcao,
+								mesano,
+								identificador,
+								banco,
+								agencia,
+								conta,
+								digito_conta: digitoConta,
+								digito,
+								forma_desconto: formaDesconto,
+								estornado,
+								indica,
+								observacao: (
+									usuario.associado_atendimento.observacao +
+									" " +
+									observacao
+								).trim(),
+								tipo: "01",
+								status: true,
+								recadastrado: true,
+							},
+						});
+					}
+
+					setAlerta({
+						visible: true,
+						title: data.title,
+						message: data.message.replace(/@@@@/g, `\n`),
+						showCancel: false,
+						showConfirm: true,
+						confirmText: "FECHAR",
+						type: "success",
+						confirmFunction: () => navigation.navigate("Inicio"),
+					});
+				} else {
+					setAlerta({
+						visible: true,
+						title: data.title,
+						message: data.message,
+						showCancel: false,
+						showConfirm: true,
+						confirmText: "FECHAR",
+						type: "danger",
+					});
+				}
 			} else {
 				setAlerta({
 					visible: true,
-					title: data.title,
-					message: data.message,
-					showCancel: false,
-					showConfirm: true,
-					confirmText: "FECHAR",
+					title: retorno.data.title,
+					message: retorno.data.message,
 					type: "danger",
+					cancelText: "FECHAR",
+					showConfirm: false,
+					showCancel: true,
 				});
 			}
 		} catch (error) {
@@ -763,59 +918,64 @@ function CadastrarAssociado(props) {
 				} else {
 					setPrevStep(true);
 					setActiveStep(2);
-					setTextNext("CADASTRAR");
 				}
 
 				break;
 			case 2:
-				erros = 0;
-				msgErro = "";
-
-				if (imagemCpf === "") {
-					erros++;
-					msgErro += "É obrigatório enviar a imagem do CPF.\n";
-				}
-
-				if (imagemRg === "") {
-					erros++;
-					msgErro += "É obrigatório enviar a imagem do RG.\n";
-				}
-
-				if (imagemContraCheque === "") {
-					erros++;
-					msgErro += "É obrigatório enviar a imagem do CONTRA CHEQUE.\n";
-				}
-
-				if (imagemComprovanteResidencia === "") {
-					erros++;
-					msgErro +=
-						"É obrigatório enviar a imagem do COMPROVANTE DE RESIDÊNCIA.\n";
-				}
-
-				if (erros > 0) {
+				if (
+					imagemCpf === "" ||
+					imagemRg === "" ||
+					imagemContraCheque === "" ||
+					imagemComprovanteResidencia === ""
+				) {
 					setAlerta({
 						visible: true,
 						title: "ATENÇÃO!",
-						message: `Para prosseguir é necessário preencher corretamente os campos:\n\n${msgErro}`,
-						showCancel: false,
+						message: `Ao prosseguir o cadastro você aceita que o cadastro${"\n"}deverá ser auditado posteriormente por conta de${"\n"}não possuir os documentos necessários?`,
+						showCancel: true,
 						showConfirm: true,
-						confirmText: "OK, Corrigir campos",
+						cancelText: "FECHAR",
+						confirmText: "SIM, PROSSEGUIR",
 						type: "warning",
+						confirmFunction: () => {
+							setActiveStep(3);
+							setTextNext("CADASTRAR");
+							setAlerta({ visible: false });
+							setAssociadoSemDocumentos(true);
+						},
 					});
 				} else {
-					if (associado_atendimento.data_saida == 1) {
-						showModal();
-					} else {
-						cadastrarAssociado();
-					}
+					setActiveStep(3);
+					setTextNext("CADASTRAR");
 				}
 
+				break;
+			case 3:
+				if (associado_atendimento.data_saida == 1) {
+					showModal();
+				} else {
+					cadastrarAssociado();
+				}
 				break;
 			default:
 				break;
 		}
 
 		setModalCarregando(false);
+	};
+
+	const handleOKAssoc = (signature) => {
+		setAssinaturaAssociado(signature);
+
+		return true;
+	};
+
+	const handleEndAssociado = () => {
+		refAssoc.current.readSignature();
+	};
+
+	const handleClear = () => {
+		refAssoc.current.clearSignature();
 	};
 
 	const goToPrevStep = () => {
@@ -1525,6 +1685,82 @@ function CadastrarAssociado(props) {
 									<View style={s.h100}></View>
 								</ScrollView>
 							</ProgressStep>
+							<ProgressStep label="Assinatura" removeBtnRow>
+								<View style={[s.row, s.mb10]}>
+									<View style={[s.fl1, s.jcc, s.aic]}>
+										<View style={[s.fl1, s.fullw, s.mh20, s.h400, s.mb20]}>
+											<>
+												<WebView
+													source={{ html: termo.texto }}
+													style={[
+														s.jcc,
+														s.aic,
+														s.fl2,
+														s.mv6,
+														{ backgroundColor: "#f1f1f1" },
+													]}
+													textZoom={130}
+													containerStyle={s.fs15}
+													startInLoadingState={true}
+													renderLoading={() => (
+														<View style={[s.fl1, s.jcc, s.aic]}>
+															<Loading size={80} />
+														</View>
+													)}
+												/>
+											</>
+										</View>
+										<View style={[s.row, s.jcc, s.aic, s.mb20]}>
+											<Image
+												source={images.seta}
+												style={[s.w20, s.h20, s.tr90, , s.tcp]}
+												tintColor={tema.colors.primary}
+											/>
+											<Text style={[s.fs15, s.ml10, s.fcp]}>
+												ARRASTE PARA VER O REQUERIMENTO COMPLETO
+											</Text>
+										</View>
+										<Text>Assinatura de</Text>
+										<Text style={[s.bold, s.mb20]}>
+											{associado_atendimento?.nome?.toUpperCase()}
+										</Text>
+										<Signature
+											ref={refAssoc}
+											style={s.h300}
+											onOK={handleOKAssoc}
+											onEmpty={() =>
+												setAlerta({
+													visible: true,
+													title: "ATENÇÃO!",
+													message:
+														"Para confirmar é necessário preencher a assinatura do associado.",
+													showCancel: false,
+													showConfirm: true,
+													confirmText: "FECHAR",
+												})
+											}
+											onEnd={handleEndAssociado}
+											descriptionText=""
+											webStyle={`
+											html {background: #f1f1f1}
+										.m-signature-pad {width: 80%; height: 250px; margin-left: auto; margin-right: auto; margin-top: 10px; margin-bottom: 0px; }
+										.m-signature-pad::before{
+											position: absolute;
+											top: 210px;
+											content: " ";
+											width: 70%;
+											background: #aaa;
+											height:2px;
+											left: 15%;
+											right: 15%;
+										}
+										.m-signature-pad--body {border: none;}
+										.m-signature-pad--footer{ display: none;}
+										`}
+										/>
+									</View>
+								</View>
+							</ProgressStep>
 						</ProgressSteps>
 						{prevStep && (
 							<TouchableOpacity
@@ -1549,6 +1785,29 @@ function CadastrarAssociado(props) {
 								<Text style={[s.fcw, s.fs20]}>ANTERIOR</Text>
 							</TouchableOpacity>
 						)}
+						{activeStep === 3 && (
+							<TouchableOpacity
+								onPress={handleClear}
+								style={[
+									s.bgcr,
+									s.pd20,
+									s.br6,
+									s.psa,
+									s.b40,
+									s.row,
+									s.jcc,
+									s.aic,
+									{ left: "33%" },
+								]}
+							>
+								<Image
+									source={images.trash}
+									style={[s.w20, s.h20, s.tcw, s.mr10, s.tr180]}
+									tintColor={tema.colors.background}
+								/>
+								<Text style={[s.fcw, s.fs20]}>LIMPAR ASSINATURA</Text>
+							</TouchableOpacity>
+						)}
 						<TouchableOpacity
 							disabled={!nextStep}
 							onPress={goToNextStep}
@@ -1563,7 +1822,7 @@ function CadastrarAssociado(props) {
 								s.aic,
 								{
 									backgroundColor: nextStep
-										? activeStep === 2
+										? activeStep === 3
 											? "#188038"
 											: "#031e3f"
 										: "#aaa",
@@ -1574,7 +1833,7 @@ function CadastrarAssociado(props) {
 								{textNext}
 							</Text>
 							{nextStep ? (
-								activeStep === 2 ? (
+								activeStep === 3 ? (
 									<Image
 										source={images.sucesso}
 										style={[s.w20, s.h20, s.tcw, s.ml10]}
