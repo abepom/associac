@@ -333,141 +333,96 @@ function CadastrarAssociado(props) {
 			});
 
 			try {
-				const requerimento = await api({
-					url: "/requerimentoCadastroAssociado",
-					method: "POST",
-					data: {
-						associado: {
-							orgao,
-							matricula: associado_atendimento.matricula,
-							nome: nome.toUpperCase(),
-							nascimento,
-							cpf,
-							rg,
-							endereco,
-							numero,
-							complemento,
-							bairro,
-							cep,
-							cidade,
-							funcao,
-							telefone_residencial: telefoneResidencial,
-							telefone_comercial: telefoneComercial,
-							celular,
-							email,
-							local_trabalho: localTrabalho,
-							banco,
-							agencia,
-							conta,
-							digito_conta: digitoConta,
+				if (usuario?.assinatura?.length <= 0) {
+					setAlerta({
+						visible: true,
+						title: "ATENÇÃO!",
+						message: `Para prosseguir é necessário cadastrar${"\n"}a assinatura do usuário.`,
+						type: "danger",
+						cancelText: "FECHAR",
+						confirmText: "OK, CADASTRAR ASSINATURA",
+						showConfirm: true,
+						showCancel: true,
+						confirmFunction: () => navigation.navigate("Perfil"),
+					});
+				} else {
+					const requerimento = await api({
+						url: "/requerimentoCadastroAssociado",
+						method: "POST",
+						data: {
+							associado: {
+								orgao,
+								matricula: associado_atendimento.matricula,
+								nome: nome.toUpperCase(),
+								nascimento,
+								cpf,
+								rg,
+								endereco,
+								numero,
+								complemento,
+								bairro,
+								cep,
+								cidade,
+								funcao,
+								telefone_residencial: telefoneResidencial,
+								telefone_comercial: telefoneComercial,
+								celular,
+								email,
+								local_trabalho: localTrabalho,
+								banco,
+								agencia,
+								conta,
+								digito_conta: digitoConta,
+							},
+							termo: termo.texto,
+							assinatura: assinaturaAssociado,
+							assinatura_colaborador: usuario.assinatura,
 						},
-						termo: termo.texto,
-						assinatura: assinaturaAssociado,
-					},
-					headers: { "x-access-token": token },
-				});
-
-				if (requerimento.data.status) {
-					const { uri } = await Print.printToFileAsync({
-						html: requerimento.data.requerimento,
+						headers: { "x-access-token": token },
 					});
 
-					const formulario = new FormData();
-					formulario.append("matricula", `${associado_atendimento.matricula}`);
-					formulario.append("dep", "00");
-					formulario.append(
-						"nome_doc",
-						"REQUERIMENTO DE INCLUSÃO DE ASSOCIADO"
-					);
-					formulario.append("tipo_doc", 8);
-					formulario.append("usuario", usuario.usuario);
-					formulario.append("file", {
-						uri,
-						type: `application/pdf`,
-						name: `REQUERIMENTO_INCLUSAO_${associado_atendimento.matricula}.pdf`,
-					});
-
-					const retorno = await api.post(
-						"/associados/enviarDocumento",
-						formulario,
-						{
-							headers: {
-								"Content-Type": `multipart/form-data; boundary=${formulario._boundary}`,
-								"x-access-token": usuario.token,
-							},
-						}
-					);
-
-					if (retorno.data.status) {
-						const { data } = await api({
-							url: "/cadastrarAssociado",
-							method: "POST",
-							data: {
-								associado: {
-									matricula: associado_atendimento.matricula,
-									nome,
-									nascimento,
-									sexo,
-									cpf: cpf.replace(/[.-]/g, "").trim(),
-									rg,
-									telefone_comercial: telefoneComercial
-										.replace(/[()-]/g, "")
-										.trim(),
-									telefone_residencial: telefoneResidencial
-										.replace(/[()-]/g, "")
-										.trim(),
-									celular: celular.replace(/[()-]/g, "").trim(),
-									email,
-									endereco,
-									numero: numero.trim(),
-									complemento,
-									bairro,
-									cidade,
-									cep,
-									orgao,
-									local_trabalho: localTrabalho,
-									funcao,
-									mesano,
-									identificador,
-									banco,
-									agencia,
-									conta,
-									digito_conta: digitoConta,
-									digito,
-									forma_desconto: formaDesconto,
-									estornado,
-									indica,
-									vinculo: 1,
-									observacao: (
-										associado_atendimento.observacao +
-										" " +
-										observacao
-									).trim(),
-									tipo: "01",
-									status: true,
-									recadastrado: true,
-									paga_joia: associado_atendimento.paga_joia,
-									sem_documentos: associadoSemDocumentos,
-								},
-							},
-							headers: { "x-access-token": token },
+					if (requerimento.data.status) {
+						const { uri } = await Print.printToFileAsync({
+							html: requerimento.data.requerimento,
 						});
 
-						if (data.status) {
-							setActiveStep(0);
-							setPrevStep(false);
-							setTextNext("PRÓXIMO");
-							setImagemCpf("");
-							setImagemRg("");
-							setImagemContraCheque("");
-							setImagemComprovanteResidencia("");
+						const formulario = new FormData();
+						formulario.append(
+							"matricula",
+							`${associado_atendimento.matricula}`
+						);
+						formulario.append("dep", "00");
+						formulario.append(
+							"nome_doc",
+							"REQUERIMENTO DE INCLUSÃO DE ASSOCIADO"
+						);
+						formulario.append("tipo_doc", 8);
+						formulario.append("usuario", usuario.usuario);
+						formulario.append("file", {
+							uri,
+							type: `application/pdf`,
+							name: `REQUERIMENTO_INCLUSAO_${associado_atendimento.matricula}.pdf`,
+						});
 
-							if (!associadoSemDocumentos) {
-								setUsuario({
-									...usuario,
-									associado_atendimento: {
-										...associado_atendimento,
-										nome: nome.toUpperCase(),
+						const retorno = await api.post(
+							"/associados/enviarDocumento",
+							formulario,
+							{
+								headers: {
+									"Content-Type": `multipart/form-data; boundary=${formulario._boundary}`,
+									"x-access-token": usuario.token,
+								},
+							}
+						);
+
+						if (retorno.data.status) {
+							const { data } = await api({
+								url: "/cadastrarAssociado",
+								method: "POST",
+								data: {
+									associado: {
+										matricula: associado_atendimento.matricula,
+										nome,
 										nascimento,
 										sexo,
 										cpf: cpf.replace(/[.-]/g, "").trim(),
@@ -499,60 +454,123 @@ function CadastrarAssociado(props) {
 										forma_desconto: formaDesconto,
 										estornado,
 										indica,
+										vinculo: 1,
 										observacao: (
-											usuario.associado_atendimento.observacao +
+											associado_atendimento.observacao +
 											" " +
 											observacao
 										).trim(),
 										tipo: "01",
 										status: true,
 										recadastrado: true,
+										paga_joia: associado_atendimento.paga_joia,
+										sem_documentos: associadoSemDocumentos,
 									},
+								},
+								headers: { "x-access-token": token },
+							});
+
+							if (data.status) {
+								setActiveStep(0);
+								setPrevStep(false);
+								setTextNext("PRÓXIMO");
+								setImagemCpf("");
+								setImagemRg("");
+								setImagemContraCheque("");
+								setImagemComprovanteResidencia("");
+
+								if (!associadoSemDocumentos) {
+									setUsuario({
+										...usuario,
+										associado_atendimento: {
+											...associado_atendimento,
+											nome: nome.toUpperCase(),
+											nascimento,
+											sexo,
+											cpf: cpf.replace(/[.-]/g, "").trim(),
+											rg,
+											telefone_comercial: telefoneComercial
+												.replace(/[()-]/g, "")
+												.trim(),
+											telefone_residencial: telefoneResidencial
+												.replace(/[()-]/g, "")
+												.trim(),
+											celular: celular.replace(/[()-]/g, "").trim(),
+											email,
+											endereco,
+											numero: numero.trim(),
+											complemento,
+											bairro,
+											cidade,
+											cep,
+											orgao,
+											local_trabalho: localTrabalho,
+											funcao,
+											mesano,
+											identificador,
+											banco,
+											agencia,
+											conta,
+											digito_conta: digitoConta,
+											digito,
+											forma_desconto: formaDesconto,
+											estornado,
+											indica,
+											observacao: (
+												usuario.associado_atendimento.observacao +
+												" " +
+												observacao
+											).trim(),
+											tipo: "01",
+											status: true,
+											recadastrado: true,
+										},
+									});
+								}
+
+								setAlerta({
+									visible: true,
+									title: data.title,
+									message: data.message.replace(/@@@@/g, `\n`),
+									showCancel: false,
+									showConfirm: true,
+									confirmText: "FECHAR",
+									type: "success",
+									confirmFunction: () => navigation.navigate("Inicio"),
+								});
+							} else {
+								setAlerta({
+									visible: true,
+									title: data.title,
+									message: data.message,
+									showCancel: false,
+									showConfirm: true,
+									confirmText: "FECHAR",
+									type: "danger",
 								});
 							}
-
-							setAlerta({
-								visible: true,
-								title: data.title,
-								message: data.message.replace(/@@@@/g, `\n`),
-								showCancel: false,
-								showConfirm: true,
-								confirmText: "FECHAR",
-								type: "success",
-								confirmFunction: () => navigation.navigate("Inicio"),
-							});
 						} else {
 							setAlerta({
 								visible: true,
-								title: data.title,
-								message: data.message,
-								showCancel: false,
-								showConfirm: true,
-								confirmText: "FECHAR",
+								title: retorno.data.title,
+								message: retorno.data.message,
 								type: "danger",
+								cancelText: "FECHAR",
+								showConfirm: false,
+								showCancel: true,
 							});
 						}
 					} else {
 						setAlerta({
 							visible: true,
-							title: retorno.data.title,
-							message: retorno.data.message,
+							title: "ATENÇÃO!",
+							message: "Ocorreu um erro ao tentar cadastrar o associado.",
+							showCancel: false,
+							showConfirm: true,
+							confirmText: "FECHAR",
 							type: "danger",
-							cancelText: "FECHAR",
-							showConfirm: false,
-							showCancel: true,
 						});
 					}
-				} else {
-					setAlerta({
-						visible: true,
-						title: "ATENÇÃO!",
-						message: "Ocorreu um erro ao tentar cadastrar o associado.",
-						showCancel: false,
-						showConfirm: true,
-						confirmText: "FECHAR",
-						type: "danger",
-					});
 				}
 			} catch (error) {
 				setAlerta({
@@ -1714,20 +1732,20 @@ function CadastrarAssociado(props) {
 											descriptionText=""
 											webStyle={`
 											html {background: #f1f1f1}
-										.m-signature-pad {width: 80%; height: 250px; margin-left: auto; margin-right: auto; margin-top: 10px; margin-bottom: 0px; }
-										.m-signature-pad::before{
-											position: absolute;
-											top: 210px;
-											content: " ";
-											width: 70%;
-											background: #aaa;
-											height:2px;
-											left: 15%;
-											right: 15%;
-										}
-										.m-signature-pad--body {border: none;}
-										.m-signature-pad--footer{ display: none;}
-										`}
+											.m-signature-pad {width: 80%; height: 250px; margin-left: auto; margin-right: auto; margin-top: 10px; margin-bottom: 0px; }
+											.m-signature-pad::before{
+												position: absolute;
+												top: 210px;
+												content: " ";
+												width: 70%;
+												background: #aaa;
+												height:2px;
+												left: 15%;
+												right: 15%;
+											}
+											.m-signature-pad--body {border: none;}
+											.m-signature-pad--footer{ display: none;}
+											`}
 										/>
 									</View>
 								</View>

@@ -354,86 +354,101 @@ function RecadastrarAssociado(props) {
 		setModal(false);
 
 		try {
-			const requerimento = await api({
-				url: "/requerimentoRecadastroAssociado",
-				method: "POST",
-				data: {
-					associado: {
-						matricula: associado_atendimento.matricula,
-						nome: associado_atendimento.nome,
-						sexo,
-						email,
-						nascimento,
-						cpf,
-						rg,
-						local_trabalho: localTrabalho,
-						telefone_residencial: telefoneResidencial,
-						telefone_comercial: telefoneComercial,
-						celular,
-						endereco,
-						complemento,
-						numero,
-						bairro,
-						cep,
-						cidade,
-					},
-					termo: termo.texto,
-					assinatura: assinaturaAssociado,
-				},
-				headers: { "x-access-token": token },
-			});
-
-			if (requerimento.data.status) {
-				const { uri } = await Print.printToFileAsync({
-					html: requerimento.data.requerimento,
-				});
-
-				const formulario = new FormData();
-				formulario.append("matricula", `${associado_atendimento.matricula}`);
-				formulario.append("file", {
-					uri,
-					type: `application/pdf`,
-					name: `REQUERIMENTO_RECADASTRO_${associado_atendimento.matricula}.pdf`,
-				});
-
-				const { data } = await api.post(
-					"/associados/cadastrarAssinatura",
-					formulario,
-					{
-						headers: {
-							"Content-Type": `multipart/form-data; boundary=${formulario._boundary}`,
-							"x-access-token": token,
-						},
-					}
-				);
-
-				if (data.status) {
-					setAlerta({ visible: false });
-					setBtnRecadastrar(true);
-				} else {
-					setAlerta({
-						visible: true,
-						title: data.title,
-						message: data.message,
-						type: "danger",
-						cancelText: "FECHAR",
-						confirmText: "OK",
-						showConfirm: true,
-						showCancel: true,
-						confirmFunction: () => setModal(true),
-					});
-				}
-			} else {
+			if (usuario?.assinatura?.length <= 0) {
 				setAlerta({
 					visible: true,
 					title: "ATENÇÃO!",
-					message:
-						"Ocorreu um erro ao tentar recolher a assinatura do associado.",
+					message: `Para prosseguir é necessário cadastrar${"\n"}a assinatura do usuário.`,
 					type: "danger",
 					cancelText: "FECHAR",
-					showConfirm: false,
+					confirmText: "OK, CADASTRAR ASSINATURA",
+					showConfirm: true,
 					showCancel: true,
+					confirmFunction: () => navigation.navigate("Perfil"),
 				});
+			} else {
+				const requerimento = await api({
+					url: "/requerimentoRecadastroAssociado",
+					method: "POST",
+					data: {
+						associado: {
+							matricula: associado_atendimento.matricula,
+							nome: associado_atendimento.nome,
+							sexo,
+							email,
+							nascimento,
+							cpf,
+							rg,
+							local_trabalho: localTrabalho,
+							telefone_residencial: telefoneResidencial,
+							telefone_comercial: telefoneComercial,
+							celular,
+							endereco,
+							complemento,
+							numero,
+							bairro,
+							cep,
+							cidade,
+						},
+						termo: termo.texto,
+						assinatura: assinaturaAssociado,
+						assinatura_colaborador: usuario.assinatura,
+					},
+					headers: { "x-access-token": token },
+				});
+
+				if (requerimento.data.status) {
+					const { uri } = await Print.printToFileAsync({
+						html: requerimento.data.requerimento,
+					});
+
+					const formulario = new FormData();
+					formulario.append("matricula", `${associado_atendimento.matricula}`);
+					formulario.append("file", {
+						uri,
+						type: `application/pdf`,
+						name: `REQUERIMENTO_RECADASTRO_${associado_atendimento.matricula}.pdf`,
+					});
+
+					const { data } = await api.post(
+						"/associados/cadastrarAssinatura",
+						formulario,
+						{
+							headers: {
+								"Content-Type": `multipart/form-data; boundary=${formulario._boundary}`,
+								"x-access-token": token,
+							},
+						}
+					);
+
+					if (data.status) {
+						setAlerta({ visible: false });
+						setBtnRecadastrar(true);
+					} else {
+						setAlerta({
+							visible: true,
+							title: data.title,
+							message: data.message,
+							type: "danger",
+							cancelText: "FECHAR",
+							confirmText: "OK",
+							showConfirm: true,
+							showCancel: true,
+							confirmFunction: () => setModal(true),
+						});
+					}
+				} else {
+					setAlerta({
+						visible: true,
+						title: "ATENÇÃO!",
+						message:
+							"Ocorreu um erro ao tentar recolher a assinatura do associado.",
+						type: "danger",
+						cancelText: "FECHAR",
+						showConfirm: false,
+						showCancel: true,
+					});
+				}
 			}
 		} catch (error) {
 			setAlerta({

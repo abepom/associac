@@ -158,174 +158,186 @@ function Inicio(props) {
 		setModalTermoEsclusao(false);
 
 		try {
-			const requerimento = await api({
-				url: "/requerimentoExclusaoDependente",
-				method: "POST",
-				data: {
-					associado: associado_atendimento,
-					dependente: {
-						nome_dependente: dependenteEscolhido.nome,
-						sexo_dependente:
-							dependenteEscolhido.sexo === "F"
-								? { Name: "Feminino", Value: "F" }
-								: { Name: "Masculino", Value: "M" },
-						nascimento_dependente: dependenteEscolhido.data_nascimento,
-						cpf_dependente: dependenteEscolhido.cpf,
-						tipo_dependente: { Name: dependenteEscolhido.tipo },
-					},
-					termo: termo.texto,
-					assinatura: assinaturaAssociado,
-					motivo: motivoExclusao,
-				},
-				headers: { "x-access-token": usuario.token },
-			});
-
-			if (requerimento.data.status) {
-				const { uri } = await Print.printToFileAsync({
-					html: requerimento.data.requerimento,
-				});
-
-				const formulario = new FormData();
-				formulario.append("matricula", `${matricula}`);
-				formulario.append(
-					"dep",
-					dependenteEscolhido.pre_cadastro ? "00" : dependenteEscolhido.cont
-				);
-				formulario.append(
-					"nome_doc",
-					`REQUERIMENTO DE EXCLUSÃO DE DEPENDENTE ${
-						dependenteEscolhido.pre_cadastro ? " - PRÉ CADASTRAD" : ""
-					}`
-				);
-				formulario.append("tipo_doc", 15);
-				formulario.append("usuario", usuario.usuario);
-				formulario.append("file", {
-					uri,
-					type: `application/pdf`,
-					name: `REQUERIMENTO_EXCLUSAO_${matricula}.pdf`,
-				});
-
-				const { data } = await api.post(
-					"/associados/enviarDocumento",
-					formulario,
-					{
-						headers: {
-							"Content-Type": `multipart/form-data; boundary=${formulario._boundary}`,
-							"x-access-token": usuario.token,
-						},
-					}
-				);
-
-				if (data.status) {
-					const retorno = await api({
-						url: "/associados/excluirDependente",
-						method: "POST",
-						data: {
-							cartao: associado_atendimento.cartao,
-							dep: dependenteEscolhido.cont,
-							cd_dep: dependenteEscolhido.cod_dep,
-							nome: dependenteEscolhido.nome,
-							tipo: dependenteEscolhido.pre_cadastro ? 2 : 1,
-							motivo: motivoExclusao,
-							origem: "Associac Mobile",
-						},
-						headers: { "x-access-token": usuario.token },
-					});
-
-					if (retorno.data.status) {
-						if (dependenteEscolhido.pre_cadastro) {
-							let dependentes = associado_atendimento.dependentes.filter(
-								(dep) => dep.cont !== dependenteEscolhido.cont
-							);
-
-							dependentes = dependentes
-								.sort(compararValores("nome", "asc"))
-								.sort(compararValores("pre_cadastro", "desc"))
-								.sort(compararValores("inativo"), "asc");
-
-							setUsuario({
-								...usuario,
-								associado_atendimento: {
-									...associado_atendimento,
-									dependentes,
-								},
-							});
-						} else {
-							let dependente = associado_atendimento.dependentes.find(
-								(dep) => dep.cont === dependenteEscolhido.cont
-							);
-
-							dependente = {
-								...dependente,
-								inativo: 1,
-								data_inativo:
-									("0" + data_atual.getDate()).slice(-2) +
-									"/" +
-									("0" + (data_atual.getMonth() + 1)).slice(-2) +
-									"/" +
-									data_atual.getFullYear(),
-							};
-
-							let dependentes = associado_atendimento.dependentes.filter(
-								(dep) => dep.cont !== dependenteEscolhido.cont
-							);
-
-							dependentes = [...dependentes, dependente];
-							dependentes = dependentes
-								.sort(compararValores("nome", "asc"))
-								.sort(compararValores("pre_cadastro", "desc"))
-								.sort(compararValores("inativo"), "asc");
-
-							setUsuario({
-								...usuario,
-								associado_atendimento: {
-									...associado_atendimento,
-									dependentes,
-								},
-							});
-						}
-					}
-
-					setAlerta({
-						visible: true,
-						title: retorno.data.title,
-						message: retorno.data.message.replace(/@@/g, `\n`),
-						type: retorno.data.status ? "success" : "danger",
-						confirmText: "FECHAR",
-						showConfirm: true,
-						showCancel: false,
-					});
-
-					setDependenteEscolhido({});
-					setMotivoExclusao("");
-				} else {
-					setAlerta({
-						visible: true,
-						title: data.title,
-						message: data.message,
-						type: "danger",
-						cancelText: "FECHAR",
-						confirmText: "OK",
-						showConfirm: true,
-						showCancel: true,
-					});
-				}
-			} else {
-				console.log(requerimento);
-
+			if (usuario?.assinatura?.length <= 0) {
 				setAlerta({
 					visible: true,
 					title: "ATENÇÃO!",
-					message:
-						"Ocorreu um erro ao tentar recolher a assinatura do associado.",
+					message: `Para prosseguir é necessário cadastrar${"\n"}a assinatura do usuário.`,
 					type: "danger",
 					cancelText: "FECHAR",
-					showConfirm: false,
+					confirmText: "OK, CADASTRAR ASSINATURA",
+					showConfirm: true,
 					showCancel: true,
+					confirmFunction: () => navigation.navigate("Perfil"),
 				});
+			} else {
+				const requerimento = await api({
+					url: "/requerimentoExclusaoDependente",
+					method: "POST",
+					data: {
+						associado: associado_atendimento,
+						dependente: {
+							nome_dependente: dependenteEscolhido.nome,
+							sexo_dependente:
+								dependenteEscolhido.sexo === "F"
+									? { Name: "Feminino", Value: "F" }
+									: { Name: "Masculino", Value: "M" },
+							nascimento_dependente: dependenteEscolhido.data_nascimento,
+							cpf_dependente: dependenteEscolhido.cpf,
+							tipo_dependente: { Name: dependenteEscolhido.tipo },
+						},
+						termo: termo.texto,
+						assinatura: assinaturaAssociado,
+						assinatura_colaborador: usuario.assinatura,
+						motivo: motivoExclusao,
+					},
+					headers: { "x-access-token": usuario.token },
+				});
+
+				if (requerimento.data.status) {
+					const { uri } = await Print.printToFileAsync({
+						html: requerimento.data.requerimento,
+					});
+
+					const formulario = new FormData();
+					formulario.append("matricula", `${matricula}`);
+					formulario.append(
+						"dep",
+						dependenteEscolhido.pre_cadastro ? "00" : dependenteEscolhido.cont
+					);
+					formulario.append(
+						"nome_doc",
+						`REQUERIMENTO DE EXCLUSÃO DE DEPENDENTE ${
+							dependenteEscolhido.pre_cadastro ? " - PRÉ CADASTRAD" : ""
+						}`
+					);
+					formulario.append("tipo_doc", 15);
+					formulario.append("usuario", usuario.usuario);
+					formulario.append("file", {
+						uri,
+						type: `application/pdf`,
+						name: `REQUERIMENTO_EXCLUSAO_${matricula}.pdf`,
+					});
+
+					const { data } = await api.post(
+						"/associados/enviarDocumento",
+						formulario,
+						{
+							headers: {
+								"Content-Type": `multipart/form-data; boundary=${formulario._boundary}`,
+								"x-access-token": usuario.token,
+							},
+						}
+					);
+
+					if (data.status) {
+						const retorno = await api({
+							url: "/associados/excluirDependente",
+							method: "POST",
+							data: {
+								cartao: associado_atendimento.cartao,
+								dep: dependenteEscolhido.cont,
+								cd_dep: dependenteEscolhido.cod_dep,
+								nome: dependenteEscolhido.nome,
+								tipo: dependenteEscolhido.pre_cadastro ? 2 : 1,
+								motivo: motivoExclusao,
+								origem: "Associac Mobile",
+							},
+							headers: { "x-access-token": usuario.token },
+						});
+
+						if (retorno.data.status) {
+							if (dependenteEscolhido.pre_cadastro) {
+								let dependentes = associado_atendimento.dependentes.filter(
+									(dep) => dep.cont !== dependenteEscolhido.cont
+								);
+
+								dependentes = dependentes
+									.sort(compararValores("nome", "asc"))
+									.sort(compararValores("pre_cadastro", "desc"))
+									.sort(compararValores("inativo"), "asc");
+
+								setUsuario({
+									...usuario,
+									associado_atendimento: {
+										...associado_atendimento,
+										dependentes,
+									},
+								});
+							} else {
+								let dependente = associado_atendimento.dependentes.find(
+									(dep) => dep.cont === dependenteEscolhido.cont
+								);
+
+								dependente = {
+									...dependente,
+									inativo: 1,
+									data_inativo:
+										("0" + data_atual.getDate()).slice(-2) +
+										"/" +
+										("0" + (data_atual.getMonth() + 1)).slice(-2) +
+										"/" +
+										data_atual.getFullYear(),
+								};
+
+								let dependentes = associado_atendimento.dependentes.filter(
+									(dep) => dep.cont !== dependenteEscolhido.cont
+								);
+
+								dependentes = [...dependentes, dependente];
+								dependentes = dependentes
+									.sort(compararValores("nome", "asc"))
+									.sort(compararValores("pre_cadastro", "desc"))
+									.sort(compararValores("inativo"), "asc");
+
+								setUsuario({
+									...usuario,
+									associado_atendimento: {
+										...associado_atendimento,
+										dependentes,
+									},
+								});
+							}
+						}
+
+						setAlerta({
+							visible: true,
+							title: retorno.data.title,
+							message: retorno.data.message.replace(/@@/g, `\n`),
+							type: retorno.data.status ? "success" : "danger",
+							confirmText: "FECHAR",
+							showConfirm: true,
+							showCancel: false,
+						});
+
+						setDependenteEscolhido({});
+						setMotivoExclusao("");
+					} else {
+						setAlerta({
+							visible: true,
+							title: data.title,
+							message: data.message,
+							type: "danger",
+							cancelText: "FECHAR",
+							confirmText: "OK",
+							showConfirm: true,
+							showCancel: true,
+						});
+					}
+				} else {
+					setAlerta({
+						visible: true,
+						title: "ATENÇÃO!",
+						message:
+							"Ocorreu um erro ao tentar recolher a assinatura do associado.",
+						type: "danger",
+						cancelText: "FECHAR",
+						showConfirm: false,
+						showCancel: true,
+					});
+				}
 			}
 		} catch (error) {
-			console.log(error);
 			setAlerta({
 				visible: true,
 				title: "ATENÇÃO!",
@@ -676,6 +688,16 @@ function Inicio(props) {
 					>
 						<Image
 							source={images.sair}
+							style={[s.w35, s.h35, s.tcw, s.mr10]}
+							tintColor={"#fff"}
+						/>
+					</TouchableOpacity>
+					<TouchableOpacity
+						onPress={() => navigation.navigate("Perfil")}
+						style={[s.row, s.l10, s.psa, s.h60, s.w60, s.jcc, s.aic, s.zit]}
+					>
+						<Image
+							source={images.user_config}
 							style={[s.w35, s.h35, s.tcw, s.mr10]}
 							tintColor={"#fff"}
 						/>

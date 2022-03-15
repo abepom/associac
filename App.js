@@ -19,6 +19,7 @@ import CadastrarPlanosDeSaude from "./src/pages/CadastrarPlanosDeSaude";
 import VisualizarRequerimentos from "./src/pages/VisualizarRequerimentos";
 import { StoreProvider } from "./src/store/store";
 import Sair from "./src/pages/Sair";
+import Perfil from "./src/pages/Perfil";
 
 const Stack = createNativeStackNavigator();
 
@@ -97,6 +98,11 @@ export default function App() {
 						<Stack.Screen
 							name="EnviarDocumentoDependente"
 							component={EnviarDocumentoDependente}
+							options={{ headerShown: false }}
+						/>
+						<Stack.Screen
+							name="Perfil"
+							component={Perfil}
 							options={{ headerShown: false }}
 						/>
 						<Stack.Screen

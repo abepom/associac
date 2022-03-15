@@ -174,6 +174,7 @@ const styles = StyleSheet.create({
 	b20: { bottom: 20 },
 	b40: { bottom: 40 },
 	l0: { left: 0 },
+	l10: { left: 10 },
 	l50: { left: 50 },
 	r0: { right: 0 },
 	r10: { right: 10 },

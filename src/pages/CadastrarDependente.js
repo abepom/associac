@@ -168,161 +168,182 @@ function CadastrarDependente(props) {
 				showCancel: false,
 			});
 		} else {
-			const requerimento = await api({
-				url: "/requerimentoInclusaoDependente",
-				method: "POST",
-				data: {
-					associado: associado_atendimento,
-					dependente: {
-						nome_dependente: nome,
-						sexo_dependente: sexo,
-						nascimento_dependente: nascimento,
-						cpf_dependente: cpf,
-						tipo_dependente: tipo,
+			if (usuario?.assinatura?.length <= 0) {
+				setAlerta({
+					visible: true,
+					title: "ATENÇÃO!",
+					message: `Para prosseguir é necessário cadastrar${"\n"}a assinatura do usuário.`,
+					type: "danger",
+					cancelText: "FECHAR",
+					confirmText: "OK, CADASTRAR ASSINATURA",
+					showConfirm: true,
+					showCancel: true,
+					confirmFunction: () => navigation.navigate("Perfil"),
+				});
+			} else {
+				const requerimento = await api({
+					url: "/requerimentoInclusaoDependente",
+					method: "POST",
+					data: {
+						associado: associado_atendimento,
+						dependente: {
+							nome_dependente: nome,
+							sexo_dependente: sexo,
+							nascimento_dependente: nascimento,
+							cpf_dependente: cpf,
+							tipo_dependente: tipo,
+						},
+						termo: tipo.CobraMensalidade
+							? termoDependenteEspecial.texto
+							: termoDependenteLegal.texto,
+						assinatura: assinaturaAssociado,
+						assinatura_colaborador: usuario.assinatura,
 					},
-					termo: tipo.CobraMensalidade
-						? termoDependenteEspecial.texto
-						: termoDependenteLegal.texto,
-					assinatura: assinaturaAssociado,
-				},
-				headers: { "x-access-token": token },
-			});
-
-			if (requerimento.data.status) {
-				const { uri } = await Print.printToFileAsync({
-					html: requerimento.data.requerimento,
+					headers: { "x-access-token": token },
 				});
 
-				const formulario = new FormData();
-				formulario.append("matricula", `${associado_atendimento.matricula}`);
-				formulario.append("dep", "00");
-				formulario.append("nome_doc", "REQUERIMENTO DE INCLUSÃO DE DEPENDENTE");
-				formulario.append("tipo_doc", 14);
-				formulario.append("usuario", usuario.usuario);
-				formulario.append("file", {
-					uri,
-					type: `application/pdf`,
-					name: `REQUERIMENTO_INCLUSAO_DEPENDENTE_${associado_atendimento.matricula}.pdf`,
-				});
-
-				const retorno = await api.post(
-					"/associados/enviarDocumento",
-					formulario,
-					{
-						headers: {
-							"Content-Type": `multipart/form-data; boundary=${formulario._boundary}`,
-							"x-access-token": usuario.token,
-						},
-					}
-				);
-
-				if (retorno.data.status) {
-					const { data } = await api({
-						url: "/associados/cadastrarDependente",
-						method: "POST",
-						data: {
-							cartao: associado_atendimento.cartao,
-							nome,
-							cpf,
-							nascimento,
-							sexo: sexo.Value,
-							tipo: tipo.Value,
-							origem: "Associac Mobile",
-							termo: tipo.CobraMensalidade
-								? termoDependenteEspecial
-								: termoDependenteLegal,
-						},
-						headers: { "x-access-token": token },
+				if (requerimento.data.status) {
+					const { uri } = await Print.printToFileAsync({
+						html: requerimento.data.requerimento,
 					});
 
-					if (data.status) {
-						let dependente = {
-							caminho_imagem: "",
-							cartao: "",
-							cartao_enviado: 0,
-							cartao_recebido: 0,
-							cartao_solicitado: 0,
-							celular: "",
-							cod_dep: tipo.Value,
-							cont: data.cont,
-							cpf,
-							data_nascimento: nascimento,
-							email: "",
-							facebook: "",
-							instagram: "",
-							nome,
-							nome_plano: "",
-							possui_plano: 0,
-							pre_cadastro: 1,
-							sexo: sexo.Value,
-							telefone: "",
-							tipo: tipo.Name,
-							inativo: 0,
-							data_inativo: "",
-						};
+					const formulario = new FormData();
+					formulario.append("matricula", `${associado_atendimento.matricula}`);
+					formulario.append("dep", "00");
+					formulario.append(
+						"nome_doc",
+						"REQUERIMENTO DE INCLUSÃO DE DEPENDENTE"
+					);
+					formulario.append("tipo_doc", 14);
+					formulario.append("usuario", usuario.usuario);
+					formulario.append("file", {
+						uri,
+						type: `application/pdf`,
+						name: `REQUERIMENTO_INCLUSAO_DEPENDENTE_${associado_atendimento.matricula}.pdf`,
+					});
 
-						let dependentes = [
-							...associado_atendimento.dependentes,
-							dependente,
-						];
-						dependentes = dependentes
-							.sort(compararValores("nome", "asc"))
-							.sort(compararValores("pre_cadastro", "desc"))
-							.sort(compararValores("inativo", "asc"));
+					const retorno = await api.post(
+						"/associados/enviarDocumento",
+						formulario,
+						{
+							headers: {
+								"Content-Type": `multipart/form-data; boundary=${formulario._boundary}`,
+								"x-access-token": usuario.token,
+							},
+						}
+					);
 
-						setUsuario({
-							...usuario,
-							associado_atendimento: { ...associado_atendimento, dependentes },
+					if (retorno.data.status) {
+						const { data } = await api({
+							url: "/associados/cadastrarDependente",
+							method: "POST",
+							data: {
+								cartao: associado_atendimento.cartao,
+								nome,
+								cpf,
+								nascimento,
+								sexo: sexo.Value,
+								tipo: tipo.Value,
+								origem: "Associac Mobile",
+								termo: tipo.CobraMensalidade
+									? termoDependenteEspecial
+									: termoDependenteLegal,
+							},
+							headers: { "x-access-token": token },
 						});
 
-						setNome("");
-						setCpf("");
-						setNascimento("");
-						setSexo({ Name: "MASCULINO", Value: "M" });
-						setTipo({ Name: "", Value: "", CobraMensalidade: false });
+						if (data.status) {
+							let dependente = {
+								caminho_imagem: "",
+								cartao: "",
+								cartao_enviado: 0,
+								cartao_recebido: 0,
+								cartao_solicitado: 0,
+								celular: "",
+								cod_dep: tipo.Value,
+								cont: data.cont,
+								cpf,
+								data_nascimento: nascimento,
+								email: "",
+								facebook: "",
+								instagram: "",
+								nome,
+								nome_plano: "",
+								possui_plano: 0,
+								pre_cadastro: 1,
+								sexo: sexo.Value,
+								telefone: "",
+								tipo: tipo.Name,
+								inativo: 0,
+								data_inativo: "",
+							};
 
-						setAlerta({
-							visible: true,
-							title: data.title,
-							message: data.message.replace(/@@@@/g, `\n`),
-							type: "success",
-							confirmText: "FECHAR",
-							showConfirm: true,
-							showCancel: false,
-							confirmFunction: () => navigation.navigate("Inicio"),
-						});
+							let dependentes = [
+								...associado_atendimento.dependentes,
+								dependente,
+							];
+							dependentes = dependentes
+								.sort(compararValores("nome", "asc"))
+								.sort(compararValores("pre_cadastro", "desc"))
+								.sort(compararValores("inativo", "asc"));
+
+							setUsuario({
+								...usuario,
+								associado_atendimento: {
+									...associado_atendimento,
+									dependentes,
+								},
+							});
+
+							setNome("");
+							setCpf("");
+							setNascimento("");
+							setSexo({ Name: "MASCULINO", Value: "M" });
+							setTipo({ Name: "", Value: "", CobraMensalidade: false });
+
+							setAlerta({
+								visible: true,
+								title: data.title,
+								message: data.message.replace(/@@@@/g, `\n`),
+								type: "success",
+								confirmText: "FECHAR",
+								showConfirm: true,
+								showCancel: false,
+								confirmFunction: () => navigation.navigate("Inicio"),
+							});
+						} else {
+							setAlerta({
+								visible: true,
+								title: data.title,
+								message: data.message.replace(/@@@@/g, `\n`),
+								type: "danger",
+								confirmText: "FECHAR",
+								showConfirm: true,
+								showCancel: false,
+							});
+						}
 					} else {
 						setAlerta({
 							visible: true,
-							title: data.title,
-							message: data.message.replace(/@@@@/g, `\n`),
+							title: retorno.data.title,
+							message: retorno.data.message,
 							type: "danger",
-							confirmText: "FECHAR",
-							showConfirm: true,
-							showCancel: false,
+							cancelText: "FECHAR",
+							showConfirm: false,
+							showCancel: true,
 						});
 					}
 				} else {
 					setAlerta({
 						visible: true,
-						title: retorno.data.title,
-						message: retorno.data.message,
+						title: requerimento.data.title,
+						message: requerimento.data.message,
 						type: "danger",
 						cancelText: "FECHAR",
 						showConfirm: false,
 						showCancel: true,
 					});
 				}
-			} else {
-				setAlerta({
-					visible: true,
-					title: requerimento.data.title,
-					message: requerimento.data.message,
-					type: "danger",
-					cancelText: "FECHAR",
-					showConfirm: false,
-					showCancel: true,
-				});
 			}
 		}
 

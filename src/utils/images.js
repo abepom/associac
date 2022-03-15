@@ -29,6 +29,7 @@ import assinatura from "../../assets/img/assinatura.png";
 import cancelar_plano from "../../assets/img/cancelar_plano.png";
 import imagem_padrao from "../../assets/img/imagem_padrao.png";
 import ativar_dependente from "../../assets/img/ativar_dependente.png";
+import user_config from "../../assets/img/user_config.png";
 
 export default {
 	bg,
@@ -62,4 +63,5 @@ export default {
 	cancelar_plano,
 	imagem_padrao,
 	ativar_dependente,
+	user_config,
 };
