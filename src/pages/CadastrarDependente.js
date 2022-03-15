@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
 	SafeAreaView,
 	Platform,
@@ -15,14 +15,17 @@ import api from "../../services/api";
 import { useUsuario } from "../store/Usuario";
 import s, { tema } from "../../assets/style/Style";
 import Combo from "../components/Combo";
+import * as Print from "expo-print";
 import HTMLView from "react-native-htmlview";
 import Alert from "../components/Alert";
 import Loading from "../components/Loading";
 import compararValores from "../functions/compararValores";
 import images from "../utils/images";
+import Signature from "react-native-signature-canvas";
 
 function CadastrarDependente(props) {
 	const { navigation } = props;
+	const refAssoc = useRef();
 	const [usuario, setUsuario] = useUsuario();
 	const { token, associado_atendimento } = usuario;
 	const [nome, setNome] = useState("");
@@ -45,12 +48,27 @@ function CadastrarDependente(props) {
 		id: 0,
 		texto: "",
 	});
+	const [assinaturaAssociado, setAssinaturaAssociado] = useState("");
 
 	useEffect(() => {
 		listarTermoDependenteLegal();
 		listarTermoDependenteEspecial();
 		listarTiposDependente();
 	}, []);
+
+	const handleOKAssoc = (signature) => {
+		setAssinaturaAssociado(signature);
+
+		return true;
+	};
+
+	const handleEndAssociado = () => {
+		refAssoc.current.readSignature();
+	};
+
+	const handleClear = () => {
+		refAssoc.current.clearSignature();
+	};
 
 	async function listarTiposDependente() {
 		const { data } = await api({
@@ -150,86 +168,160 @@ function CadastrarDependente(props) {
 				showCancel: false,
 			});
 		} else {
-			const { data } = await api({
-				url: "/associados/cadastrarDependente",
+			const requerimento = await api({
+				url: "/requerimentoInclusaoDependente",
 				method: "POST",
 				data: {
-					cartao: associado_atendimento.cartao,
-					nome,
-					cpf,
-					nascimento,
-					sexo: sexo.Value,
-					tipo: tipo.Value,
-					origem: "Associac Mobile",
+					associado: associado_atendimento,
+					dependente: {
+						nome_dependente: nome,
+						sexo_dependente: sexo,
+						nascimento_dependente: nascimento,
+						cpf_dependente: cpf,
+						tipo_dependente: tipo,
+					},
 					termo: tipo.CobraMensalidade
-						? termoDependenteEspecial
-						: termoDependenteLegal,
+						? termoDependenteEspecial.texto
+						: termoDependenteLegal.texto,
+					assinatura: assinaturaAssociado,
 				},
 				headers: { "x-access-token": token },
 			});
 
-			if (data.status) {
-				let dependente = {
-					caminho_imagem: "",
-					cartao: "",
-					cartao_enviado: 0,
-					cartao_recebido: 0,
-					cartao_solicitado: 0,
-					celular: "",
-					cod_dep: tipo.Value,
-					cont: data.cont,
-					cpf,
-					data_nascimento: nascimento,
-					email: "",
-					facebook: "",
-					instagram: "",
-					nome,
-					nome_plano: "",
-					possui_plano: 0,
-					pre_cadastro: 1,
-					sexo: sexo.Value,
-					telefone: "",
-					tipo: tipo.Name,
-					inativo: 0,
-					data_inativo: "",
-				};
-
-				let dependentes = [...associado_atendimento.dependentes, dependente];
-				dependentes = dependentes
-					.sort(compararValores("nome", "asc"))
-					.sort(compararValores("pre_cadastro", "desc"))
-					.sort(compararValores("inativo", "asc"));
-
-				setUsuario({
-					...usuario,
-					associado_atendimento: { ...associado_atendimento, dependentes },
+			if (requerimento.data.status) {
+				const { uri } = await Print.printToFileAsync({
+					html: requerimento.data.requerimento,
 				});
 
-				setNome("");
-				setCpf("");
-				setNascimento("");
-				setSexo({ Name: "MASCULINO", Value: "M" });
-				setTipo({ Name: "", Value: "", CobraMensalidade: false });
-
-				setAlerta({
-					visible: true,
-					title: data.title,
-					message: data.message.replace(/@@@@/g, `\n`),
-					type: "success",
-					confirmText: "FECHAR",
-					showConfirm: true,
-					showCancel: false,
-					confirmFunction: () => navigation.navigate("Inicio"),
+				const formulario = new FormData();
+				formulario.append("matricula", `${associado_atendimento.matricula}`);
+				formulario.append("dep", "00");
+				formulario.append("nome_doc", "REQUERIMENTO DE INCLUSÃO DE DEPENDENTE");
+				formulario.append("tipo_doc", 14);
+				formulario.append("usuario", usuario.usuario);
+				formulario.append("file", {
+					uri,
+					type: `application/pdf`,
+					name: `REQUERIMENTO_INCLUSAO_DEPENDENTE_${associado_atendimento.matricula}.pdf`,
 				});
+
+				const retorno = await api.post(
+					"/associados/enviarDocumento",
+					formulario,
+					{
+						headers: {
+							"Content-Type": `multipart/form-data; boundary=${formulario._boundary}`,
+							"x-access-token": usuario.token,
+						},
+					}
+				);
+
+				if (retorno.data.status) {
+					const { data } = await api({
+						url: "/associados/cadastrarDependente",
+						method: "POST",
+						data: {
+							cartao: associado_atendimento.cartao,
+							nome,
+							cpf,
+							nascimento,
+							sexo: sexo.Value,
+							tipo: tipo.Value,
+							origem: "Associac Mobile",
+							termo: tipo.CobraMensalidade
+								? termoDependenteEspecial
+								: termoDependenteLegal,
+						},
+						headers: { "x-access-token": token },
+					});
+
+					if (data.status) {
+						let dependente = {
+							caminho_imagem: "",
+							cartao: "",
+							cartao_enviado: 0,
+							cartao_recebido: 0,
+							cartao_solicitado: 0,
+							celular: "",
+							cod_dep: tipo.Value,
+							cont: data.cont,
+							cpf,
+							data_nascimento: nascimento,
+							email: "",
+							facebook: "",
+							instagram: "",
+							nome,
+							nome_plano: "",
+							possui_plano: 0,
+							pre_cadastro: 1,
+							sexo: sexo.Value,
+							telefone: "",
+							tipo: tipo.Name,
+							inativo: 0,
+							data_inativo: "",
+						};
+
+						let dependentes = [
+							...associado_atendimento.dependentes,
+							dependente,
+						];
+						dependentes = dependentes
+							.sort(compararValores("nome", "asc"))
+							.sort(compararValores("pre_cadastro", "desc"))
+							.sort(compararValores("inativo", "asc"));
+
+						setUsuario({
+							...usuario,
+							associado_atendimento: { ...associado_atendimento, dependentes },
+						});
+
+						setNome("");
+						setCpf("");
+						setNascimento("");
+						setSexo({ Name: "MASCULINO", Value: "M" });
+						setTipo({ Name: "", Value: "", CobraMensalidade: false });
+
+						setAlerta({
+							visible: true,
+							title: data.title,
+							message: data.message.replace(/@@@@/g, `\n`),
+							type: "success",
+							confirmText: "FECHAR",
+							showConfirm: true,
+							showCancel: false,
+							confirmFunction: () => navigation.navigate("Inicio"),
+						});
+					} else {
+						setAlerta({
+							visible: true,
+							title: data.title,
+							message: data.message.replace(/@@@@/g, `\n`),
+							type: "danger",
+							confirmText: "FECHAR",
+							showConfirm: true,
+							showCancel: false,
+						});
+					}
+				} else {
+					setAlerta({
+						visible: true,
+						title: retorno.data.title,
+						message: retorno.data.message,
+						type: "danger",
+						cancelText: "FECHAR",
+						showConfirm: false,
+						showCancel: true,
+					});
+				}
 			} else {
 				setAlerta({
 					visible: true,
-					title: data.title,
-					message: data.message.replace(/@@@@/g, `\n`),
+					title: requerimento.data.title,
+					message: requerimento.data.message,
 					type: "danger",
-					confirmText: "FECHAR",
-					showConfirm: true,
-					showCancel: false,
+					cancelText: "FECHAR",
+					showConfirm: false,
+					showCancel: true,
 				});
 			}
 		}
@@ -375,6 +467,44 @@ function CadastrarDependente(props) {
 							</>
 						)}
 					</View>
+					<Text style={[s.tac, s.mt20]}>Assinatura de</Text>
+					<Text style={[s.bold, s.mb20, s.tac]}>
+						{associado_atendimento?.nome?.toUpperCase()}
+					</Text>
+					<Signature
+						ref={refAssoc}
+						style={s.h300}
+						onOK={handleOKAssoc}
+						onEmpty={() =>
+							setAlerta({
+								visible: true,
+								title: "ATENÇÃO!",
+								message:
+									"Para confirmar é necessário preencher a assinatura do associado.",
+								showCancel: false,
+								showConfirm: true,
+								confirmText: "FECHAR",
+							})
+						}
+						onEnd={handleEndAssociado}
+						descriptionText=""
+						webStyle={`
+						html {background: #f1f1f1}
+						.m-signature-pad {width: 80%; height: 250px; margin-left: auto; margin-right: auto; margin-top: 10px; margin-bottom: 0px; }
+						.m-signature-pad::before{
+							position: absolute;
+							top: 210px;
+							content: " ";
+							width: 70%;
+							background: #aaa;
+							height:2px;
+							left: 15%;
+							right: 15%;
+						}
+						.m-signature-pad--body {border: none;}
+						.m-signature-pad--footer{ display: none;}
+						`}
+					/>
 					{carregando ? (
 						<View
 							style={{
@@ -386,30 +516,50 @@ function CadastrarDependente(props) {
 							<Loading size={95} />
 						</View>
 					) : (
-						<TouchableOpacity
-							style={{
-								flexDirection: "row",
-								flex: 1,
-								margin: 0,
-								padding: 15,
-								borderRadius: 5,
-								justifyContent: "center",
-								alignItems: "center",
-								backgroundColor: tema.colors.primary,
-								borderWidth: 1,
-								borderColor: tema.colors.accent,
-							}}
-							onPress={() => cadastrar()}
-						>
-							<Image
-								source={images.sucesso}
-								style={[s.w20, s.h20, s.tcw]}
-								tintColor={tema.colors.background}
-							/>
-							<Text style={{ color: "#fff", marginLeft: 10 }}>
-								PRÉ-CADASTRAR
-							</Text>
-						</TouchableOpacity>
+						<View style={s.row}>
+							<TouchableOpacity
+								style={[
+									s.row,
+									s.fl1,
+									s.m0,
+									s.pd15,
+									s.br6,
+									s.jcc,
+									s.aic,
+									s.bgcr,
+									s.mr10,
+								]}
+								onPress={handleClear}
+							>
+								<Image
+									source={images.trash}
+									style={[s.w20, s.h20, s.tcw]}
+									tintColor={tema.colors.background}
+								/>
+								<Text style={[s.fcw, s.ml10]}>LIMPAR ASSINATURA</Text>
+							</TouchableOpacity>
+							<TouchableOpacity
+								style={[
+									s.row,
+									s.fl1,
+									s.m0,
+									s.pd15,
+									s.br6,
+									s.jcc,
+									s.aic,
+									s.bgcp,
+									s.ml10,
+								]}
+								onPress={() => cadastrar()}
+							>
+								<Image
+									source={images.sucesso}
+									style={[s.w20, s.h20, s.tcw]}
+									tintColor={tema.colors.background}
+								/>
+								<Text style={[s.fcw, s.ml10]}>PRÉ-CADASTRAR</Text>
+							</TouchableOpacity>
+						</View>
 					)}
 					<View style={{ height: 100 }} />
 				</ScrollView>

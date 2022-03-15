@@ -125,6 +125,7 @@ const styles = StyleSheet.create({
 	psa: { position: "absolute" },
 	zit: { zIndex: 999999 },
 	/* MARGENS E PADDINGS */
+	m0: { margin: 0 },
 	m4: { margin: 4 },
 	m10: { margin: 10 },
 	m20: { margin: 20 },
