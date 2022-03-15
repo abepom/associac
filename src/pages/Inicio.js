@@ -34,7 +34,7 @@ function Inicio(props) {
 	let data_atual = new Date();
 	const [usuario, setUsuario] = useUsuario();
 	const { associado_atendimento } = usuario;
-	const [matricula, setMatricula] = useState("003959");
+	const [matricula, setMatricula] = useState("999354");
 	const [alerta, setAlerta] = useState({ visible: false });
 	const [carregando, setCarregando] = useState(false);
 	const [dependenteEscolhido, setDependenteEscolhido] = useState({});
@@ -180,8 +180,6 @@ function Inicio(props) {
 				headers: { "x-access-token": usuario.token },
 			});
 
-			console.log(requerimento.data);
-
 			if (requerimento.data.status) {
 				const { uri } = await Print.printToFileAsync({
 					html: requerimento.data.requerimento,
@@ -218,8 +216,6 @@ function Inicio(props) {
 					}
 				);
 
-				console.log(data);
-
 				if (data.status) {
 					const retorno = await api({
 						url: "/associados/excluirDependente",
@@ -235,8 +231,6 @@ function Inicio(props) {
 						},
 						headers: { "x-access-token": usuario.token },
 					});
-
-					console.log(retorno.data);
 
 					if (retorno.data.status) {
 						if (dependenteEscolhido.pre_cadastro) {

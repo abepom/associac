@@ -28,7 +28,6 @@ import images from "../utils/images";
 function RecadastrarAssociado(props) {
 	const { navigation } = props;
 	const refAssoc = useRef();
-	const refColab = useRef();
 	const [usuario, setUsuario] = useUsuario();
 	const { nome, token, associado_atendimento } = usuario;
 	const [nascimento, setNascimento] = useState("");
@@ -52,17 +51,16 @@ function RecadastrarAssociado(props) {
 	const [lotacoes, setLotacoes] = useState([]);
 	const [modalLoading, setModalLoading] = useState(false);
 	const [modal, setModal] = useState(false);
-	const [modalAssinatura, setModalAssinatura] = useState(false);
 	const [assinaturaAssociado, setAssinaturaAssociado] = useState("");
-	const [assinaturaColaborador, setAssinaturaColaborador] = useState("");
-	const [pdf, setPdf] = useState("");
 	const [btnRecadastrar, setBtnRecadastrar] = useState(false);
 	const [alerta, setAlerta] = useState({});
+	const [termo, setTermo] = useState({});
 
 	useEffect(() => {
 		listarCidades();
 		listarLotacoes();
 		verificarMatricula();
+		listarTermoRecadastro();
 	}, []);
 
 	const verificarMatricula = async () => {
@@ -71,10 +69,8 @@ function RecadastrarAssociado(props) {
 
 			try {
 				setBtnRecadastrar(false);
-				setPdf("");
 				setCarregando(false);
 				setAssinaturaAssociado("");
-				setAssinaturaColaborador("");
 
 				if (associado_atendimento.status) {
 					setNascimento(associado_atendimento.nascimento);
@@ -329,82 +325,22 @@ function RecadastrarAssociado(props) {
 		}
 	}
 
+	async function listarTermoRecadastro() {
+		const { data } = await api({
+			url: "/associados/visualizarTermo",
+			method: "GET",
+			params: { id_local: 18 },
+			headers: { "x-access-token": token },
+		});
+
+		setTermo({
+			id: data.id_termo,
+			texto: data.termo,
+		});
+	}
+
 	const abrirModal = () => {
 		setAssinaturaAssociado("");
-		setAssinaturaColaborador("");
-
-		setPdf(`
-		<!DOCTYPE html>
-		<html lang="en">
-		<head>
-			<meta charset="UTF-8">
-			<meta http-equiv="X-UA-Compatible" content="IE=edge">
-			<meta name="viewport" content="width=device-width, initial-scale=1.0">
-			<title>REQUERIMENTO DE RECADASTRAMENTO</title>
-		</head>
-		<body>
-			<center>
-				<img src="https://www.abepom.org.br/images/logomarca.png" style="width: 60px" />
-				<h5 style="margin-top:0px;">ASSOCIAÇÃO BENEFICENTE DOS MILITARES ESTADUAIS DE SANTA <br />REQUERIMENTO DE RECADASTRAMENTO</h5>
-			</center>  
-			<table width="100%" border="1" cellspacing="0" cellpadding="4" align="center" style="font-size:11px">
-				<tbody>
-					<tr>
-						<td style="width: 33%"><b>NOME:</b> ${associado_atendimento.nome}</td>
-						<td style="width: 33%"><b>MATRÍCULA:</b> ${associado_atendimento.matricula}</td>
-						<td style="width: 33%"><b>SEXO:</b> ${sexo.Name}</td>
-					</tr>
-					<tr>
-						<td style="width: 33%"><b>E-MAIL:</b> ${email}</td>
-						<td style="width: 33%"><b>NASCIMENTO:</b> ${nascimento}</td>
-						<td style="width: 33%"><b>CPF:</b> ${cpf}</td>
-					</tr>
-					<tr>
-						<td style="width: 33%"><b>RG:</b> ${rg}</td>
-						<td colspan="2" style="width: 66%"><b>LOCAL DE TRAB.:</b> ${
-							localTrabalho.Name
-						}</td>
-					</tr>
-					<tr>
-						<td style="width: 33%"><b>TELEFONE RES.:</b> ${telefoneResidencial}</td>
-						<td style="width: 33%"><b>TELEFONE COM.:</b> ${telefoneComercial}</td>
-						<td style="width: 33%"><b>CELULAR:</b> ${celular}</td>
-					</tr>
-					<tr>
-						<td style="width: 33%"><b>ENDEREÇO:</b> 
-							${endereco} 
-							${complemento ? ` - ${complemento}` : null}
-						</td>
-						<td style="width: 33%"><b>Nº:</b> ${numero}</td>
-						<td style="width: 33%"><b>BAIRRO:</b> ${bairro}</td>
-					</tr>
-					<tr>
-						<td style="width: 33%"><b>CEP:</b> ${cep}</td>
-						<td colspan="2" style="width: 66%"><b>CIDADE:</b> ${cidade.Name}</td>
-					</tr>
-				</tbody>
-			</table>
-			<p align="justify" style="font-size: 12px">
-				O associado acima qualificado vem por meio do presente instrumento, isento de qualquer tipo de constrangimento ou coação, requerer seu recadastramento junto ao quadro 
-				social da ABEPOM, com base nos termos dos artigos 3º, 4º, 5º, 6º, 7º e 8º do Estatuto Social vigente cujo teor tem amplo conhecimento, autorizando desde já, que a sua 
-				contribuição mensal bem como, quaisquer outros encargos devidos, decorrentes da prestação de serviços ou fruição dos benefícios, sejam descontados mediante consignação 
-				em sua folha de pagamento. Caso a consignação em folha de pagamento não possa, por qualquer motivo ser efetivada, autoriza expressamente em caráter irrevogável e 
-				irretratável, que também, tais descontos (Contribuição Mensal e/ou Prestações Financeiras decorrentes da utilização dos serviços ou a fruição dos benefícios previstos 
-				no seu Plano e Regulamento de BENEFÍCIOS e SERVIÇOS, cujo teor também conhece) sejam debitados em sua conta corrente bancária, através da qual recebe os seus 
-				vencimentos. Declaro também, que estou ciente nas previsões do artigo 7º, §1º e § 2º do Estatuto Social*.
-			</p> 
-			<p align="justify" style="font-size: 12px">
-				Sendo empregado da ABEPOM, autorizo na Rescisão Contratual, que quaisquer débitos contraídos junto a associação, sejam descontados no ato da rescisão.
-			</p>  
-			<p align="justify" style="font-size: 10px">
-				* “7º - São dependentes dos associados, a esposa ou o esposo, a companheira ou o companheiro em união estável devidamente comprovada, os filhos até 18 (dezoito) anos 
-				de idade e os filhos absolutamente incapazes. §1º - O limite de idade para os filhos previsto no caput, poderá ser ampliado até o ser comprovada semestralmente. §2º - 
-				Podem ainda ser inscritos como dependentes o enteado e o menor que se ache sob sua guarda judicial, o pai, a mãe, o sogro ou dependência econômica do associado 
-				devidamente comprovada, cuja regulamentação sobre a comprovação da dependência econômica, meio de Diretriz fixada pelo Conselho de Administração.
-			</p>  
-			<p align="justify" style="font-size:12px">Nestes termos, pede deferimento.</p>
-			`);
-
 		setModal(true);
 	};
 
@@ -414,81 +350,89 @@ function RecadastrarAssociado(props) {
 		return true;
 	};
 
-	const handleOKColab = (signature) => {
-		setAssinaturaColaborador(signature);
-
-		return true;
-	};
-
 	const handleOK = async () => {
 		setModal(false);
-		setModalAssinatura(false);
-		let html =
-			pdf +
-			` 
-				<p align="justify" style="font-size: 12px;">Local: Florianpolis</p>
-				<p align="justify" style="font-size: 12px;">Data: 25/11/1990</p>
-				<center>
-					<img src="${assinaturaAssociado}" style="width: 300px;" />
-					<hr style="width: 60%; margin-top: -15px;" />
-					<p style="font-size:12px !important;">Assinatura de<br/><b>${associado_atendimento?.nome?.toUpperCase()}</b></p>
-				</center>
-				<div style="display: flex; flex: 1; flex-direction: row; width: 100%;margin-top: 50px;">
-					<div style="display: flex; flex: 1; justify-content: center;">
-						<center>
-							<img src="${assinaturaColaborador}" style="width: 250px;" /><br />
-							<hr style="width: 80%; margin-top: -15px;" />
-							<p style="text-align: center; font-size:12px !important;"><b>${nome}</b>
-							<br />Representante ABEPOM</p>
-						</center>
-					</div>
-					<div style="display: flex; flex: 1; justify-content: center;">
-						<center>
-							<img src="${assinaturaColaborador}" style="width: 250px;" /><br />
-							<hr style="width: 80%; margin-top: -15px;" />
-							<p style="text-align: center; font-size:12px !important;">Cel Aroldo<br />Presidente da ABEPOM</p>
-						</center>
-					</div>
-				</div>
-			</body>
-		</html>`;
 
 		try {
-			const { uri } = await Print.printToFileAsync({ html });
-
-			const formulario = new FormData();
-			formulario.append("matricula", `${associado_atendimento.matricula}`);
-			formulario.append("file", {
-				uri,
-				type: `application/pdf`,
-				name: `REQUERIMENTO_RECADASTRO_${associado_atendimento.matricula}.pdf`,
+			const requerimento = await api({
+				url: "/requerimentoRecadastroAssociado",
+				method: "POST",
+				data: {
+					associado: {
+						matricula: associado_atendimento.matricula,
+						nome: associado_atendimento.nome,
+						sexo,
+						email,
+						nascimento,
+						cpf,
+						rg,
+						local_trabalho: localTrabalho,
+						telefone_residencial: telefoneResidencial,
+						telefone_comercial: telefoneComercial,
+						celular,
+						endereco,
+						complemento,
+						numero,
+						bairro,
+						cep,
+						cidade,
+					},
+					termo: termo.texto,
+					assinatura: assinaturaAssociado,
+				},
+				headers: { "x-access-token": token },
 			});
 
-			const { data } = await api.post(
-				"/associados/cadastrarAssinatura",
-				formulario,
-				{
-					headers: {
-						"Content-Type": `multipart/form-data; boundary=${formulario._boundary}`,
-						"x-access-token": token,
-					},
-				}
-			);
+			if (requerimento.data.status) {
+				const { uri } = await Print.printToFileAsync({
+					html: requerimento.data.requerimento,
+				});
 
-			if (data.status) {
-				setAlerta({ visible: false });
-				setBtnRecadastrar(true);
+				const formulario = new FormData();
+				formulario.append("matricula", `${associado_atendimento.matricula}`);
+				formulario.append("file", {
+					uri,
+					type: `application/pdf`,
+					name: `REQUERIMENTO_RECADASTRO_${associado_atendimento.matricula}.pdf`,
+				});
+
+				const { data } = await api.post(
+					"/associados/cadastrarAssinatura",
+					formulario,
+					{
+						headers: {
+							"Content-Type": `multipart/form-data; boundary=${formulario._boundary}`,
+							"x-access-token": token,
+						},
+					}
+				);
+
+				if (data.status) {
+					setAlerta({ visible: false });
+					setBtnRecadastrar(true);
+				} else {
+					setAlerta({
+						visible: true,
+						title: data.title,
+						message: data.message,
+						type: "danger",
+						cancelText: "FECHAR",
+						confirmText: "OK",
+						showConfirm: true,
+						showCancel: true,
+						confirmFunction: () => setModal(true),
+					});
+				}
 			} else {
 				setAlerta({
 					visible: true,
-					title: data.title,
-					message: data.message,
+					title: "ATENÇÃO!",
+					message:
+						"Ocorreu um erro ao tentar recolher a assinatura do associado.",
 					type: "danger",
 					cancelText: "FECHAR",
-					confirmText: "OK",
-					showConfirm: true,
+					showConfirm: false,
 					showCancel: true,
-					confirmFunction: () => setModal(true),
 				});
 			}
 		} catch (error) {
@@ -507,14 +451,13 @@ function RecadastrarAssociado(props) {
 
 	const handleClear = () => {
 		refAssoc.current.clearSignature();
-		refColab.current.clearSignature();
 	};
 
 	const handleConfirm = () => {
-		if (assinaturaAssociado !== "" && assinaturaColaborador !== "") {
+		if (assinaturaAssociado !== "") {
 			setAlerta({
 				visible: true,
-				title: "CARREGANDO ASSINATURA",
+				title: "CADASTRANDO ASSINATURA",
 				message: <Loading size={125} />,
 				showConfirm: false,
 				showCancel: false,
@@ -522,15 +465,21 @@ function RecadastrarAssociado(props) {
 			});
 
 			handleOK();
+		} else {
+			setAlerta({
+				visible: true,
+				title: "ATENÇÃO!",
+				message: `Para prosseguir é necessário solicitar${"\n"}a assinatura ao associado.`,
+				type: "warning",
+				showConfirm: true,
+				showCancel: false,
+				confirmText: "FECHAR",
+			});
 		}
 	};
 
 	const handleEndAssociado = () => {
 		refAssoc.current.readSignature();
-	};
-
-	const handleEndColaborador = () => {
-		refColab.current.readSignature();
 	};
 
 	return (
@@ -540,53 +489,99 @@ function RecadastrarAssociado(props) {
 			<Modal visible={modal}>
 				<View style={[s.fl1, s.jcc, s.acc, s.aic, s.pdt20]}>
 					<View style={[s.fl2, s.mb20, { width: "90%" }]}>
-						<WebView source={{ html: pdf }} />
-					</View>
-					<View style={[s.fl1, s.aic]}>
-						{assinaturaAssociado === "" ? (
-							<Button
-								onPress={() => {
-									setModal(false);
-									setModalAssinatura(true);
-								}}
-								color={"#fff"}
-								style={s.bgcp}
-							>
-								CLIQUE AQUI PARA ASSINAR
-							</Button>
-						) : (
-							<>
-								<Image
-									source={{ uri: assinaturaAssociado }}
-									style={[s.w400, s.h100]}
-								/>
-								<Text>Assinatura de</Text>
-								<Text style={s.bold}>
-									{associado_atendimento?.nome?.toUpperCase()}
-								</Text>
-								<View style={[s.row, s.mt5]}>
-									<Text style={s.mh7}>LOCAL: FLORIANOPOLIS</Text>
-									<Text style={s.mh7}>DATA: 25/11/2021</Text>
-								</View>
-							</>
-						)}
-					</View>
-					<View style={[s.fl1, s.row, s.jcc, s.aic]}>
-						<View style={[s.fl1, s.jcc, s.aic]}>
-							{assinaturaColaborador !== "" && (
-								<Image
-									source={{ uri: assinaturaColaborador }}
-									style={{ width: 280, height: 70 }}
-								/>
-							)}
-							<Text style={[s.bold, s.tac, s.mt40]}>{nome}</Text>
-							<Text style={s.tac}>Representante ABEPOM</Text>
+						<Text style={[s.mt40, s.bold, s.fs20, s.tac, s.mb10]}>
+							{associado_atendimento.nome.toUpperCase()}
+						</Text>
+						<WebView
+							source={{ html: termo.texto }}
+							textZoom={175}
+							style={[s.fl3, s.mb20]}
+						/>
+						<View style={s.fl1}>
+							<Text style={s.tac}>Assinatura de</Text>
+							<Text style={[s.tac, s.bold]}>
+								{associado_atendimento?.nome?.toUpperCase()}
+							</Text>
+							<Signature
+								ref={refAssoc}
+								style={s.h150}
+								onOK={handleOKAssoc}
+								onEmpty={() =>
+									setAlerta({
+										visible: true,
+										title: "ATENÇÃO!",
+										message:
+											"Para confirmar é necessário preencher a assinatura do associado.",
+										showCancel: false,
+										showConfirm: true,
+										confirmText: "FECHAR",
+									})
+								}
+								onEnd={handleEndAssociado}
+								descriptionText=""
+								webStyle={`
+									.m-signature-pad {width: 80%; height: 250px; margin-left: auto; margin-right: auto; margin-top: 10px; margin-bottom: 0px; }
+									.m-signature-pad::before{
+										position: absolute;
+										top: 210px;
+										content: " ";
+										width: 70%;
+										background: #aaa;
+										height:2px;
+										left: 15%;
+										right: 15%;
+									}
+									.m-signature-pad--body {border: none;}
+									.m-signature-pad--footer{ display: none;}
+								`}
+							/>
+							<View style={[s.row, s.aic, s.mh20, s.mb50]}>
+								<TouchableOpacity
+									style={[
+										s.row,
+										s.fl1,
+										s.m0,
+										s.pd15,
+										s.br6,
+										s.jcc,
+										s.aic,
+										s.bgcr,
+										s.mr10,
+									]}
+									onPress={handleClear}
+								>
+									<Image
+										source={images.trash}
+										style={[s.w20, s.h20, s.tcw]}
+										tintColor={tema.colors.background}
+									/>
+									<Text style={[s.fcw, s.ml10]}>LIMPAR ASSINATURA</Text>
+								</TouchableOpacity>
+								<TouchableOpacity
+									style={[
+										s.row,
+										s.fl1,
+										s.m0,
+										s.pd15,
+										s.br6,
+										s.jcc,
+										s.aic,
+										s.bgcg,
+										s.mr10,
+									]}
+									onPress={handleConfirm}
+								>
+									<Image
+										source={images.sucesso}
+										style={[s.w20, s.h20, s.tcw]}
+										tintColor={tema.colors.background}
+									/>
+									<Text style={[s.fcw, s.ml10]}>CONFIRMAR ASSINATURA</Text>
+								</TouchableOpacity>
+							</View>
 						</View>
-						<View style={[s.fl1, s.jcc, s.aic]}>
-							<Text style={s.mt40}>bruno.horn</Text>
-							<Text>Presidente da ABEPOM</Text>
-						</View>
 					</View>
+
 					<View
 						style={[
 							s.row,
@@ -600,116 +595,6 @@ function RecadastrarAssociado(props) {
 					>
 						<Button
 							onPress={() => setModal(false)}
-							color={"#fff"}
-							style={s.bgcp}
-						>
-							FECHAR
-						</Button>
-					</View>
-				</View>
-			</Modal>
-			<Modal visible={modalAssinatura}>
-				<View style={[s.fl1, s.jcc, s.acc, s.aic, s.pdt35]}>
-					<Text style={[s.fs20, s.mb10]}>
-						Recolha a assinatura do associado na área destacada abaixo:
-					</Text>
-					<Text>Assinatura de</Text>
-					<Text style={s.bold}>
-						{associado_atendimento?.nome?.toUpperCase()}
-					</Text>
-					<Signature
-						ref={refAssoc}
-						style={s.h150}
-						onOK={handleOKAssoc}
-						onEmpty={() =>
-							setAlerta({
-								visible: true,
-								title: "ATENÇÃO!",
-								message:
-									"Para confirmar é necessário preencher a assinatura do associado.",
-								showCancel: false,
-								showConfirm: true,
-								confirmText: "FECHAR",
-							})
-						}
-						onEnd={handleEndAssociado}
-						descriptionText=""
-						webStyle={`
-						.m-signature-pad {width: 80%; height: 250px; margin-left: auto; margin-right: auto; margin-top: 10px; margin-bottom: 0px; }
-						.m-signature-pad::before{
-							position: absolute;
-							top: 210px;
-							content: " ";
-							width: 70%;
-							background: #aaa;
-							height:2px;
-							left: 15%;
-							right: 15%;
-						}
-						.m-signature-pad--body {border: none;}
-						.m-signature-pad--footer{ display: none;}
-						`}
-					/>
-					<Text style={[s.fs20, s.mb10]}>
-						Recolha a assinatura do colaborador na área destacada abaixo:{" "}
-					</Text>
-					<Text>Assinatura de</Text>
-					<Text style={s.bold}>{nome?.toUpperCase()}</Text>
-					<Signature
-						ref={refColab}
-						style={s.h100}
-						onOK={handleOKColab}
-						onEmpty={() =>
-							setAlerta({
-								visible: true,
-								title: "ATENÇÃO!",
-								message:
-									"Para confirmar é necessário preencher a assinatura do colaborador.",
-								showCancel: false,
-								showConfirm: true,
-								confirmText: "FECHAR",
-							})
-						}
-						onEnd={handleEndColaborador}
-						descriptionText=""
-						webStyle={`
-						.m-signature-pad {width: 80%; height: 250px; margin-left: auto; margin-right: auto; margin-top: 10px; }
-						.m-signature-pad::before{
-							position: absolute;
-							top: 210px;
-							content: " ";
-							width: 70%;
-							background: #aaa;
-							height:2px;
-							left: 15%;
-							right: 15%;
-						}
-						.m-signature-pad--body {border: none;}
-						.m-signature-pad--footer{ display: none;}
-						`}
-					/>
-					<View
-						style={[
-							s.row,
-							s.jcsb,
-							s.aic,
-							s.b20,
-							{
-								width: "90%",
-							},
-						]}
-					>
-						<Button onPress={handleClear} color={"#fff"} style={s.bgcr}>
-							LIMPAR ASSINATURAS
-						</Button>
-						<Button onPress={handleConfirm} color={"#fff"} style={s.bgcg}>
-							CONFIRMAR ASSINATURAS
-						</Button>
-						<Button
-							onPress={() => {
-								setModal(true);
-								setModalAssinatura(false);
-							}}
 							color={"#fff"}
 							style={s.bgcp}
 						>
@@ -902,7 +787,7 @@ function RecadastrarAssociado(props) {
 											numberOfLines={7}
 											mode={"outlined"}
 											theme={tema}
-											style={[s.fs18, s.mxh200]}
+											style={[s.fs18, s.mxh200, s.mb50]}
 											onChangeText={(text) => setObservacao(text)}
 										/>
 									</View>

@@ -140,6 +140,7 @@ const styles = StyleSheet.create({
 	mb5: { marginBottom: 5 },
 	mb10: { marginBottom: 10 },
 	mb20: { marginBottom: 20 },
+	mb50: { marginBottom: 50 },
 	ml5: { marginLeft: 5 },
 	ml10: { marginLeft: 10 },
 	mh5: { marginHorizontal: 5 },

@@ -312,288 +312,259 @@ function CadastrarAssociado(props) {
 	}
 
 	const cadastrarAssociado = async () => {
-		setAlerta({
-			visible: true,
-			title: "CADASTRANDO ASSOCIADO",
-			message: <Loading size={125} />,
-			showConfirm: false,
-			showCancel: false,
-			showIcon: false,
-		});
-
-		try {
-			let html =
-				`
-				<center><img src="https://assets.abepom.org.br/img/logo.png" style="width: 70px;" />
-				<br />
-				<h4>ASSOCIAÇÃO BENEFICENTE DOS MILITARES ESTADUAIS DE SANTA CATARINA</h4>
-				<h3>REQUERIMENTO DE INCLUSÃO DE ASSOCIADO</h3>
-				</center>
-				<table style="width: 100%;font-size: 11px;" border="1" cellspacing="0" cellpadding="3">
-					<tbody>
-						<tr>
-							<td colspan="3" style="width: 99.8834%;"><center><b>${
-								orgao.Name
-							}</b></center></td>
-						</tr>
-						<tr>
-							<td style="width: 33.3333%;">Matr&iacute;cula: <b>${
-								associado_atendimento.matricula
-							}</b></td>
-							<td colspan="2" style="width: 66.6667%;">Nome: <b>${nome.toUpperCase()}</b></td>
-						</tr>
-						<tr>
-							<td style="width: 33.3333%;">Nascimento: <b>${nascimento}</b></td>
-							<td style="width: 33.3333%;">CPF: <b>${cpf}</b></td>
-							<td style="width: 33.3333%;">RG: <b>${rg}</b></td>
-						</tr>
-						<tr>
-							<td style="width: 66.6666%;" colspan="2">Endere&ccedil;o: <b>${endereco}</b></td>
-							<td style="width: 33.3333%;">N&ordm;: <b>${numero}</b></td>
-						</tr>
-						<tr>
-							<td style="width: 33.3333%;">Complemento: <b>${complemento}</b></td>
-							<td style="width: 33.3333%;">Bairro: <b>${bairro}</b></td>
-							<td style="width: 33.3333%;">CEP: <b>${cep}</b></td>
-						</tr>
-						<tr>
-							<td colspan="2" style="width: 66.5501%;">Cidade: <b>${cidade.Name}</b></td>
-							<td style="width: 33.3333%;">Posto / Gradua&ccedil;&atilde;o: <b>${
-								funcao.Name
-							}</b></td>
-						</tr>
-						<tr>
-							<td style="width: 33.3333%;">Fone Residencial: <b>${telefoneResidencial}</b></td>
-							<td style="width: 33.3333%;">Celular: <b>${celular}</b></td>
-							<td style="width: 33.3333%;">Fone Comercial: <b>${telefoneComercial}</b></td>
-						</tr>
-						<tr>
-							<td colspan="2" style="width: 66.5501%;">E-mail: <b>${email}</b></td>
-							<td style="width: 33.3333%;">Lota&ccedil;&atilde;o: <b>${
-								localTrabalho.Name
-							}</b></td>
-						</tr>
-						<tr>
-							<td style="width: 33.3333%;">Banco: <b>${banco.Name}</b></td>
-							<td style="width: 33.3333%;">Ag&ecirc;ncia Banc&aacute;ria: <b>${agencia}</b></td>
-							<td style="width: 33.3333%;">Conta Corrente N&ordm;: <b>${conta} ${digitoConta}</b></td>
-						</tr>
-					</tbody>
-				</table><div style="font-size: 12px !important;">` +
-				termo.texto +
-				`</div><p align="justify" style="font-size: 12px;">Local: Florianópolis</p>
-					<p align="justify" style="font-size: 12px;">Data: ${
-						("0" + data_atual.getDate()).slice(-2) +
-						"/" +
-						("0" + (data_atual.getMonth() + 1)).slice(-2) +
-						"/" +
-						data_atual.getFullYear()
-					}</p>
-					<center>
-						<img src="${assinaturaAssociado}" style="width: 300px;" />
-						<hr style="width: 60%; margin-top: -15px;" />
-						<p style="font-size:12px !important;">Assinatura de<br/><b>${associado_atendimento?.nome?.toUpperCase()}</b></p>
-					</center>
-					<div style="display: flex; flex: 1; flex-direction: row; width: 100%;margin-top: 50px;">
-						<div style="display: flex; flex: 1; justify-content: center;">
-							<center>
-								<img src="" style="width: 250px;" /><br />
-								<hr style="width: 80%; margin-top: -15px;" />
-								<p style="text-align: center; font-size:12px !important;"><b>${usuario.nome}</b>
-								<br />Representante ABEPOM</p>
-							</center>
-						</div>
-						<div style="display: flex; flex: 1; justify-content: center;">
-							<center>
-								<img src="" style="width: 250px;" /><br />
-								<hr style="width: 80%; margin-top: -15px;" />
-								<p style="text-align: center; font-size:12px !important;">Cel Aroldo<br />Presidente da ABEPOM</p>
-							</center>
-						</div>
-					</div>
-				</body>
-			</html>`;
-
-			const { uri } = await Print.printToFileAsync({ html });
-
-			const formulario = new FormData();
-			formulario.append("matricula", `${associado_atendimento.matricula}`);
-			formulario.append("dep", "00");
-			formulario.append("nome_doc", "REQUERIMENTO DE INCLUSÃO DE ASSOCIADO");
-			formulario.append("tipo_doc", 8);
-			formulario.append("usuario", usuario.usuario);
-			formulario.append("file", {
-				uri,
-				type: `application/pdf`,
-				name: `REQUERIMENTO_INCLUSAO_${associado_atendimento.matricula}.pdf`,
+		if (assinaturaAssociado === "") {
+			setAlerta({
+				visible: true,
+				title: "ATENÇÃO!",
+				message: `Para prosseguir é necessário capturar${"\n"}a assinatura do associado.`,
+				type: "warning",
+				showConfirm: false,
+				showCancel: true,
+				cancelText: "FECHAR",
+			});
+		} else {
+			setAlerta({
+				visible: true,
+				title: "CADASTRANDO ASSOCIADO",
+				message: <Loading size={125} />,
+				showConfirm: false,
+				showCancel: false,
+				showIcon: false,
 			});
 
-			const retorno = await api.post(
-				"/associados/enviarDocumento",
-				formulario,
-				{
-					headers: {
-						"Content-Type": `multipart/form-data; boundary=${formulario._boundary}`,
-						"x-access-token": usuario.token,
-					},
-				}
-			);
-
-			if (retorno.data.status) {
-				const { data } = await api({
-					url: "/cadastrarAssociado",
+			try {
+				const requerimento = await api({
+					url: "/requerimentoCadastroAssociado",
 					method: "POST",
 					data: {
 						associado: {
+							orgao,
 							matricula: associado_atendimento.matricula,
-							nome,
+							nome: nome.toUpperCase(),
 							nascimento,
-							sexo,
-							cpf: cpf.replace(/[.-]/g, "").trim(),
+							cpf,
 							rg,
-							telefone_comercial: telefoneComercial
-								.replace(/[()-]/g, "")
-								.trim(),
-							telefone_residencial: telefoneResidencial
-								.replace(/[()-]/g, "")
-								.trim(),
-							celular: celular.replace(/[()-]/g, "").trim(),
-							email,
 							endereco,
-							numero: numero.trim(),
+							numero,
 							complemento,
 							bairro,
-							cidade,
 							cep,
-							orgao,
-							local_trabalho: localTrabalho,
+							cidade,
 							funcao,
-							mesano,
-							identificador,
+							telefone_residencial: telefoneResidencial,
+							telefone_comercial: telefoneComercial,
+							celular,
+							email,
+							local_trabalho: localTrabalho,
 							banco,
 							agencia,
 							conta,
 							digito_conta: digitoConta,
-							digito,
-							forma_desconto: formaDesconto,
-							estornado,
-							indica,
-							vinculo: 1,
-							observacao: (
-								associado_atendimento.observacao +
-								" " +
-								observacao
-							).trim(),
-							tipo: "01",
-							status: true,
-							recadastrado: true,
-							paga_joia: associado_atendimento.paga_joia,
-							sem_documentos: associadoSemDocumentos,
 						},
+						termo: termo.texto,
+						assinatura: assinaturaAssociado,
 					},
 					headers: { "x-access-token": token },
 				});
 
-				if (data.status) {
-					setActiveStep(0);
-					setPrevStep(false);
-					setTextNext("PRÓXIMO");
-					setImagemCpf("");
-					setImagemRg("");
-					setImagemContraCheque("");
-					setImagemComprovanteResidencia("");
+				if (requerimento.data.status) {
+					const { uri } = await Print.printToFileAsync({
+						html: requerimento.data.requerimento,
+					});
 
-					if (!associadoSemDocumentos) {
-						setUsuario({
-							...usuario,
-							associado_atendimento: {
-								...associado_atendimento,
-								nome: nome.toUpperCase(),
-								nascimento,
-								sexo,
-								cpf: cpf.replace(/[.-]/g, "").trim(),
-								rg,
-								telefone_comercial: telefoneComercial
-									.replace(/[()-]/g, "")
-									.trim(),
-								telefone_residencial: telefoneResidencial
-									.replace(/[()-]/g, "")
-									.trim(),
-								celular: celular.replace(/[()-]/g, "").trim(),
-								email,
-								endereco,
-								numero: numero.trim(),
-								complemento,
-								bairro,
-								cidade,
-								cep,
-								orgao,
-								local_trabalho: localTrabalho,
-								funcao,
-								mesano,
-								identificador,
-								banco,
-								agencia,
-								conta,
-								digito_conta: digitoConta,
-								digito,
-								forma_desconto: formaDesconto,
-								estornado,
-								indica,
-								observacao: (
-									usuario.associado_atendimento.observacao +
-									" " +
-									observacao
-								).trim(),
-								tipo: "01",
-								status: true,
-								recadastrado: true,
+					const formulario = new FormData();
+					formulario.append("matricula", `${associado_atendimento.matricula}`);
+					formulario.append("dep", "00");
+					formulario.append(
+						"nome_doc",
+						"REQUERIMENTO DE INCLUSÃO DE ASSOCIADO"
+					);
+					formulario.append("tipo_doc", 8);
+					formulario.append("usuario", usuario.usuario);
+					formulario.append("file", {
+						uri,
+						type: `application/pdf`,
+						name: `REQUERIMENTO_INCLUSAO_${associado_atendimento.matricula}.pdf`,
+					});
+
+					const retorno = await api.post(
+						"/associados/enviarDocumento",
+						formulario,
+						{
+							headers: {
+								"Content-Type": `multipart/form-data; boundary=${formulario._boundary}`,
+								"x-access-token": usuario.token,
 							},
+						}
+					);
+
+					if (retorno.data.status) {
+						const { data } = await api({
+							url: "/cadastrarAssociado",
+							method: "POST",
+							data: {
+								associado: {
+									matricula: associado_atendimento.matricula,
+									nome,
+									nascimento,
+									sexo,
+									cpf: cpf.replace(/[.-]/g, "").trim(),
+									rg,
+									telefone_comercial: telefoneComercial
+										.replace(/[()-]/g, "")
+										.trim(),
+									telefone_residencial: telefoneResidencial
+										.replace(/[()-]/g, "")
+										.trim(),
+									celular: celular.replace(/[()-]/g, "").trim(),
+									email,
+									endereco,
+									numero: numero.trim(),
+									complemento,
+									bairro,
+									cidade,
+									cep,
+									orgao,
+									local_trabalho: localTrabalho,
+									funcao,
+									mesano,
+									identificador,
+									banco,
+									agencia,
+									conta,
+									digito_conta: digitoConta,
+									digito,
+									forma_desconto: formaDesconto,
+									estornado,
+									indica,
+									vinculo: 1,
+									observacao: (
+										associado_atendimento.observacao +
+										" " +
+										observacao
+									).trim(),
+									tipo: "01",
+									status: true,
+									recadastrado: true,
+									paga_joia: associado_atendimento.paga_joia,
+									sem_documentos: associadoSemDocumentos,
+								},
+							},
+							headers: { "x-access-token": token },
+						});
+
+						if (data.status) {
+							setActiveStep(0);
+							setPrevStep(false);
+							setTextNext("PRÓXIMO");
+							setImagemCpf("");
+							setImagemRg("");
+							setImagemContraCheque("");
+							setImagemComprovanteResidencia("");
+
+							if (!associadoSemDocumentos) {
+								setUsuario({
+									...usuario,
+									associado_atendimento: {
+										...associado_atendimento,
+										nome: nome.toUpperCase(),
+										nascimento,
+										sexo,
+										cpf: cpf.replace(/[.-]/g, "").trim(),
+										rg,
+										telefone_comercial: telefoneComercial
+											.replace(/[()-]/g, "")
+											.trim(),
+										telefone_residencial: telefoneResidencial
+											.replace(/[()-]/g, "")
+											.trim(),
+										celular: celular.replace(/[()-]/g, "").trim(),
+										email,
+										endereco,
+										numero: numero.trim(),
+										complemento,
+										bairro,
+										cidade,
+										cep,
+										orgao,
+										local_trabalho: localTrabalho,
+										funcao,
+										mesano,
+										identificador,
+										banco,
+										agencia,
+										conta,
+										digito_conta: digitoConta,
+										digito,
+										forma_desconto: formaDesconto,
+										estornado,
+										indica,
+										observacao: (
+											usuario.associado_atendimento.observacao +
+											" " +
+											observacao
+										).trim(),
+										tipo: "01",
+										status: true,
+										recadastrado: true,
+									},
+								});
+							}
+
+							setAlerta({
+								visible: true,
+								title: data.title,
+								message: data.message.replace(/@@@@/g, `\n`),
+								showCancel: false,
+								showConfirm: true,
+								confirmText: "FECHAR",
+								type: "success",
+								confirmFunction: () => navigation.navigate("Inicio"),
+							});
+						} else {
+							setAlerta({
+								visible: true,
+								title: data.title,
+								message: data.message,
+								showCancel: false,
+								showConfirm: true,
+								confirmText: "FECHAR",
+								type: "danger",
+							});
+						}
+					} else {
+						setAlerta({
+							visible: true,
+							title: retorno.data.title,
+							message: retorno.data.message,
+							type: "danger",
+							cancelText: "FECHAR",
+							showConfirm: false,
+							showCancel: true,
 						});
 					}
-
-					setAlerta({
-						visible: true,
-						title: data.title,
-						message: data.message.replace(/@@@@/g, `\n`),
-						showCancel: false,
-						showConfirm: true,
-						confirmText: "FECHAR",
-						type: "success",
-						confirmFunction: () => navigation.navigate("Inicio"),
-					});
 				} else {
 					setAlerta({
 						visible: true,
-						title: data.title,
-						message: data.message,
+						title: "ATENÇÃO!",
+						message: "Ocorreu um erro ao tentar cadastrar o associado.",
 						showCancel: false,
 						showConfirm: true,
 						confirmText: "FECHAR",
 						type: "danger",
 					});
 				}
-			} else {
+			} catch (error) {
 				setAlerta({
 					visible: true,
-					title: retorno.data.title,
-					message: retorno.data.message,
+					title: "ATENÇÃO!",
+					message: "Ocorreu um erro ao tentar cadastrar o associado.",
+					showCancel: false,
+					showConfirm: true,
+					confirmText: "FECHAR",
 					type: "danger",
-					cancelText: "FECHAR",
-					showConfirm: false,
-					showCancel: true,
 				});
 			}
-		} catch (error) {
-			setAlerta({
-				visible: true,
-				title: "ATENÇÃO!",
-				message: "Ocorreu um erro ao tentar cadastrar o associado.",
-				showCancel: false,
-				showConfirm: true,
-				confirmText: "FECHAR",
-				type: "danger",
-			});
 		}
 	};
 
