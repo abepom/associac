@@ -11,17 +11,14 @@ export const tema = {
 		text: "#0f4064",
 		background: "#ffffff",
 		surface: "#fff",
-		text: "#03254E",
 		disabled: "#717171",
 		placeholder: "#2A629A",
-		text: "#03254E",
 		backdrop: "rgba(52, 52, 52, 0.8)",
 		verde: "#6CAC67",
 		amarelo: "#d3c200",
 		info: "#4da5db",
 		vermelho: "#A32224",
 		cinza: "#F0EEEF",
-		separador: "#8D8C8D",
 	},
 };
 
@@ -210,36 +207,6 @@ const styles = StyleSheet.create({
 		},
 		shadowOpacity: 0.25,
 		shadowRadius: 3.84,
-	},
-	linha: {
-		flexDirection: "row",
-	},
-	centralizado: {
-		justifyContent: "center",
-		alignItems: "center",
-	},
-	blocoScroll: {
-		flex: 1,
-		height: 110,
-		backgroundColor: tema.colors.background,
-		marginVertical: 5,
-		borderRadius: 4,
-		elevation: 1,
-	},
-	containerScroll: {
-		flex: 1,
-		width: "100%",
-		maxHeight: "90%",
-		marginVertical: 10,
-	},
-	containerTotal: {
-		width: "100%",
-		height: 50,
-		bottom: 0,
-		backgroundColor: tema.colors.primary,
-	},
-	textoTotal: {
-		color: tema.colors.background,
 	},
 });
 
