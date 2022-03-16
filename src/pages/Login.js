@@ -23,8 +23,8 @@ import s from "../../assets/style/Style";
 
 function Login(props) {
 	const [usuario, setUsuario] = useUsuario();
-	const [nome, setNome] = useState("bruno");
-	const [senha, setSenha] = useState("jack2811");
+	const [nome, setNome] = useState("");
+	const [senha, setSenha] = useState("");
 	const [alerta, setAlerta] = useState({ visible: false });
 
 	const senhaRef = useRef(null);
@@ -66,12 +66,13 @@ function Login(props) {
 				if (data.status) {
 					setUsuario({
 						usuario: nome,
-						senha: senha,
+						senha,
 						codigo_local: data.dados.codigo_local,
 						nome: data.dados.nome,
 						email: data.dados.email,
 						token: data.token,
 						administrador: true,
+						assinatura: data.dados.assinatura,
 					});
 
 					props.navigation.reset({ index: 0, routes: [{ name: "Inicio" }] });

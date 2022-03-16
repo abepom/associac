@@ -810,7 +810,7 @@ function RecadastrarAssociado(props) {
 										<View style={s.fl1} />
 										<View style={s.fl4}>
 											{btnRecadastrar ? (
-												<View style={s.row}>
+												<View style={[s.row, s.jcc, s.aic]}>
 													<TouchableOpacity
 														onPress={() => recadastrar()}
 														style={[

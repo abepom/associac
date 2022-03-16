@@ -74,7 +74,7 @@ export default (props) => {
 				>
 					<Image
 						source={images.file}
-						style={[s.w50, s.h50, s.tcp]}
+						style={[s.w40, s.h40, s.tcp]}
 						tintColor={tema.colors.primary}
 					/>
 				</TouchableOpacity>
@@ -91,7 +91,7 @@ export default (props) => {
 					>
 						<Image
 							source={images.ativar_dependente}
-							style={[s.w35, s.h35, s.tcg]}
+							style={[s.w40, s.h40, s.tcg]}
 							tintColor={tema.colors.tcg}
 						/>
 					</TouchableOpacity>
@@ -114,7 +114,7 @@ export default (props) => {
 					>
 						<Image
 							source={images.ativar_dependente}
-							style={[s.w35, s.h35, s.tcc]}
+							style={[s.w40, s.h40, s.tcc]}
 							tintColor={tema.colors.cinza}
 						/>
 					</TouchableOpacity>
@@ -131,7 +131,7 @@ export default (props) => {
 				>
 					<Image
 						source={images.alterar_dados}
-						style={[s.w35, s.h35, s.tcp]}
+						style={[s.w40, s.h40, s.tcp]}
 						tintColor={tema.colors.primary}
 					/>
 				</TouchableOpacity>
@@ -143,7 +143,7 @@ export default (props) => {
 				>
 					<Image
 						source={images.trash}
-						style={[s.w35, s.h35, s.tcr]}
+						style={[s.w40, s.h40, s.tcr]}
 						tintColor={tema.colors.vermelho}
 					/>
 				</TouchableOpacity>

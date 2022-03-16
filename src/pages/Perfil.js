@@ -5,28 +5,15 @@ import {
 	SafeAreaView,
 	TouchableOpacity,
 	Image,
-	Keyboard,
-	FlatList,
-	Modal,
-	Platform,
 } from "react-native";
 import images from "../utils/images";
-import app from "../../app.json";
 import s, { tema } from "../../assets/style/Style";
 import { useUsuario } from "../store/Usuario";
-import { Button, IconButton, TextInput } from "react-native-paper";
-import { TextInputMask } from "react-native-masked-text";
 import Header from "../components/Header";
 import Alert from "../components/Alert";
 import Loading from "../components/Loading";
-import Input from "../components/Input";
-import WebView from "react-native-webview";
-import MenuInicio from "../components/MenuInicio";
-import Dependente from "../components/Dependente";
-import compararValores from "../functions/compararValores";
 import Signature from "react-native-signature-canvas";
 import api from "../../services/api";
-import * as Print from "expo-print";
 
 function Perfil(props) {
 	const refColab = useRef();
@@ -104,7 +91,7 @@ function Perfil(props) {
 			<Header titulo={"Perfil do Usuário"} {...props} />
 			<SafeAreaView style={s.fl1}>
 				<View style={[s.fl1, s.m20]}>
-					{usuario?.assinatura?.length > 0 && (
+					{usuario.assinatura.length > 0 && (
 						<View style={[s.fl1, s.aic, s.mt20]}>
 							<Text style={s.tac}>Assinatura atual de</Text>
 							<Text style={[s.tac, s.bold]}>
