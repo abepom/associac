@@ -24,7 +24,10 @@ export default (props) => {
 		});
 
 		setLink(data.caminho);
-		setCarregar(false);
+
+		setTimeout(() => {
+			setCarregar(false);
+		}, 500);
 	}
 
 	return (
