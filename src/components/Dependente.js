@@ -79,7 +79,7 @@ export default (props) => {
 					/>
 				</TouchableOpacity>
 			) : item.inativo ? (
-				item.data_inativo === "" || dias >= 730 ? (
+				item.data_inativo === "" || dias >= 730 || (dias >= 0 && dias < 2) ? (
 					<TouchableOpacity
 						onPress={() =>
 							navigation.navigate("AtivarDependente", {
