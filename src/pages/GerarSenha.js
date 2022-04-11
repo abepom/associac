@@ -175,9 +175,9 @@ function GerarSenha(props) {
 		setAlerta({
 			visible: true,
 			title: "ATENÇÃO!",
-			message: `Você deseja enviar um SMS para o${"\n"}${
+			message: `Você deseja enviar um SMS para o${
 				tipo == 1 ? "titular" : "dependente"
-			} ${nome} com a senha do ABEPOM Mobile no número ${celular}?`,
+			}${"\n"}${nome}${"\n"}com a senha do ABEPOM Mobile no número ${celular}?`,
 			type: "warning",
 			confirmText: "SIM, ENVIAR!",
 			showConfirm: true,
